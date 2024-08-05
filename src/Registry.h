@@ -21,8 +21,8 @@ public:
     static std::unique_ptr<Registry> instance;
 
     std::shared_ptr<Configuration> configuration();
-    std::vector<ForceFunctor>& forceFunctors();
-    std::vector<Integrator>& integrators();
+    std::vector<std::unique_ptr<ForceFunctor>>& forceFunctors();
+    std::vector<std::unique_ptr<Integrator>>& integrators();
     std::shared_ptr<MoleculeContainer> moleculeContainer();
     std::shared_ptr<Simulation> simulation();
     std::shared_ptr<Boundary> boundary();
@@ -33,8 +33,8 @@ public:
     std::shared_ptr<Boundary>& boundary_ptr();
 private:
     std::shared_ptr<Configuration> m_configuration;
-    std::vector<ForceFunctor> m_forceFunctors;
-    std::vector<Integrator> m_integrators;
+    std::vector<std::unique_ptr<ForceFunctor>> m_forceFunctors;
+    std::vector<std::unique_ptr<Integrator>> m_integrators;
     std::shared_ptr<MoleculeContainer> m_moleculeContainer;
     std::shared_ptr<Simulation> m_simulation;
     std::shared_ptr<Boundary> m_boundary;

@@ -15,11 +15,11 @@ std::shared_ptr<Configuration> Registry::configuration() {
     return m_configuration;
 }
 
-std::vector<ForceFunctor> &Registry::forceFunctors() {
+std::vector<std::unique_ptr<ForceFunctor>> &Registry::forceFunctors() {
     return m_forceFunctors;
 }
 
-std::vector<Integrator> &Registry::integrators() {
+std::vector<std::unique_ptr<Integrator>> &Registry::integrators() {
     return m_integrators;
 }
 

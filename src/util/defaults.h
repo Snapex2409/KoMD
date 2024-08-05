@@ -21,6 +21,7 @@ namespace Defaults {
     static constexpr math::d3 domainHigh {10, 10, 10};  // in Armstrong
     static constexpr double cutoff = sigma * 2.5;       // in Armstrong
     static constexpr bool enableSOA = false;
+    static constexpr uint64_t timesteps = 1;            // unit-less
 }
 
 #endif //KOMD_DEFAULTS_H

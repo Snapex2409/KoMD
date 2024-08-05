@@ -34,6 +34,7 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "domain_low") file >> config->domainLow.x() >> config->domainLow.y() >> config->domainLow.z();
             if (var == "domain_high") file >> config->domainHigh.x() >> config->domainHigh.y() >> config->domainHigh.z();
             if (var == "enableSOA") file >> config->enableSOA;
+            if (var == "timesteps") file >> config->timesteps;
         }
     }
     file.close();

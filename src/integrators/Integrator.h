@@ -12,9 +12,8 @@ class Integrator {
 public:
     /**
      * Creates new Integrator
-     * @param delta_t time step size
      * */
-    explicit Integrator(double delta_t);
+    explicit Integrator();
 
     /**
      * First half step of integration

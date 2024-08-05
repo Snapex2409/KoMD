@@ -10,8 +10,7 @@
 
 #include "Vec3D.h"
 #include "Cell.h"
-
-class Molecule;
+#include "molecule/Molecule.h"
 
 class MoleculeContainer {
 public:

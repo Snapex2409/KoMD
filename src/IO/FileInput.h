@@ -9,6 +9,7 @@
 #include <string>
 
 class FileInput {
+public:
 /**
      * @brief Reading input parameters from given input data file
      *

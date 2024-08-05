@@ -19,6 +19,7 @@ struct Configuration {
     math::d3 domainLow = Defaults::domainLow;
     math::d3 domainHigh = Defaults::domainHigh;
     bool enableSOA = Defaults::enableSOA;
+    uint64_t timesteps = Defaults::timesteps;
 };
 
 

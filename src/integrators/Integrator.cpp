@@ -6,8 +6,8 @@
 #include "Registry.h"
 #include "molecule/Molecule.h"
 
-Integrator::Integrator(double delta_t) :
-m_delta_t(delta_t),
+Integrator::Integrator() :
+m_delta_t(Registry::instance->configuration()->delta_t),
 m_use_soa(Registry::instance->configuration()->enableSOA) { }
 
 void Integrator::integrate0() {
