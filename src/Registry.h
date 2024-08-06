@@ -14,6 +14,7 @@
 #include "potentials/ForceFunctor.h"
 #include "Simulation.h"
 #include "boundary/Boundary.h"
+#include "IO/VTKWriter.h"
 
 class Registry {
 public:
@@ -26,11 +27,13 @@ public:
     std::shared_ptr<MoleculeContainer> moleculeContainer();
     std::shared_ptr<Simulation> simulation();
     std::shared_ptr<Boundary> boundary();
+    std::shared_ptr<VTKWriter> vtkWriter();
 
     std::shared_ptr<Configuration>& configuration_ptr();
     std::shared_ptr<MoleculeContainer>& moleculeContainer_ptr();
     std::shared_ptr<Simulation>& simulation_ptr();
     std::shared_ptr<Boundary>& boundary_ptr();
+    std::shared_ptr<VTKWriter>& vtkWriter_ptr();
 private:
     std::shared_ptr<Configuration> m_configuration;
     std::vector<std::unique_ptr<ForceFunctor>> m_forceFunctors;
@@ -38,6 +41,7 @@ private:
     std::shared_ptr<MoleculeContainer> m_moleculeContainer;
     std::shared_ptr<Simulation> m_simulation;
     std::shared_ptr<Boundary> m_boundary;
+    std::shared_ptr<VTKWriter> m_vtk_writer;
 };
 
 

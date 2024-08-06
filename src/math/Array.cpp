@@ -66,3 +66,23 @@ math::ul3 math::ufloor(const math::d3 &vec) {
     result[2] = std::floor(vec[2]);
     return result;
 }
+
+math::d3 math::max(const math::d3 &a, const math::d3 &b) {
+    return {std::max(a.x(), b.x()), std::max(a.y(), b.y()), std::max(a.z(), b.z())};
+}
+
+math::d3 math::min(const math::d3 &a, const math::d3 &b) {
+    return {std::min(a.x(), b.x()), std::min(a.y(), b.y()), std::min(a.z(), b.z())};
+}
+
+math::d3 math::max(const math::d3 &a, double v) {
+    return {std::max(a.x(), v), std::max(a.y(), v), std::max(a.z(), v)};
+}
+
+math::d3 math::min(const math::d3 &a, double v) {
+    return {std::min(a.x(), v), std::min(a.y(), v), std::min(a.z(), v)};
+}
+
+math::d3 math::abs(const math::d3 &vec) {
+    return {std::abs(vec.x()), std::abs(vec.y()), std::abs(vec.z())};
+}

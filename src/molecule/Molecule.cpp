@@ -54,7 +54,7 @@ math::d3 Molecule::getCenterOfMass() const {
         result += site.r_arr() * site.getMass();
         total_mass += site.getMass();
     }
-    return result;
+    return result / total_mass;
 }
 
 void Molecule::registerCopy(Molecule &copy, const math::i3& shift) {
@@ -90,4 +90,12 @@ void Molecule::moveBy(const math::d3 &offset) {
 void Molecule::moveCoMTo(const math::d3 &position) {
     const math::d3 delta = position - getCenterOfMass();
     moveBy(delta);
+}
+
+void Molecule::copyParentLocation(const math::d3 &offset) {
+    for (uint64_t idx = 0; idx < m_sites.size(); idx++) {
+        Site& site = m_sites[idx];
+        Site& p_site = m_parent.get().m_sites[idx];
+        site.r_arr() = p_site.r_arr() + offset;
+    }
 }

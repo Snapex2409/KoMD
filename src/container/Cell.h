@@ -22,6 +22,7 @@ public:
     void constructSOA();
     void writeSOA2AOS();
     void invalidateSOA();
+    void clearForces();
 
     /**
      * Checks if the point is within the bounds of this cell

@@ -313,6 +313,12 @@ namespace math {
     [[maybe_unused]] ul3 uceil(const d3& vec);
     [[maybe_unused]] ul3 ufloor(const d3& vec);
 
+    [[maybe_unused]] d3 max(const d3 &a, const d3 &b);
+    [[maybe_unused]] d3 min(const d3 &a, const d3 &b);
+    [[maybe_unused]] d3 max(const d3 &a, double v);
+    [[maybe_unused]] d3 min(const d3 &a, double v);
+    [[maybe_unused]] d3 abs(const d3 &vec);
+
 } // math
 
 #endif //KOMD_ARRAY_H

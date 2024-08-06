@@ -16,10 +16,12 @@ struct Configuration {
     double epsilon = Defaults::epsilon;
     double sigma = Defaults::sigma;
     double stiffness_factor = Defaults::stiffness_factor;
+    double limit_factor = Defaults::limit_factor;
     math::d3 domainLow = Defaults::domainLow;
     math::d3 domainHigh = Defaults::domainHigh;
     bool enableSOA = Defaults::enableSOA;
     uint64_t timesteps = Defaults::timesteps;
+    uint64_t write_freq = Defaults::write_freq;
 };
 
 

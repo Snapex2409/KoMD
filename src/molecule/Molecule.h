@@ -91,6 +91,11 @@ public:
      * */
     void moveCoMTo(const math::d3& position);
 
+    /**
+     * Copies parent location data for all sites, applies offset afterwards
+     * */
+    void copyParentLocation(const math::d3& offset);
+
 private:
     /// Collection of all sites
     sites_t m_sites;

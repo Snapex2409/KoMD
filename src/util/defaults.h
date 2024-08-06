@@ -13,6 +13,7 @@ namespace Defaults {
     static constexpr double mass = 1.0;                 // 1 Dalton = 1u
     static constexpr double delta_t = 0.001;            // 1 ps, 0.001 = 1 fs
     static constexpr double stiffness_factor = 30;      // unit-less
+    static constexpr double limit_factor = 20;          // unit-less
     static constexpr double density = 0.1;              // unit-less, number density
     static constexpr math::d3 r {0, 0, 0};
     static constexpr math::d3 v {0, 0, 0};
@@ -22,6 +23,7 @@ namespace Defaults {
     static constexpr double cutoff = sigma * 2.5;       // in Armstrong
     static constexpr bool enableSOA = false;
     static constexpr uint64_t timesteps = 1;            // unit-less
+    static constexpr uint64_t write_freq = 10;          // unit-less
 }
 
 #endif //KOMD_DEFAULTS_H

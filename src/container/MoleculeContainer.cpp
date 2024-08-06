@@ -88,6 +88,8 @@ void MoleculeContainer::updateContainer() {
 
     // reconstruct all broken SOAs
     constructSOAs();
+
+    clearForces();
 }
 
 void MoleculeContainer::constructSOAs() {
@@ -144,4 +146,15 @@ math::ul3 MoleculeContainer::findCell(const math::d3 &pos, bool& valid) {
 
 Vec3D<Cell> &MoleculeContainer::getCells() {
     return m_data;
+}
+
+void MoleculeContainer::clearForces() {
+    for (uint64_t z = 1; z < m_data.dims().z()-1; z++) {
+        for (uint64_t y = 1; y < m_data.dims().y()-1; y++) {
+            for (uint64_t x = 1; x < m_data.dims().x()-1; x++) {
+                Cell& cell = m_data[x, y, z];
+                cell.clearForces();
+            }
+        }
+    }
 }

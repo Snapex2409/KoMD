@@ -26,6 +26,7 @@ private:
     Vec3D<Cell> m_data;
     void constructSOAs();
     void writeSOA2AOS();
+    void clearForces();
 };
 
 

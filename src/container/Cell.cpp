@@ -85,3 +85,19 @@ std::vector<Molecule>::iterator Cell::removeMolecule(uint64_t id) {
     it->setCell(Cell::INVALID);
     return m_data.erase(it);
 }
+
+void Cell::clearForces() {
+    if (m_valid_soa) {
+        const auto size = m_soa.size();
+        for (uint64_t idx = 0; idx < size; idx++) {
+            m_soa.f()[idx] = {0, 0, 0};
+        }
+    }
+    else {
+        for (Molecule& molecule : m_data) {
+            for (Site& site : molecule.getSites()) {
+                site.f_arr() = {0, 0, 0};
+            }
+        }
+    }
+}

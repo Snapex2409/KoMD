@@ -7,15 +7,20 @@ find_package(OpenMP REQUIRED)
 #list(APPEND CMAKE_PREFIX_PATH "~/libs")
 #find_package(Kokkos REQUIRED)
 
+# modules
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules/)
+# include vtk module
+include(vtk)
+# include OpenMP module
+include(OpenMP)
+
 file(GLOB_RECURSE files src/*.cpp)
 
 add_library(KoMD_lib STATIC ${files})
 target_include_directories(KoMD_lib PUBLIC src)
 target_link_libraries(KoMD_lib
-        PRIVATE OpenMP::OpenMP_CXX
-#        PUBLIC Kokkos::kokkos
+        ${VTK_LIB}     # for VTK/xerces
 )
-
 
 add_executable(KoMD "src/main.cpp")
 target_include_directories(KoMD PUBLIC src)

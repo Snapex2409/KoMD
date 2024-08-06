@@ -53,13 +53,15 @@ void PhasespaceGenerator::generate() {
 
                 const math::d3 center_pos {x, y, z};
                 Molecule molecule;
-                double alpha = uniform(rng), beta = uniform(rng), gamma = uniform(rng);
 
+                //velocity and rotation should be same for all sites
+                double alpha = uniform(rng), beta = uniform(rng), gamma = uniform(rng);
+                const math::d3 v = getMaxwellBoltzmannVelocity(config->temperature, 1.0);
                 for (int idx = 0; idx < 4; idx++) {
-                    const math::d3 site_pos = random_rotate(alpha, beta, gamma, center_pos + coords[idx]);
-                    const math::d3 v = getMaxwellBoltzmannVelocity(config->temperature, 1.0);
+                    const math::d3 site_pos = center_pos + random_rotate(alpha, beta, gamma, coords[idx]);
                     molecule.addSite(config->epsilon, config->sigma, 1.0, site_pos, v);
                 }
+                container->addMolecule(molecule);
             }
         }
     }
@@ -70,7 +72,8 @@ math::d3 PhasespaceGenerator::getMaxwellBoltzmannVelocity(double T, double m) {
     static std::default_random_engine rng(42); // NOLINT(*-msc51-cpp) I know... that's the point
     static const SciValue kbInvConvDa = Constants::kB / Constants::conv_Da_kg;
 
-    double std_dev = std::sqrt((T / m) * kbInvConvDa);
+    double std_dev = std::sqrt((T / m) * kbInvConvDa); // this is in m/s
+    std_dev /= 100.0; // now in A/ps (base unit of simulation)
     std::normal_distribution<double> normal(0, 1);
     math::d3 result {normal(rng), normal(rng), normal(rng)};
     result *= std_dev;

@@ -31,10 +31,12 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "epsilon") file >> config->epsilon;
             if (var == "sigma") file >> config->sigma;
             if (var == "stiffness") file >> config->stiffness_factor;
+            if (var == "limit") file >> config->limit_factor;
             if (var == "domain_low") file >> config->domainLow.x() >> config->domainLow.y() >> config->domainLow.z();
             if (var == "domain_high") file >> config->domainHigh.x() >> config->domainHigh.y() >> config->domainHigh.z();
             if (var == "enableSOA") file >> config->enableSOA;
             if (var == "timesteps") file >> config->timesteps;
+            if (var == "write_freq") file >> config->write_freq;
         }
     }
     file.close();

@@ -11,7 +11,7 @@
 LJ12_6::LJ12_6() : m_cutoff2(std::pow(Registry::instance->configuration()->cutoff, 2)) {}
 
 void LJ12_6::handleCell(Cell &cell) {
-    if (p_use_soa) {
+    if (!p_use_soa) {
         auto& molecules = cell.molecules();
         for (uint64_t mi = 0; mi < molecules.size(); mi++) {
             for (uint64_t mj = mi+1; mj < molecules.size(); mj++) {
@@ -39,7 +39,7 @@ void LJ12_6::handleCell(Cell &cell) {
 }
 
 void LJ12_6::handleCellPair(Cell &cell0, Cell &cell1) {
-    if (p_use_soa) {
+    if (!p_use_soa) {
         auto& molecules0 = cell0.molecules();
         auto& molecules1 = cell1.molecules();
         for (uint64_t mi = 0; mi < molecules0.size(); mi++) {

@@ -6,7 +6,7 @@
 #include "SciValue.h"
 
 SciValue::operator double() const {
-    return m_factor * (double) m_exp;
+    return m_factor * std::pow(10, m_exp);
 }
 
 SciValue &SciValue::operator*=(const SciValue &other) {

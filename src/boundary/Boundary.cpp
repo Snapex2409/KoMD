@@ -101,7 +101,7 @@ void Boundary::createHaloMolecules(Molecule &molecule, const math::ul3& cell_coo
                 halo_copy.moveBy(halo_offset);
                 halo_copy.setParent(molecule);
 
-                const math::ul3 halo_cell_coord = cell_coord + (is_bound * shiftVec) * (domain_size - 2); // TODO check if we do not truncate numbers here
+                const math::ul3 halo_cell_coord = cell_coord + (is_bound * shiftVec) * (cell_dims - 2);
                 Cell& halo_cell = container->getCells()[halo_cell_coord];
                 halo_cell.addMolecule(halo_copy);
                 molecule.registerCopy(halo_cell.molecules().back(), shiftVec);
@@ -133,8 +133,7 @@ void Boundary::updateHaloMolecules(Molecule &molecule, const math::ul3 &cell_coo
                 if (halo_shift != shiftVec) throw std::runtime_error("Something went wrong!");
 
                 const math::d3 halo_offset = domain_size * is_bound * shiftVec;
-                const math::d3 halo_target = halo_offset + molecule.getCenterOfMass();
-                halo_molecule.get().moveCoMTo(halo_target);
+                halo_molecule.get().copyParentLocation(halo_offset);
             }
         }
     }
@@ -148,9 +147,9 @@ void Boundary::loopOverBoundary(std::function<void(Cell&, const math::ul3&)> fun
     for (uint64_t z = 1; z < cell_dims.z()-1; z++) {
         for (uint64_t y = 1; y < cell_dims.y()-1; y++) {
             for (uint64_t x = 1; x < cell_dims.x()-1; x++) {
-                if ((x != 1 && x != cell_dims.x()-1) &&
-                    (y != 1 && y != cell_dims.y()-1) &&
-                    (z != 1 && z != cell_dims.z()-1)) continue;
+                if ((x != 1 && x != cell_dims.x()-2) &&
+                    (y != 1 && y != cell_dims.y()-2) &&
+                    (z != 1 && z != cell_dims.z()-2)) continue;
 
                 Cell& cell = cells[x, y, z];
                 fun(cell, {x, y, z});

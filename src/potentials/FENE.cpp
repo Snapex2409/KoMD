@@ -13,7 +13,7 @@ FENE::FENE() : m_stiffness_factor(Registry::instance->configuration()->stiffness
 }
 
 void FENE::handleCell(Cell &cell) {
-    if (p_use_soa) {
+    if (!p_use_soa) {
         auto& molecules = cell.molecules();
         for (uint64_t mi = 0; mi < molecules.size(); mi++) {
             Molecule& mol_i = molecules[mi];
@@ -43,14 +43,15 @@ void FENE::handleCell(Cell &cell) {
 void FENE::handleCellPair(Cell &cell0, Cell &cell1) { }
 
 void FENE::computeForce(Site &site0, Site &site1) const {
-    const math::d3 dr = site0.r_arr() - site1.r_arr();
+    const math::d3 dr = site1.r_arr() - site0.r_arr();
+    const math::d3 invdr = math::d3{1, 1, 1} / dr;
     const double dr2 = dr.dot(dr);
 
     const double sigma = (site0.getSigma() + site1.getSigma()) / 2.0;
     const double R02 = std::pow(1.5 * sigma, 2);
-    if (R02 == dr2) {
-        site0.f_arr() += 1e+30;
-        site1.f_arr() -= 1e+30;
+    if (R02 <= dr2) {
+        site0.f_arr() += invdr * 1e+30;
+        site1.f_arr() -= invdr * 1e+30;
         return;
     }
 
@@ -58,7 +59,6 @@ void FENE::computeForce(Site &site0, Site &site1) const {
     const double k = m_stiffness_factor * epsilon / std::pow(sigma, 2);
 
     const double fac = (dr2 * k) / (1 - (dr2/R02));
-    const math::d3 invdr = math::d3{1, 1, 1} / dr;
 
     site0.f_arr() += invdr * fac;
     site1.f_arr() -= invdr * fac;
@@ -68,14 +68,15 @@ void FENE::computeForceSOA(uint64_t idx_0, uint64_t idx_1, SOA::vec_t<math::d3> 
                            SOA::vec_t<math::d3> &f0, SOA::vec_t<math::d3> &f1, SOA::vec_t<double> &sigmas0,
                            SOA::vec_t<double> &sigmas1, SOA::vec_t<double> &epsilons0,
                            SOA::vec_t<double> &epsilons1) const {
-    const math::d3 dr = r0[idx_0] - r1[idx_1];
+    const math::d3 dr = r1[idx_1] - r0[idx_0];
+    const math::d3 invdr = math::d3{1, 1, 1} / dr;
     const double dr2 = dr.dot(dr);
 
     const double sigma = (sigmas0[idx_0] + sigmas1[idx_1]) / 2.0;
     const double R02 = std::pow(1.5 * sigma, 2);
-    if (R02 == dr2) {
-        f0[idx_0] += 1e+30;
-        f1[idx_1] -= 1e+30;
+    if (R02 <= dr2) {
+        f0[idx_0] += invdr * 1e+30;
+        f1[idx_1] -= invdr * 1e+30;
         return;
     }
 
@@ -83,7 +84,6 @@ void FENE::computeForceSOA(uint64_t idx_0, uint64_t idx_1, SOA::vec_t<math::d3> 
     const double k = m_stiffness_factor * epsilon / std::pow(sigma, 2);
 
     const double fac = (dr2 * k) / (1 - (dr2/R02));
-    const math::d3 invdr = math::d3{1, 1, 1} / dr;
 
     f0[idx_0] += invdr * fac;
     f1[idx_1] -= invdr * fac;

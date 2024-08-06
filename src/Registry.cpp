@@ -50,3 +50,11 @@ std::shared_ptr<Boundary> Registry::boundary() {
 std::shared_ptr<Boundary> &Registry::boundary_ptr() {
     return m_boundary;
 }
+
+std::shared_ptr<VTKWriter> Registry::vtkWriter() {
+    return m_vtk_writer;
+}
+
+std::shared_ptr<VTKWriter> &Registry::vtkWriter_ptr() {
+    return m_vtk_writer;
+}
