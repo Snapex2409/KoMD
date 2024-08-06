@@ -58,10 +58,10 @@ void FENE::computeForce(Site &site0, Site &site1) const {
     const double epsilon = std::sqrt(site0.getEpsilon() * site1.getEpsilon());
     const double k = m_stiffness_factor * epsilon / std::pow(sigma, 2);
 
-    const double fac = (dr2 * k) / (1 - (dr2/R02));
+    const double fac = k / (1 - (dr2/R02));
 
-    site0.f_arr() += invdr * fac;
-    site1.f_arr() -= invdr * fac;
+    site0.f_arr() += dr * fac;
+    site1.f_arr() -= dr * fac;
 }
 
 void FENE::computeForceSOA(uint64_t idx_0, uint64_t idx_1, SOA::vec_t<math::d3> &r0, SOA::vec_t<math::d3> &r1,
@@ -83,8 +83,8 @@ void FENE::computeForceSOA(uint64_t idx_0, uint64_t idx_1, SOA::vec_t<math::d3> 
     const double epsilon = std::sqrt(epsilons0[idx_0] * epsilons1[idx_1]);
     const double k = m_stiffness_factor * epsilon / std::pow(sigma, 2);
 
-    const double fac = (dr2 * k) / (1 - (dr2/R02));
+    const double fac = k / (1 - (dr2/R02));
 
-    f0[idx_0] += invdr * fac;
-    f1[idx_1] -= invdr * fac;
+    f0[idx_0] += dr * fac;
+    f1[idx_1] -= dr * fac;
 }
