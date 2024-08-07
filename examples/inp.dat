@@ -7,7 +7,7 @@ density 0.001
 epsilon 1
 sigma 1
 stiffness 30
-stiffness 20
+limit 20
 domain_low 0 0 0
 domain_high 10 10 10
 enableSOA 0
