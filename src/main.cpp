@@ -3,6 +3,7 @@
 #include "Registry.h"
 #include "IO/Logging.h"
 #include "IO/FileInput.h"
+#include "IO/CheckpointIO.h"
 #include "potentials/LJ12_6.h"
 #include "potentials/FENE.h"
 #include "util/PhasespaceGenerator.h"
@@ -29,7 +30,9 @@ int main(int argc, char** argv) {
     Registry::instance->forceFunctors().push_back(std::make_unique<Limit>());
     Registry::instance->integrators().push_back(std::make_unique<Integrator>());
 
-    PhasespaceGenerator::generate();
+    if (Registry::instance->configuration()->loadCheckpoint) CheckpointIO::loadCheckpoint();
+    else PhasespaceGenerator::generate();
+
     Registry::instance->boundary()->setup();
     Registry::instance->simulation()->run();
 

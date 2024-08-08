@@ -6,6 +6,7 @@
 #define KOMD_DEFAULTS_H
 
 #include "math/Array.h"
+#include <string>
 
 namespace Defaults {
     static constexpr double sigma = 1.0;                // 1 Armstrong
@@ -22,8 +23,11 @@ namespace Defaults {
     static constexpr math::d3 domainHigh {10, 10, 10};  // in Armstrong
     static constexpr double cutoff = sigma * 2.5;       // in Armstrong
     static constexpr bool enableSOA = false;
+    static constexpr bool loadCheckpoint = false;
+    static constexpr bool storeCheckpoint = false;
     static constexpr uint64_t timesteps = 1;            // unit-less
     static constexpr uint64_t write_freq = 10;          // unit-less
+    static constexpr std::string checkpoint_file = "ckpt_0.ps";
 }
 
 #endif //KOMD_DEFAULTS_H

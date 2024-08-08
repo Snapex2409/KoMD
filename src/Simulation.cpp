@@ -5,6 +5,7 @@
 #include "Simulation.h"
 #include "Registry.h"
 #include "IO/Logging.h"
+#include "IO/CheckpointIO.h"
 
 void Simulation::run() {
     auto config = Registry::instance->configuration();
@@ -36,4 +37,6 @@ void Simulation::run() {
 
         if (simstep % write_freq == 0) vtkWriter->write("VTK_Output", simstep);
     }
+
+    if (config->storeCheckpoint) CheckpointIO::writeCheckpoint(simstep);
 }

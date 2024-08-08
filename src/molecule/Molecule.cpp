@@ -7,7 +7,7 @@
 
 Molecule::id_t Molecule::NEXT_ID = 0;
 
-Molecule::Molecule() : m_sites(), m_id(NEXT_ID++), m_parent(*this), m_links(), m_cell(Cell::INVALID) {}
+Molecule::Molecule() : m_sites(), m_id(NEXT_ID++), m_parent(Cell::INVALID), m_links(), m_cell(Cell::INVALID) {}
 
 Molecule::Molecule(const Molecule &copy) : m_parent(copy.m_parent), m_cell(copy.m_cell) {
     m_sites = copy.m_sites;
@@ -57,19 +57,19 @@ math::d3 Molecule::getCenterOfMass() const {
     return result / total_mass;
 }
 
-void Molecule::registerCopy(Molecule &copy, const math::i3& shift) {
-    m_links.emplace_back(copy, shift);
+void Molecule::registerCopy(Cell& cell, const math::i3& shift) {
+    m_links.emplace_back(cell, shift);
 }
 
-std::vector<std::pair<std::reference_wrapper<Molecule>, math::i3>> &Molecule::getCopies() {
+std::vector<std::pair<std::reference_wrapper<Cell>, math::i3>> &Molecule::getCopies() {
     return m_links;
 }
 
-void Molecule::setParent(Molecule &parent) {
-    m_parent = std::reference_wrapper<Molecule>(parent);
+void Molecule::setParent(Cell& cell) {
+    m_parent = std::reference_wrapper<Cell>(cell);
 }
 
-Molecule &Molecule::getParent() {
+Cell &Molecule::getParent() {
     return m_parent.get();
 }
 
@@ -95,7 +95,7 @@ void Molecule::moveCoMTo(const math::d3 &position) {
 void Molecule::copyParentLocation(const math::d3 &offset) {
     for (uint64_t idx = 0; idx < m_sites.size(); idx++) {
         Site& site = m_sites[idx];
-        Site& p_site = m_parent.get().m_sites[idx];
+        Site& p_site = m_parent.get().findBy(m_id)->m_sites[idx];
         site.r_arr() = p_site.r_arr() + offset;
     }
 }

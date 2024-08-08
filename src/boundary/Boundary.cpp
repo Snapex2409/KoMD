@@ -13,8 +13,9 @@ void Boundary::setup() {
     auto config = Registry::instance->configuration();
     const math::d3 domain_size = config->domainHigh - config->domainLow;
     loopOverBoundary([&](Cell& cell, const math::ul3& cell_coord) -> void {
-        for (Molecule& molecule : cell.molecules()) {
-            createHaloMolecules(molecule, cell_coord, domain_size);
+        for (uint64_t m_idx = 0; m_idx < cell.molecules().size(); m_idx++) {
+            Molecule& molecule = cell.molecules()[m_idx];
+            createHaloMolecules(molecule, cell, m_idx, cell_coord, domain_size);
         }
     });
 }
@@ -60,14 +61,14 @@ void Boundary::moveMolecule(Molecule& molecule) {
     cell.invalidateSOA();
 
     // add halo molecules if needed
-    createHaloMolecules(container->getCells()[cell_coord].molecules().back(), cell_coord, domain_size);
+    createHaloMolecules(cell.molecules().back(), cell, cell.molecules().size()-1, cell_coord, domain_size);
 }
 
 std::vector<Molecule>::iterator Boundary::deleteMolecule(Molecule &molecule) {
     // remove all linked molecules
-    for (auto& [mol_ref, _] : molecule.getCopies()) {
-        auto& mol = mol_ref.get();
-        Cell& cell = mol.getCell();
+    for (auto& [cell_ref, _] : molecule.getCopies()) {
+        Cell& cell = cell_ref.get();
+        Molecule& mol = *cell.findBy(molecule.ID());
         cell.removeMolecule(mol.ID());
         cell.invalidateSOA();
     }
@@ -78,7 +79,7 @@ std::vector<Molecule>::iterator Boundary::deleteMolecule(Molecule &molecule) {
     return molecule.getCell().removeMolecule(molecule.ID());
 }
 
-void Boundary::createHaloMolecules(Molecule &molecule, const math::ul3& cell_coord, const math::d3& domain_size) {
+void Boundary::createHaloMolecules(Molecule& molecule, Cell& cell, uint64_t idx, const math::ul3& cell_coord, const math::d3& domain_size) {
     auto container = Registry::instance->moleculeContainer();
 
     const math::ul3 cell_dims = container->getCells().dims();
@@ -99,12 +100,12 @@ void Boundary::createHaloMolecules(Molecule &molecule, const math::ul3& cell_coo
 
                 Molecule halo_copy = molecule;
                 halo_copy.moveBy(halo_offset);
-                halo_copy.setParent(molecule);
+                halo_copy.setParent(cell);
 
                 const math::ul3 halo_cell_coord = cell_coord + (is_bound * shiftVec) * (cell_dims - 2);
                 Cell& halo_cell = container->getCells()[halo_cell_coord];
                 halo_cell.addMolecule(halo_copy);
-                molecule.registerCopy(halo_cell.molecules().back(), shiftVec);
+                molecule.registerCopy(halo_cell, shiftVec);
                 halo_cell.invalidateSOA();
             }
         }
@@ -129,11 +130,13 @@ void Boundary::updateHaloMolecules(Molecule &molecule, const math::ul3 &cell_coo
             for (int shiftX = 0; shiftX <= ((is_bound.x() != 0) ? 1 : 0); shiftX++) {
                 if (shiftX == 0 && shiftY == 0 && shiftZ == 0) continue;
                 const math::i3 shiftVec {shiftX, shiftY, shiftZ};
-                auto& [halo_molecule, halo_shift] = molecule.getCopies()[idx++];
+                auto& [halo_cell_ref, halo_shift] = molecule.getCopies()[idx++];
                 if (halo_shift != shiftVec) throw std::runtime_error("Something went wrong!");
 
+                Cell& halo_cell = halo_cell_ref.get();
+                Molecule& halo_molecule = *halo_cell.findBy(molecule.ID());
                 const math::d3 halo_offset = domain_size * is_bound * shiftVec;
-                halo_molecule.get().copyParentLocation(halo_offset);
+                halo_molecule.copyParentLocation(halo_offset);
             }
         }
     }

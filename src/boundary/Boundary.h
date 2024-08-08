@@ -38,10 +38,13 @@ public:
     /**
      * Creates HaloMolecules for the given molecule, if it is in a boundary cell.
      * Otherwise, nothing happens.
+     * @param molecule Molecule reference
+     * @param cell cell of molecule
+     * @param idx position of molecule in cell
      * @param cell_coord coordinate of cell, in which molecule is
      * @param domain_size size of active domain
      * */
-    void createHaloMolecules(Molecule& molecule, const math::ul3& cell_coord, const math::d3& domain_size);
+    void createHaloMolecules(Molecule& molecule, Cell& cell, uint64_t idx, const math::ul3& cell_coord, const math::d3& domain_size);
 
     /**
      * Patches HaloMolecules for the given molecule, if it is in a boundary cell. (Fixes the position)

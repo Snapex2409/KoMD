@@ -37,20 +37,18 @@ void PhasespaceGenerator::generate() {
         math::d3 {0.35355339, -0.35355339, -0.35355339}
     };
 
-    uint64_t counter = 0;
-    const auto spacing = static_cast<uint64_t>(1.0 / density);
+    const math::d3 domain_size = config->domainHigh - config->domainLow;
+    const double domain_volume = domain_size.product();
+    const double num_molecules = density * domain_volume;
+    const double mol_per_dim = std::pow(num_molecules, 1./3.);
+    const math::d3 spacing = domain_size / mol_per_dim;
+
     static std::default_random_engine rng(43); // NOLINT(*-msc51-cpp) I know... that's the point
     std::uniform_real_distribution<double> uniform(0, M_PI * 2);
 
-    for (double z = config->domainLow.z() + 0.5; z < config->domainHigh.z(); z += 1.0) {
-        for (double y = config->domainLow.y() + 0.5; y < config->domainHigh.y(); y += 1.0) {
-            for (double x = config->domainLow.x() + 0.5; x < config->domainHigh.x(); x += 1.0) {
-                if (counter % spacing == 0) counter++;
-                else {
-                    counter++;
-                    continue;
-                }
-
+    for (double z = config->domainLow.z() + 0.5; z < config->domainHigh.z(); z += spacing.z()) {
+        for (double y = config->domainLow.y() + 0.5; y < config->domainHigh.y(); y += spacing.y()) {
+            for (double x = config->domainLow.x() + 0.5; x < config->domainHigh.x(); x += spacing.x()) {
                 const math::d3 center_pos {x, y, z};
                 Molecule molecule;
 
@@ -61,6 +59,7 @@ void PhasespaceGenerator::generate() {
                     const math::d3 site_pos = center_pos + random_rotate(alpha, beta, gamma, coords[idx]);
                     molecule.addSite(config->epsilon, config->sigma, 1.0, site_pos, v);
                 }
+                //molecule.addSite(config->epsilon, config->sigma, 1.0, center_pos, v);
                 container->addMolecule(molecule);
             }
         }

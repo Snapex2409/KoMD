@@ -16,15 +16,16 @@
 #include <iostream>
 #include <string>
 
-void VTKWriter::write(const std::string &filename, int iteration) {
+void VTKWriter::write(const std::string &filename, int iteration, bool writeHalo) {
     auto container = Registry::instance->moleculeContainer();
     auto& cells = container->getCells();
     const auto cell_dims = cells.dims();
 
     uint64_t sites = 0;
-    for (uint64_t z = 0; z < cell_dims.z(); z++) {
-        for (uint64_t y = 0; y < cell_dims.y(); y++) {
-            for (uint64_t x = 0; x < cell_dims.x(); x++) {
+    uint64_t offset = writeHalo ? 0 : 1;
+    for (uint64_t z = 0 + offset; z < cell_dims.z() - offset; z++) {
+        for (uint64_t y = 0 + offset; y < cell_dims.y() - offset; y++) {
+            for (uint64_t x = 0 + offset; x < cell_dims.x() - offset; x++) {
                 Cell& cell = cells[x, y, z];
                 for (Molecule& molecule : cell.molecules()) sites += molecule.getSites().size();
             }
@@ -33,9 +34,9 @@ void VTKWriter::write(const std::string &filename, int iteration) {
 
     initializeOutput(sites);
 
-    for (uint64_t z = 0; z < cell_dims.z(); z++) {
-        for (uint64_t y = 0; y < cell_dims.y(); y++) {
-            for (uint64_t x = 0; x < cell_dims.x(); x++) {
+    for (uint64_t z = 0 + offset; z < cell_dims.z() - offset; z++) {
+        for (uint64_t y = 0 + offset; y < cell_dims.y() - offset; y++) {
+            for (uint64_t x = 0 + offset; x < cell_dims.x() - offset; x++) {
                 Cell& cell = cells[x, y, z];
                 for (Molecule& molecule : cell.molecules()) plotMolecule(molecule);
             }

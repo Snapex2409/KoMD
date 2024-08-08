@@ -16,7 +16,7 @@ class VTKFile_t;
  */
 class VTKWriter {
 public:
-    void write(const std::string &filename, int iteration);
+    void write(const std::string &filename, int iteration, bool writeHalo=false);
 
 private:
     /**

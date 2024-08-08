@@ -37,6 +37,11 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "enableSOA") file >> config->enableSOA;
             if (var == "timesteps") file >> config->timesteps;
             if (var == "write_freq") file >> config->write_freq;
+            if (var == "store_checkpoint") file >> config->storeCheckpoint;
+            if (var == "checkpoint_file") {
+                file >> config->checkpoint_file;
+                config->loadCheckpoint = true;
+            }
         }
     }
     file.close();

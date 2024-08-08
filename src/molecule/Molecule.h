@@ -39,6 +39,11 @@ public:
     [[nodiscard]] id_t ID() const { return m_id; }
 
     /**
+     * Sets the molecule id
+     * */
+    void setID(id_t id) { m_id = id; }
+
+    /**
      * Gets reference to this molecules sites
      * */
     sites_t& getSites();
@@ -53,22 +58,22 @@ public:
      * Store copy (new halo molecule) as a reference for bookkeeping
      * @param shift binary shift vector for faster lookup, used in Boundary.cpp
      * */
-    void registerCopy(Molecule& copy, const math::i3& shift);
+    void registerCopy(Cell& cell, const math::i3& shift);
 
     /**
      * Access to all copies
      * */
-    std::vector<std::pair<std::reference_wrapper<Molecule>, math::i3>>& getCopies();
+    std::vector<std::pair<std::reference_wrapper<Cell>, math::i3>>& getCopies();
 
     /**
-     * Store reference to original copy (assuming this is a halo molecule)
+     * Store reference to original copy's cell (assuming this is a halo molecule)
      * */
-    void setParent(Molecule& parent);
+    void setParent(Cell& cell);
 
     /**
-     * Access to parent copy
+     * Access to parent copy cell
      * */
-    Molecule& getParent();
+    Cell& getParent();
 
     /**
      * Store reference to current cell
@@ -102,9 +107,9 @@ private:
     /// Globally unique id
     id_t m_id;
     /// Linked Molecules
-    std::vector<std::pair<std::reference_wrapper<Molecule>, math::i3>> m_links;
+    std::vector<std::pair<std::reference_wrapper<Cell>, math::i3>> m_links;
     /// Parent Molecule
-    std::reference_wrapper<Molecule> m_parent;
+    std::reference_wrapper<Cell> m_parent;
     /// Current Cell
     std::reference_wrapper<Cell> m_cell;
 

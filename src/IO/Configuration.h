@@ -7,6 +7,7 @@
 
 #include "util/defaults.h"
 #include "math/Array.h"
+#include <string>
 
 struct Configuration {
     double temperature = Defaults::temperature;
@@ -20,8 +21,11 @@ struct Configuration {
     math::d3 domainLow = Defaults::domainLow;
     math::d3 domainHigh = Defaults::domainHigh;
     bool enableSOA = Defaults::enableSOA;
+    bool loadCheckpoint = Defaults::loadCheckpoint;
+    bool storeCheckpoint = Defaults::storeCheckpoint;
     uint64_t timesteps = Defaults::timesteps;
     uint64_t write_freq = Defaults::write_freq;
+    std::string checkpoint_file = Defaults::checkpoint_file;
 };
 
 
