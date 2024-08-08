@@ -22,10 +22,10 @@ public:
      * Returns a valid cell coordinate if pos is within simulation bounds, else returned result is invalid and valid is set to false
      * */
     math::ul3 findCell(const math::d3& pos, bool& valid);
+    void writeSOA2AOS();
 private:
     Vec3D<Cell> m_data;
     void constructSOAs();
-    void writeSOA2AOS();
     void clearForces();
 };
 

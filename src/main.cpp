@@ -8,6 +8,8 @@
 #include "potentials/FENE.h"
 #include "util/PhasespaceGenerator.h"
 #include "potentials/Limit.h"
+#include "sensors/LJ12_6_Sensor.h"
+#include "sensors/FENE_Sensor.h"
 
 static void init();
 static void finalize();
@@ -32,6 +34,9 @@ int main(int argc, char** argv) {
 
     if (Registry::instance->configuration()->loadCheckpoint) CheckpointIO::loadCheckpoint();
     else PhasespaceGenerator::generate();
+
+    if (Registry::instance->configuration()->enable_sensor_lj) Registry::instance->sensors().push_back(std::make_unique<LJ12_6_Sensor>());
+    if (Registry::instance->configuration()->enable_sensor_fene) Registry::instance->sensors().push_back(std::make_unique<FENE_Sensor>());
 
     Registry::instance->boundary()->setup();
     Registry::instance->simulation()->run();

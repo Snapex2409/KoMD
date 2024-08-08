@@ -21,9 +21,6 @@ Site::Site(double epsilon, double sigma, double mass, const math::d3 &r, const m
 [[maybe_unused, nodiscard]] math::d3 &Site::f_arr() {
     return m_f;
 }
-[[maybe_unused, nodiscard]] math::d3 &Site::fold_arr() {
-    return m_fold;
-}
 [[maybe_unused, nodiscard]] math::d3 &Site::v_arr() {
     return m_v;
 }
@@ -32,9 +29,6 @@ Site::Site(double epsilon, double sigma, double mass, const math::d3 &r, const m
 }
 [[maybe_unused, nodiscard]] const math::d3 &Site::f_arr() const {
     return m_f;
-}
-[[maybe_unused, nodiscard]] const math::d3 &Site::fold_arr() const {
-    return m_fold;
 }
 [[maybe_unused, nodiscard]] const math::d3 &Site::v_arr() const {
     return m_v;

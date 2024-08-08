@@ -12,6 +12,7 @@
 
 void CheckpointIO::writeCheckpoint(uint64_t simstep) {
     auto container = Registry::instance->moleculeContainer();
+    container->writeSOA2AOS();
 
     std::stringstream file_name;
     file_name << "ckpt_" << simstep << ".ps";

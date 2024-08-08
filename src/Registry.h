@@ -15,6 +15,7 @@
 #include "Simulation.h"
 #include "boundary/Boundary.h"
 #include "IO/VTKWriter.h"
+#include "sensors/Sensor.h"
 
 class Registry {
 public:
@@ -24,6 +25,7 @@ public:
     std::shared_ptr<Configuration> configuration();
     std::vector<std::unique_ptr<ForceFunctor>>& forceFunctors();
     std::vector<std::unique_ptr<Integrator>>& integrators();
+    std::vector<std::unique_ptr<Sensor>>& sensors();
     std::shared_ptr<MoleculeContainer> moleculeContainer();
     std::shared_ptr<Simulation> simulation();
     std::shared_ptr<Boundary> boundary();
@@ -38,6 +40,7 @@ private:
     std::shared_ptr<Configuration> m_configuration;
     std::vector<std::unique_ptr<ForceFunctor>> m_forceFunctors;
     std::vector<std::unique_ptr<Integrator>> m_integrators;
+    std::vector<std::unique_ptr<Sensor>> m_sensors;
     std::shared_ptr<MoleculeContainer> m_moleculeContainer;
     std::shared_ptr<Simulation> m_simulation;
     std::shared_ptr<Boundary> m_boundary;

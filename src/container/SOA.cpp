@@ -11,7 +11,6 @@ SOA::SOA(uint64_t size) : m_current_size(size) {
     m_id.resize(size);
     m_r.resize(size);
     m_f.resize(size);
-    m_fold.resize(size);
     m_v.resize(size);
 }
 
@@ -22,7 +21,6 @@ void SOA::resize(uint64_t newSize) {
     m_id.resize(newSize);
     m_r.resize(newSize);
     m_f.resize(newSize);
-    m_fold.resize(newSize);
     m_v.resize(newSize);
 
     m_current_size = newSize;

@@ -23,6 +23,10 @@ std::vector<std::unique_ptr<Integrator>> &Registry::integrators() {
     return m_integrators;
 }
 
+std::vector<std::unique_ptr<Sensor>> &Registry::sensors() {
+    return m_sensors;
+}
+
 std::shared_ptr<MoleculeContainer> Registry::moleculeContainer() {
     return m_moleculeContainer;
 }

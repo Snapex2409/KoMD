@@ -20,11 +20,9 @@ public:
     [[maybe_unused, nodiscard]] double getMass() const;
     [[maybe_unused, nodiscard]] math::d3& r_arr();
     [[maybe_unused, nodiscard]] math::d3& f_arr();
-    [[maybe_unused, nodiscard]] math::d3& fold_arr();
     [[maybe_unused, nodiscard]] math::d3& v_arr();
     [[maybe_unused, nodiscard]] const math::d3& r_arr() const;
     [[maybe_unused, nodiscard]] const math::d3& f_arr() const;
-    [[maybe_unused, nodiscard]] const math::d3& fold_arr() const;
     [[maybe_unused, nodiscard]] const math::d3& v_arr() const;
 private:
     double m_epsilon;
@@ -32,7 +30,6 @@ private:
     double m_m;
     math::d3 m_r;
     math::d3 m_f;
-    math::d3 m_fold;
     math::d3 m_v;
 };
 

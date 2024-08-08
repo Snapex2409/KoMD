@@ -39,7 +39,6 @@ void Cell::constructSOA() {
             m_soa.id()[idx] = molecule.ID();
             m_soa.r()[idx] = site.r_arr();
             m_soa.f()[idx] = site.f_arr();
-            m_soa.fold()[idx] = site.fold_arr();
             m_soa.v()[idx] = site.v_arr();
             idx++;
         }
@@ -56,7 +55,6 @@ void Cell::writeSOA2AOS() {
         for (Site& site : molecule.getSites()) {
             site.r_arr() = m_soa.r()[idx];
             site.f_arr() = m_soa.f()[idx];
-            site.fold_arr() = m_soa.fold()[idx];
             site.v_arr() = m_soa.v()[idx];
             idx++;
         }

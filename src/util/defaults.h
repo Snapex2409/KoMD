@@ -23,11 +23,16 @@ namespace Defaults {
     static constexpr math::d3 domainHigh {10, 10, 10};  // in Armstrong
     static constexpr double cutoff = sigma * 2.5;       // in Armstrong
     static constexpr bool enableSOA = false;
+    static constexpr bool enable_sensor_lj = false;
+    static constexpr bool enable_sensor_fene = false;
     static constexpr bool loadCheckpoint = false;
     static constexpr bool storeCheckpoint = false;
     static constexpr uint64_t timesteps = 1;            // unit-less
     static constexpr uint64_t write_freq = 10;          // unit-less
     static constexpr std::string checkpoint_file = "ckpt_0.ps";
+
+    static constexpr uint64_t sensor_lj_bins = 100;
+    static constexpr uint64_t sensor_fene_bins = 100;
 }
 
 #endif //KOMD_DEFAULTS_H

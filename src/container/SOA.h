@@ -21,7 +21,6 @@ public:
     vec_t<uint64_t>& id() { return m_id; };
     vec_t<math::d3>& r() { return m_r; };
     vec_t<math::d3>& f() { return m_f; };
-    vec_t<math::d3>& fold() { return m_fold; };
     vec_t<math::d3>& v() { return m_v; };
     uint64_t size() { return m_current_size; }
 private:
@@ -31,7 +30,6 @@ private:
     vec_t<uint64_t> m_id;
     vec_t<math::d3> m_r;
     vec_t<math::d3> m_f;
-    vec_t<math::d3> m_fold;
     vec_t<math::d3> m_v;
 
     uint64_t m_current_size;

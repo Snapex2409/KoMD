@@ -23,9 +23,14 @@ struct Configuration {
     bool enableSOA = Defaults::enableSOA;
     bool loadCheckpoint = Defaults::loadCheckpoint;
     bool storeCheckpoint = Defaults::storeCheckpoint;
+    bool enable_sensor_lj = Defaults::enable_sensor_lj;
+    bool enable_sensor_fene = Defaults::enable_sensor_fene;
     uint64_t timesteps = Defaults::timesteps;
     uint64_t write_freq = Defaults::write_freq;
     std::string checkpoint_file = Defaults::checkpoint_file;
+
+    uint64_t sensor_lj_bins = Defaults::sensor_lj_bins;
+    uint64_t sensor_fene_bins = Defaults::sensor_fene_bins;
 };
 
 

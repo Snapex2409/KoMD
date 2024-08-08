@@ -10,6 +10,7 @@
 void Simulation::run() {
     auto config = Registry::instance->configuration();
     auto& integrators = Registry::instance->integrators();
+    auto& sensors = Registry::instance->sensors();
     auto container = Registry::instance->moleculeContainer();
     auto& potentials = Registry::instance->forceFunctors();
     auto vtkWriter = Registry::instance->vtkWriter();
@@ -31,6 +32,8 @@ void Simulation::run() {
         for (auto& potential : potentials) (*potential)();
         for (auto& integrator : integrators) integrator->integrate1();
 
+        for (auto& sensor : sensors) sensor->measure();
+
         Log::simulation->info() << "Simstep=" << simstep << " t=" << t << std::endl;
         t += dt;
         simstep++;
@@ -38,5 +41,6 @@ void Simulation::run() {
         if (simstep % write_freq == 0) vtkWriter->write("VTK_Output", simstep);
     }
 
+    for (auto& sensor : sensors) sensor->write(simstep);
     if (config->storeCheckpoint) CheckpointIO::writeCheckpoint(simstep);
 }
