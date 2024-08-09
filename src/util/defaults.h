@@ -33,6 +33,7 @@ namespace Defaults {
 
     static constexpr uint64_t sensor_lj_bins = 100;
     static constexpr uint64_t sensor_fene_bins = 100;
+    static constexpr bool sensor_temp_opt = false;
 }
 
 #endif //KOMD_DEFAULTS_H

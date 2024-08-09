@@ -31,6 +31,7 @@ struct Configuration {
 
     uint64_t sensor_lj_bins = Defaults::sensor_lj_bins;
     uint64_t sensor_fene_bins = Defaults::sensor_fene_bins;
+    bool sensor_temp_opt = Defaults::sensor_temp_opt;
 };
 
 
