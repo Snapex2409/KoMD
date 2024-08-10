@@ -72,7 +72,7 @@ math::d3 PhasespaceGenerator::getMaxwellBoltzmannVelocity(double T, double m) {
     static const SciValue kbInvConvDa = Constants::kB / Constants::conv_Da_kg;
 
     double std_dev = std::sqrt((T / m) * kbInvConvDa); // this is in m/s
-    std_dev /= 100.0; // now in A/ps (base unit of simulation)
+    std_dev *= Constants::conv_ms_Aps; // now in A/ps (base unit of simulation)
     std::normal_distribution<double> normal(0, 1);
     math::d3 result {normal(rng), normal(rng), normal(rng)};
     result *= std_dev;

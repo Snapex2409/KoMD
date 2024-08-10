@@ -35,8 +35,10 @@ int main(int argc, char** argv) {
     if (Registry::instance->configuration()->loadCheckpoint) CheckpointIO::loadCheckpoint();
     else PhasespaceGenerator::generate();
 
-    if (Registry::instance->configuration()->enable_sensor_lj) Registry::instance->sensors().push_back(std::make_unique<LJ12_6_Sensor>());
-    if (Registry::instance->configuration()->enable_sensor_fene) Registry::instance->sensors().push_back(std::make_unique<FENE_Sensor>());
+    Registry::instance->temperature_sensor_ptr() = std::make_shared<TemperatureSensor>();
+    Registry::instance->sensors().push_back(std::dynamic_pointer_cast<Sensor>(Registry::instance->temperature_sensor()));
+    if (Registry::instance->configuration()->enable_sensor_lj) Registry::instance->sensors().push_back(std::make_shared<LJ12_6_Sensor>());
+    if (Registry::instance->configuration()->enable_sensor_fene) Registry::instance->sensors().push_back(std::make_shared<FENE_Sensor>());
 
     Registry::instance->boundary()->setup();
     Registry::instance->simulation()->run();

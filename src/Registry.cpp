@@ -23,7 +23,7 @@ std::vector<std::unique_ptr<Integrator>> &Registry::integrators() {
     return m_integrators;
 }
 
-std::vector<std::unique_ptr<Sensor>> &Registry::sensors() {
+std::vector<std::shared_ptr<Sensor>> &Registry::sensors() {
     return m_sensors;
 }
 
@@ -61,4 +61,12 @@ std::shared_ptr<VTKWriter> Registry::vtkWriter() {
 
 std::shared_ptr<VTKWriter> &Registry::vtkWriter_ptr() {
     return m_vtk_writer;
+}
+
+std::shared_ptr<TemperatureSensor> Registry::temperature_sensor() {
+    return m_sensor_temp;
+}
+
+std::shared_ptr<TemperatureSensor> & Registry::temperature_sensor_ptr() {
+    return m_sensor_temp;
 }

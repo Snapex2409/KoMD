@@ -11,6 +11,7 @@ void Simulation::run() {
     auto config = Registry::instance->configuration();
     auto& integrators = Registry::instance->integrators();
     auto& sensors = Registry::instance->sensors();
+    auto temp_sens = Registry::instance->temperature_sensor();
     auto container = Registry::instance->moleculeContainer();
     auto& potentials = Registry::instance->forceFunctors();
     auto vtkWriter = Registry::instance->vtkWriter();
@@ -21,6 +22,8 @@ void Simulation::run() {
     //initial pass to compute forces
     container->updateContainer();
     for (auto& potential : potentials) (*potential)();
+    temp_sens->measure();
+    Log::simulation->info() << "Initial temperature T=" << temp_sens->getTemperature() << std::endl;
 
     // main loop
     double t = 0;
@@ -34,7 +37,7 @@ void Simulation::run() {
 
         for (auto& sensor : sensors) sensor->measure();
 
-        Log::simulation->info() << "Simstep=" << simstep << " t=" << t << std::endl;
+        Log::simulation->info() << "Simstep=" << simstep << " t=" << t << " T=" << temp_sens->getTemperature() << std::endl;
         t += dt;
         simstep++;
 

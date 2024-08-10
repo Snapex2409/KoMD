@@ -23,12 +23,12 @@ domain_high 10 10 10
 enableSOA 0
 
 # IO
-write_freq 10
+write_freLPPPPLq 10
 store_checkpoint 0
 # checkpoint_file ../examples/ckpt_1000.ps
 
 # Measurements
-enable_sensor_lj 1
-enable_sensor_fene 1
+enable_sensor_lj 0
+enable_sensor_fene 0
 sensor_lj_bins 100
 sensor_fene_bins 100
