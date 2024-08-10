@@ -15,6 +15,7 @@ void Simulation::run() {
     auto container = Registry::instance->moleculeContainer();
     auto& potentials = Registry::instance->forceFunctors();
     auto vtkWriter = Registry::instance->vtkWriter();
+    auto& thermostats = Registry::instance->thermostats();
 
     const double dt = config->delta_t;
     const uint64_t write_freq = config->write_freq;
@@ -24,6 +25,7 @@ void Simulation::run() {
     for (auto& potential : potentials) (*potential)();
     temp_sens->measure();
     Log::simulation->info() << "Initial temperature T=" << temp_sens->getTemperature() << std::endl;
+    for (auto& thermostat : thermostats) thermostat->apply();
 
     // main loop
     double t = 0;
@@ -42,6 +44,8 @@ void Simulation::run() {
         simstep++;
 
         if (simstep % write_freq == 0) vtkWriter->write("VTK_Output", simstep);
+
+        for (auto& thermostat : thermostats) thermostat->apply();
     }
 
     for (auto& sensor : sensors) sensor->write(simstep);

@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <vector>
+#include <thermostats/Thermostat.h>
 
 #include "container/MoleculeContainer.h"
 #include "integrators/Integrator.h"
@@ -32,6 +33,7 @@ public:
     std::shared_ptr<Boundary> boundary();
     std::shared_ptr<VTKWriter> vtkWriter();
     std::shared_ptr<TemperatureSensor> temperature_sensor();
+    std::vector<std::unique_ptr<Thermostat>>& thermostats();
 
     std::shared_ptr<Configuration>& configuration_ptr();
     std::shared_ptr<MoleculeContainer>& moleculeContainer_ptr();
@@ -49,6 +51,7 @@ private:
     std::shared_ptr<Boundary> m_boundary;
     std::shared_ptr<VTKWriter> m_vtk_writer;
     std::shared_ptr<TemperatureSensor> m_sensor_temp;
+    std::vector<std::unique_ptr<Thermostat>> m_thermostats;
 };
 
 

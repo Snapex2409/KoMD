@@ -10,6 +10,7 @@
 #include "potentials/Limit.h"
 #include "sensors/LJ12_6_Sensor.h"
 #include "sensors/FENE_Sensor.h"
+#include "thermostats/VelocityScaling.h"
 
 static void init();
 static void finalize();
@@ -39,6 +40,8 @@ int main(int argc, char** argv) {
     Registry::instance->sensors().push_back(std::dynamic_pointer_cast<Sensor>(Registry::instance->temperature_sensor()));
     if (Registry::instance->configuration()->enable_sensor_lj) Registry::instance->sensors().push_back(std::make_shared<LJ12_6_Sensor>());
     if (Registry::instance->configuration()->enable_sensor_fene) Registry::instance->sensors().push_back(std::make_shared<FENE_Sensor>());
+
+    Registry::instance->thermostats().push_back(std::make_unique<VelocityScaling>());
 
     Registry::instance->boundary()->setup();
     Registry::instance->simulation()->run();

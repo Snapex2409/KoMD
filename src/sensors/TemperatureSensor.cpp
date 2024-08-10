@@ -59,6 +59,7 @@ void TemperatureSensor::measure() {
 
     static const SciValue convDaInvkb = Constants::conv_Da_kg / Constants::kB;
     static const SciValue factor = Constants::conv_Aps_ms * Constants::conv_Aps_ms * convDaInvkb;
+    num_sites *= 3; // for 3 dimensions
     m_temperature = factor * (mv2 / num_sites);
 }
 
