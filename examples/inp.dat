@@ -4,10 +4,10 @@
 temperature 300
 delta_t 0.001
 cutoff 5
-timesteps 100
+timesteps 10
 
 # Phasespace
-density 0.1
+density 0.01
 
 # Potentials
 epsilon 1
@@ -23,12 +23,16 @@ domain_high 10 10 10
 enableSOA 0
 
 # IO
-write_freLPPPPLq 10
+write_freq 10
 store_checkpoint 0
 # checkpoint_file ../examples/ckpt_1000.ps
 
 # Measurements
 enable_sensor_lj 0
 enable_sensor_fene 0
+enable_sensor_rdf 1
+
 sensor_lj_bins 100
 sensor_fene_bins 100
+sensor_rdf_max 5
+sensor_rdf_dr 0.1

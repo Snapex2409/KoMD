@@ -25,6 +25,7 @@ namespace Defaults {
     static constexpr bool enableSOA = false;
     static constexpr bool enable_sensor_lj = false;
     static constexpr bool enable_sensor_fene = false;
+    static constexpr bool enable_sensor_rdf = false;
     static constexpr bool loadCheckpoint = false;
     static constexpr bool storeCheckpoint = false;
     static constexpr uint64_t timesteps = 1;            // unit-less
@@ -34,6 +35,8 @@ namespace Defaults {
     static constexpr uint64_t sensor_lj_bins = 100;
     static constexpr uint64_t sensor_fene_bins = 100;
     static constexpr bool sensor_temp_opt = false;
+    static constexpr double sensor_rdf_max = 5.0;
+    static constexpr double sensor_rdf_dr = 0.1;
 }
 
 #endif //KOMD_DEFAULTS_H

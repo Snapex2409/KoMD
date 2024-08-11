@@ -39,8 +39,11 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "write_freq") file >> config->write_freq;
             if (var == "enable_sensor_lj") file >> config->enable_sensor_lj;
             if (var == "enable_sensor_fene") file >> config->enable_sensor_fene;
+            if (var == "enable_sensor_rdf") file >> config->enable_sensor_rdf;
             if (var == "sensor_lj_bins") file >> config->sensor_lj_bins;
             if (var == "sensor_fene_bins") file >> config->sensor_fene_bins;
+            if (var == "sensor_rdf_max") file >> config->sensor_rdf_max;
+            if (var == "sensor_rdf_dr") file >> config->sensor_rdf_dr;
             if (var == "store_checkpoint") file >> config->storeCheckpoint;
             if (var == "checkpoint_file") {
                 file >> config->checkpoint_file;
