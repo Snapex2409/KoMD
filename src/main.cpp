@@ -13,12 +13,14 @@
 #include "sensors/RDFSensor.h"
 #include "thermostats/VelocityScaling.h"
 
-static void init();
+#include "Kokkos_Core.hpp"
+
+static void init(int argc, char** argv);
 static void finalize();
 static void quit(int code);
 
 int main(int argc, char** argv) {
-    init();
+    init(argc, argv);
 
     if (argc <= 1) {
         std::cout << "Run program with: KoMD <input file>" << std::endl;
@@ -53,7 +55,8 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-static void init() {
+static void init(int argc, char** argv) {
+    Kokkos::initialize(argc, argv);
     Registry::instance = std::make_unique<Registry>();
     Registry::instance->configuration_ptr() = std::make_shared<Configuration>();
     Registry::instance->vtkWriter_ptr() = std::make_shared<VTKWriter>();
@@ -62,6 +65,7 @@ static void init() {
 
 static void finalize() {
     Log::finalize();
+    Kokkos::finalize();
 }
 
 static void quit(int code) {

@@ -24,7 +24,7 @@ void VelocityScaling::apply() {
     for (uint64_t z = 1; z < cell_dims.z()-1; z++) {
         for (uint64_t y = 1; y < cell_dims.y()-1; y++) {
             for (uint64_t x = 1; x < cell_dims.x()-1; x++) {
-                Cell& cell = cells[x, y, z];
+                Cell& cell = cells(x, y, z);
 
                 if (!m_use_soa) {
                     for (Molecule& molecule : cell.molecules()) {

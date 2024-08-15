@@ -56,10 +56,10 @@ void PhasespaceGenerator::generate() {
                 double alpha = uniform(rng), beta = uniform(rng), gamma = uniform(rng);
                 const math::d3 v = getMaxwellBoltzmannVelocity(config->temperature, 1.0);
                 for (int idx = 0; idx < 4; idx++) {
-                    //const math::d3 site_pos = center_pos + random_rotate(alpha, beta, gamma, coords[idx]);
-                    //molecule.addSite(config->epsilon, config->sigma, 1.0, site_pos, v);
+                    const math::d3 site_pos = center_pos + random_rotate(alpha, beta, gamma, coords[idx]);
+                    molecule.addSite(config->epsilon, config->sigma, 1.0, site_pos, v);
                 }
-                molecule.addSite(config->epsilon, config->sigma, 1.0, center_pos, v);
+                //molecule.addSite(config->epsilon, config->sigma, 1.0, center_pos, v);
                 container->addMolecule(molecule);
             }
         }

@@ -8,10 +8,12 @@
 #include <vector>
 #include "math/Array.h"
 
+#include "Kokkos_Core.hpp"
+
 class SOA {
 public:
     template<typename T>
-    using vec_t = std::vector<T>;
+    using vec_t = Kokkos::View<T*, Kokkos::SharedSpace>;
 
     explicit SOA(uint64_t size = 0);
     void resize(uint64_t newSize);

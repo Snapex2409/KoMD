@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <array>
 #include <cmath>
+#include "Kokkos_Macros.hpp"
 
 namespace math {
     template<typename T, uint64_t N>
@@ -126,7 +127,13 @@ namespace math {
         /**
          * Constructs Array filled with 0
          * */
-        explicit Array() : m_data() {}
+        KOKKOS_INLINE_FUNCTION explicit Array() : m_data() {}
+
+        template<typename O>
+        KOKKOS_INLINE_FUNCTION Array& operator=(const Array<O,3>& other) {
+            for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = other[idx];
+            return *this;
+        }
 
         /// Access to raw pointer
         T* data() { return m_data.data(); }

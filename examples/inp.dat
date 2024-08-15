@@ -3,11 +3,11 @@
 # General
 temperature 300
 delta_t 0.001
-cutoff 5
+cutoff 2.5
 timesteps 10000
 
 # Phasespace
-density 0.01
+density 1.0
 
 # Potentials
 epsilon 1

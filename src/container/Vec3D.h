@@ -35,28 +35,28 @@ public:
     /**
      * Access to data using coord tuple
      * */
-    T& operator[](const math::ul3& coord) {
+    T& operator()(const math::ul3& coord) {
         return m_data[mapSpatial2Flat(coord)];
     }
 
     /**
      * Access to data using coord tuple
      * */
-    T& operator[](uint64_t x, uint64_t y, uint64_t z) {
+    T& operator()(uint64_t x, uint64_t y, uint64_t z) {
         return m_data[mapSpatial2Flat(x, y, z)];
     }
 
     /**
      * Access to data using coord tuple
      * */
-    T operator[](const math::ul3& coord) const {
+    T operator()(const math::ul3& coord) const {
         return m_data[mapSpatial2Flat(coord)];
     }
 
     /**
      * Access to data using coord tuple
      * */
-    T operator[](uint64_t x, uint64_t y, uint64_t z) const {
+    T operator()(uint64_t x, uint64_t y, uint64_t z) const {
         return m_data[mapSpatial2Flat(x, y, z)];
     }
 

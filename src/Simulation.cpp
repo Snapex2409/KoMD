@@ -25,7 +25,9 @@ void Simulation::run() {
     container->updateContainer();
     for (auto& potential : potentials) (*potential)();
     temp_sens->measure();
+    pot_sens->measure();
     Log::simulation->info() << "Initial temperature T=" << temp_sens->getTemperature() << std::endl;
+    if (config->enable_sensor_lj) Log::simulation->info() << "Initial potential u=" << pot_sens->getCurrentPotential() << std::endl;
     for (auto& thermostat : thermostats) thermostat->apply();
 
     // main loop

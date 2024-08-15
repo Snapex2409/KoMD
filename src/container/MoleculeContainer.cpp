@@ -26,7 +26,7 @@ MoleculeContainer::MoleculeContainer() : m_data() {
             for (uint64_t cx = 0; cx < num_cells_domain.x(); cx++) {
                 high.x() = (cx == num_cells_domain.x() - 2) ? config->domainHigh.x() : (low.x() + config->cutoff);
 
-                m_data[cx, cy, cz].setBounds(low, high);
+                m_data(cx, cy, cz).setBounds(low, high);
 
                 low.x() = high.x();
             }
@@ -46,7 +46,7 @@ void MoleculeContainer::addMolecule(const Molecule &molecule) {
     if (!valid) throw std::runtime_error("Inserting Molecule at invalid position.");
 
     // insert into cell
-    m_data[cell_coord].addMolecule(molecule);
+    m_data(cell_coord).addMolecule(molecule);
 }
 
 void MoleculeContainer::updateContainer() {
@@ -60,7 +60,7 @@ void MoleculeContainer::updateContainer() {
     for (uint64_t z = 1; z < m_data.dims().z()-1; z++) {
         for (uint64_t y = 1; y < m_data.dims().y()-1; y++) {
             for (uint64_t x = 1; x < m_data.dims().x()-1; x++) {
-                Cell& cell = m_data[x, y, z];
+                Cell& cell = m_data(x, y, z);
                 auto& molecules = cell.molecules();
                 for (auto it = molecules.begin(); it != molecules.end();) {
                     // check if molecule is within bounds of cell
@@ -114,7 +114,7 @@ void MoleculeContainer::constructSOAs() {
     for (uint64_t z = 0; z < m_data.dims().z(); z++) {
         for (uint64_t y = 0; y < m_data.dims().y(); y++) {
             for (uint64_t x = 0; x < m_data.dims().x(); x++) {
-                m_data[x, y, z].constructSOA();
+                m_data(x, y, z).constructSOA();
             }
         }
     }
@@ -126,7 +126,7 @@ void MoleculeContainer::writeSOA2AOS() {
     for (uint64_t z = 0; z < m_data.dims().z(); z++) {
         for (uint64_t y = 0; y < m_data.dims().y(); y++) {
             for (uint64_t x = 0; x < m_data.dims().x(); x++) {
-                m_data[x, y, z].writeSOA2AOS();
+                m_data(x, y, z).writeSOA2AOS();
             }
         }
     }
@@ -168,7 +168,7 @@ void MoleculeContainer::clearForces() {
     for (uint64_t z = 1; z < m_data.dims().z()-1; z++) {
         for (uint64_t y = 1; y < m_data.dims().y()-1; y++) {
             for (uint64_t x = 1; x < m_data.dims().x()-1; x++) {
-                Cell& cell = m_data[x, y, z];
+                Cell& cell = m_data(x, y, z);
                 cell.clearForces();
             }
         }
@@ -177,16 +177,16 @@ void MoleculeContainer::clearForces() {
 
 MoleculeContainer::Iterator::Iterator(const math::ul3 &min, const math::ul3 &max, bool only_mol, Vec3D<Cell> &cells) :
 m_cell_coord(min), m_cell_min(min), m_cell_max(max), m_only_molecule(only_mol),
-m_site_idx(0), m_molecule_idx(0), m_visited_sites_cell(0), m_cells(cells), m_cell_has_soa(cells[min].validSOA()) {
-    if (!cells[min].molecules().empty()) return;
+m_site_idx(0), m_molecule_idx(0), m_visited_sites_cell(0), m_cells(cells), m_cell_has_soa(cells(min).validSOA()) {
+    if (!cells(min).molecules().empty()) return;
 
     // cell is empty, find the first cell in iteration direction that is not empty
     findNextCell();
-    m_cell_has_soa = cells[m_cell_coord].validSOA();
+    m_cell_has_soa = cells(m_cell_coord).validSOA();
 }
 
 void MoleculeContainer::Iterator::operator++() {
-    Cell& cell = m_cells[m_cell_coord];
+    Cell& cell = m_cells(m_cell_coord);
     auto& cell_molecules = cell.molecules();
 
     // move to next site
@@ -207,7 +207,7 @@ void MoleculeContainer::Iterator::operator++() {
 
     // move to next cell
     findNextCell();
-    m_cell_has_soa = m_cells[m_cell_coord].validSOA();
+    m_cell_has_soa = m_cells(m_cell_coord).validSOA();
 }
 
 bool MoleculeContainer::Iterator::isValid() {
@@ -216,7 +216,7 @@ bool MoleculeContainer::Iterator::isValid() {
         m_cell_coord.y() == m_cell_max.y() + 1 &&
         m_cell_coord.z() == m_cell_max.z() + 1) return false;
 
-    Cell& cell = m_cells[m_cell_coord];
+    Cell& cell = m_cells(m_cell_coord);
     auto& cell_molecules = cell.molecules();
     // cell is valid
     // check if current molecule has more sites
@@ -233,7 +233,7 @@ bool MoleculeContainer::Iterator::isValid() {
     for (uint64_t z = m_cell_coord.z(); z <= m_cell_max.z(); z++) {
         for (uint64_t y = init ? m_cell_min.y() : m_cell_coord.y(); y <= m_cell_max.y(); y++) {
             for (uint64_t x = init ? m_cell_min.x() : m_cell_coord.x(); x <= m_cell_max.x(); x++) {
-                if (m_cells[x, y, z].molecules().empty()) continue;
+                if (m_cells(x, y, z).molecules().empty()) continue;
                 // found non empty cell
                 return true;
             }
@@ -246,42 +246,42 @@ bool MoleculeContainer::Iterator::isValid() {
 }
 
 math::d3 & MoleculeContainer::Iterator::f() {
-    if (m_cell_has_soa) return m_cells[m_cell_coord].soa().f()[m_visited_sites_cell];
-    return m_cells[m_cell_coord].molecules()[m_molecule_idx].getSites()[m_site_idx].f_arr();
+    if (m_cell_has_soa) return m_cells(m_cell_coord).soa().f()[m_visited_sites_cell];
+    return m_cells(m_cell_coord).molecules()[m_molecule_idx].getSites()[m_site_idx].f_arr();
 }
 
 math::d3 & MoleculeContainer::Iterator::r() {
-    if (m_cell_has_soa) return m_cells[m_cell_coord].soa().r()[m_visited_sites_cell];
-    return m_cells[m_cell_coord].molecules()[m_molecule_idx].getSites()[m_site_idx].r_arr();
+    if (m_cell_has_soa) return m_cells(m_cell_coord).soa().r()[m_visited_sites_cell];
+    return m_cells(m_cell_coord).molecules()[m_molecule_idx].getSites()[m_site_idx].r_arr();
 }
 
 math::d3 & MoleculeContainer::Iterator::v() {
-    if (m_cell_has_soa) return m_cells[m_cell_coord].soa().v()[m_visited_sites_cell];
-    return m_cells[m_cell_coord].molecules()[m_molecule_idx].getSites()[m_site_idx].v_arr();
+    if (m_cell_has_soa) return m_cells(m_cell_coord).soa().v()[m_visited_sites_cell];
+    return m_cells(m_cell_coord).molecules()[m_molecule_idx].getSites()[m_site_idx].v_arr();
 }
 
 double MoleculeContainer::Iterator::epsilon() {
-    if (m_cell_has_soa) return m_cells[m_cell_coord].soa().epsilon()[m_visited_sites_cell];
-    return m_cells[m_cell_coord].molecules()[m_molecule_idx].getSites()[m_site_idx].getEpsilon();
+    if (m_cell_has_soa) return m_cells(m_cell_coord).soa().epsilon()[m_visited_sites_cell];
+    return m_cells(m_cell_coord).molecules()[m_molecule_idx].getSites()[m_site_idx].getEpsilon();
 }
 
 double MoleculeContainer::Iterator::sigma() {
-    if (m_cell_has_soa) return m_cells[m_cell_coord].soa().sigma()[m_visited_sites_cell];
-    return m_cells[m_cell_coord].molecules()[m_molecule_idx].getSites()[m_site_idx].getSigma();
+    if (m_cell_has_soa) return m_cells(m_cell_coord).soa().sigma()[m_visited_sites_cell];
+    return m_cells(m_cell_coord).molecules()[m_molecule_idx].getSites()[m_site_idx].getSigma();
 }
 
 double MoleculeContainer::Iterator::mass() {
-    if (m_cell_has_soa) return m_cells[m_cell_coord].soa().mass()[m_visited_sites_cell];
-    return m_cells[m_cell_coord].molecules()[m_molecule_idx].getSites()[m_site_idx].getMass();
+    if (m_cell_has_soa) return m_cells(m_cell_coord).soa().mass()[m_visited_sites_cell];
+    return m_cells(m_cell_coord).molecules()[m_molecule_idx].getSites()[m_site_idx].getMass();
 }
 
 uint64_t MoleculeContainer::Iterator::ID() {
-    if (m_cell_has_soa) return m_cells[m_cell_coord].soa().id()[m_visited_sites_cell];
-    return m_cells[m_cell_coord].molecules()[m_molecule_idx].ID();
+    if (m_cell_has_soa) return m_cells(m_cell_coord).soa().id()[m_visited_sites_cell];
+    return m_cells(m_cell_coord).molecules()[m_molecule_idx].ID();
 }
 
 Molecule & MoleculeContainer::Iterator::molecule() {
-    return m_cells[m_cell_coord].molecules()[m_molecule_idx];
+    return m_cells(m_cell_coord).molecules()[m_molecule_idx];
 }
 
 void MoleculeContainer::Iterator::findNextCell() {
@@ -289,7 +289,7 @@ void MoleculeContainer::Iterator::findNextCell() {
     for (uint64_t z = m_cell_coord.z(); z <= m_cell_max.z(); z++) {
         for (uint64_t y = init ? m_cell_min.y() : m_cell_coord.y(); y <= m_cell_max.y(); y++) {
             for (uint64_t x = init ? m_cell_min.x() : (m_cell_coord.x()+1); x <= m_cell_max.x(); x++) {
-                if (m_cells[x, y, z].molecules().empty()) continue;
+                if (m_cells(x, y, z).molecules().empty()) continue;
                 // found non empty cell
                 m_cell_coord = {x, y, z};
                 m_molecule_idx = 0;

@@ -6,70 +6,25 @@
 #include "Registry.h"
 #include "molecule/Molecule.h"
 
-Integrator::Integrator() :
-m_delta_t(Registry::instance->configuration()->delta_t),
-m_use_soa(Registry::instance->configuration()->enableSOA) { }
+Integrator::Integrator() : m_delta_t(Registry::instance->configuration()->delta_t) { }
 
 void Integrator::integrate0() {
     auto container = Registry::instance->moleculeContainer();
-    auto& cells = container->getCells();
-    const math::ul3 cell_dims = cells.dims();
-    // loop over all non-halo cells
-    const double dt_halve = m_delta_t * 0.5;
-    for (uint64_t z = 1; z < cell_dims.z()-1; z++) {
-        for (uint64_t y = 1; y < cell_dims.y()-1; y++) {
-            for (uint64_t x = 1; x < cell_dims.x()-1; x++) {
-                Cell& cell = cells[x, y, z];
 
-                if (!m_use_soa) {
-                    for (Molecule& molecule : cell.molecules()) {
-                        for (Site& site : molecule.getSites()) {
-                            const double dtInv2m = dt_halve / site.getMass();
-                            site.v_arr() += site.f_arr() * dtInv2m;
-                            site.r_arr() += site.v_arr() * m_delta_t;
-                        }
-                    }
-                }
-                else {
-                    SOA& soa = cell.soa();
-                    for (uint64_t idx = 0; idx < soa.size(); idx++) {
-                        const double dtInv2m = dt_halve / soa.mass()[idx];
-                        soa.v()[idx] += soa.f()[idx] * dtInv2m;
-                        soa.r()[idx] += soa.v()[idx] * m_delta_t;
-                    }
-                }
-            }
-        }
+    const double dt_halve = m_delta_t * 0.5;
+    for (auto it = container->iterator(MoleculeContainer::SITE, MoleculeContainer::DOMAIN); it.isValid(); ++it) {
+        const double dtInv2m = dt_halve / it.mass();
+        it.v() += it.f() * dtInv2m;
+        it.r() += it.v() * m_delta_t;
     }
 }
 
 void Integrator::integrate1() {
     auto container = Registry::instance->moleculeContainer();
-    auto& cells = container->getCells();
-    const math::ul3 cell_dims = cells.dims();
-    // loop over all non-halo cells
-    const double dt_halve = m_delta_t * 0.5;
-    for (uint64_t z = 1; z < cell_dims.z()-1; z++) {
-        for (uint64_t y = 1; y < cell_dims.y()-1; y++) {
-            for (uint64_t x = 1; x < cell_dims.x()-1; x++) {
-                Cell& cell = cells[x, y, z];
 
-                if (!m_use_soa) {
-                    for (Molecule& molecule : cell.molecules()) {
-                        for (Site& site : molecule.getSites()) {
-                            const double dtInv2m = dt_halve / site.getMass();
-                            site.v_arr() += site.f_arr() * dtInv2m;
-                        }
-                    }
-                }
-                else {
-                    SOA& soa = cell.soa();
-                    for (uint64_t idx = 0; idx < soa.size(); idx++) {
-                        const double dtInv2m = dt_halve / soa.mass()[idx];
-                        soa.v()[idx] += soa.f()[idx] * dtInv2m;
-                    }
-                }
-            }
-        }
+    const double dt_halve = m_delta_t * 0.5;
+    for (auto it = container->iterator(MoleculeContainer::SITE, MoleculeContainer::DOMAIN); it.isValid(); ++it) {
+        const double dtInv2m = dt_halve / it.mass();
+        it.v() += it.f() * dtInv2m;
     }
 }

@@ -19,7 +19,7 @@ void ForceFunctor::iterateCells() {
     for (uint64_t z = 1; z < cell_dims.z()-1; z++) {
         for (uint64_t y = 1; y < cell_dims.y()-1; y++) {
             for (uint64_t x = 1; x < cell_dims.x()-1; x++) {
-                Cell& cell = cells[x, y, z];
+                Cell& cell = cells(x, y, z);
                 handleCell(cell);
             }
         }
@@ -67,8 +67,8 @@ void ForceFunctor::iterateCellPairs() {
                         const math::ul3 coordFirst = base_coord + offset_first;
                         const math::ul3 coordSecond = base_coord + offset_second;
 
-                        Cell& cellFirst = cells[coordFirst];
-                        Cell& cellSecond = cells[coordSecond];
+                        Cell& cellFirst = cells(coordFirst);
+                        Cell& cellSecond = cells(coordSecond);
                         handleCellPair(cellFirst, cellSecond);
                     }
                 }

@@ -22,22 +22,11 @@ void CheckpointIO::writeCheckpoint(uint64_t simstep) {
         return;
     }
 
-    auto& cells = container->getCells();
-    const math::ul3 cell_dims = cells.dims();
-    for (uint64_t z = 1; z < cell_dims.z()-1; z++) {
-        for (uint64_t y = 1; y < cell_dims.y()-1; y++) {
-            for (uint64_t x = 1; x < cell_dims.x()-1; x++) {
-                Cell& cell = cells[x, y, z];
-                for (Molecule& molecule : cell.molecules()) {
-                    for (Site& site : molecule.getSites()) {
-                        file << molecule.ID() << "\t";
-                        file << site.r_arr().x() << " " << site.r_arr().y() << " " << site.r_arr().z() << "\t";
-                        file << site.v_arr().x() << " " << site.v_arr().y() << " " << site.v_arr().z() << "\t";
-                        file << site.getMass()   << " " << site.getEpsilon()<< " " << site.getSigma()  << "\n";
-                    }
-                }
-            }
-        }
+    for (auto it = container->iterator(MoleculeContainer::SITE, MoleculeContainer::DOMAIN); it.isValid(); ++it) {
+        file << it.ID() << "\t";
+        file << it.r().x() << " " << it.r().y()  << " " << it.r().z()  << "\t";
+        file << it.v().x() << " " << it.v().y()  << " " << it.v().z()  << "\t";
+        file << it.mass()  << " " << it.epsilon()<< " " << it.sigma()  << "\n";
     }
 
     file.close();

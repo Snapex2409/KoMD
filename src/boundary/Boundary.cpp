@@ -56,7 +56,7 @@ void Boundary::moveMolecule(Molecule& molecule) {
     bool valid = false;
     const math::d3 new_pos = molecule.getCenterOfMass();
     const math::ul3 cell_coord = container->findCell(new_pos, valid);
-    Cell& cell = container->getCells()[cell_coord];
+    Cell& cell = container->getCells()(cell_coord);
     cell.addMolecule(molecule);
     cell.invalidateSOA();
 
@@ -103,7 +103,7 @@ void Boundary::createHaloMolecules(Molecule& molecule, Cell& cell, uint64_t idx,
                 halo_copy.setParent(cell);
 
                 const math::ul3 halo_cell_coord = cell_coord + (is_bound * shiftVec) * (cell_dims - 2);
-                Cell& halo_cell = container->getCells()[halo_cell_coord];
+                Cell& halo_cell = container->getCells()(halo_cell_coord);
                 halo_cell.addMolecule(halo_copy);
                 molecule.registerCopy(halo_cell, shiftVec);
                 halo_cell.invalidateSOA();
@@ -154,7 +154,7 @@ void Boundary::loopOverBoundary(std::function<void(Cell&, const math::ul3&)> fun
                     (y != 1 && y != cell_dims.y()-2) &&
                     (z != 1 && z != cell_dims.z()-2)) continue;
 
-                Cell& cell = cells[x, y, z];
+                Cell& cell = cells(x, y, z);
                 fun(cell, {x, y, z});
             }
         }

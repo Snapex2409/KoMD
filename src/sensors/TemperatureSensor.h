@@ -39,7 +39,6 @@ protected:
     math::d3 p_high;
 private:
     bool m_enable_opt_approx;
-    bool m_use_soa;
     double m_temperature;
 };
 

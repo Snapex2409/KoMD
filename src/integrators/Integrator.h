@@ -26,7 +26,6 @@ public:
     void integrate1();
 private:
     double m_delta_t;
-    bool m_use_soa;
 };
 
 
