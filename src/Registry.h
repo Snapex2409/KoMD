@@ -7,7 +7,6 @@
 
 #include <memory>
 #include <vector>
-#include <thermostats/Thermostat.h>
 
 #include "container/MoleculeContainer.h"
 #include "integrators/Integrator.h"
@@ -18,6 +17,8 @@
 #include "IO/VTKWriter.h"
 #include "sensors/Sensor.h"
 #include "sensors/TemperatureSensor.h"
+#include "sensors/LJ12_6_Sensor.h"
+#include "thermostats/Thermostat.h"
 
 class Registry {
 public:
@@ -33,6 +34,7 @@ public:
     std::shared_ptr<Boundary> boundary();
     std::shared_ptr<VTKWriter> vtkWriter();
     std::shared_ptr<TemperatureSensor> temperature_sensor();
+    std::shared_ptr<LJ12_6_Sensor> potential_sensor();
     std::vector<std::unique_ptr<Thermostat>>& thermostats();
 
     std::shared_ptr<Configuration>& configuration_ptr();
@@ -41,6 +43,7 @@ public:
     std::shared_ptr<Boundary>& boundary_ptr();
     std::shared_ptr<VTKWriter>& vtkWriter_ptr();
     std::shared_ptr<TemperatureSensor>& temperature_sensor_ptr();
+    std::shared_ptr<LJ12_6_Sensor>& potential_sensor_ptr();
 private:
     std::shared_ptr<Configuration> m_configuration;
     std::vector<std::unique_ptr<ForceFunctor>> m_forceFunctors;
@@ -51,6 +54,7 @@ private:
     std::shared_ptr<Boundary> m_boundary;
     std::shared_ptr<VTKWriter> m_vtk_writer;
     std::shared_ptr<TemperatureSensor> m_sensor_temp;
+    std::shared_ptr<LJ12_6_Sensor> m_sensor_pot;
     std::vector<std::unique_ptr<Thermostat>> m_thermostats;
 };
 

@@ -63,6 +63,14 @@ std::shared_ptr<VTKWriter> &Registry::vtkWriter_ptr() {
     return m_vtk_writer;
 }
 
+std::shared_ptr<LJ12_6_Sensor> Registry::potential_sensor() {
+    return m_sensor_pot;
+}
+
+std::shared_ptr<LJ12_6_Sensor> & Registry::potential_sensor_ptr() {
+    return m_sensor_pot;
+}
+
 std::shared_ptr<TemperatureSensor> Registry::temperature_sensor() {
     return m_sensor_temp;
 }

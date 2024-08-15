@@ -39,7 +39,8 @@ int main(int argc, char** argv) {
 
     Registry::instance->temperature_sensor_ptr() = std::make_shared<TemperatureSensor>();
     Registry::instance->sensors().push_back(std::dynamic_pointer_cast<Sensor>(Registry::instance->temperature_sensor()));
-    if (Registry::instance->configuration()->enable_sensor_lj) Registry::instance->sensors().push_back(std::make_shared<LJ12_6_Sensor>());
+    if (Registry::instance->configuration()->enable_sensor_lj) Registry::instance->potential_sensor_ptr() = std::make_shared<LJ12_6_Sensor>();
+    if (Registry::instance->configuration()->enable_sensor_lj) Registry::instance->sensors().push_back(std::dynamic_pointer_cast<Sensor>(Registry::instance->potential_sensor()));
     if (Registry::instance->configuration()->enable_sensor_fene) Registry::instance->sensors().push_back(std::make_shared<FENE_Sensor>());
     if (Registry::instance->configuration()->enable_sensor_rdf) Registry::instance->sensors().push_back(std::make_shared<RDFSensor>());
 

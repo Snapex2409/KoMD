@@ -12,6 +12,7 @@ void Simulation::run() {
     auto& integrators = Registry::instance->integrators();
     auto& sensors = Registry::instance->sensors();
     auto temp_sens = Registry::instance->temperature_sensor();
+    auto pot_sens = Registry::instance->potential_sensor();
     auto container = Registry::instance->moleculeContainer();
     auto& potentials = Registry::instance->forceFunctors();
     auto vtkWriter = Registry::instance->vtkWriter();
@@ -39,7 +40,11 @@ void Simulation::run() {
 
         for (auto& sensor : sensors) sensor->measure();
 
-        Log::simulation->info() << "Simstep=" << simstep << " t=" << t << " T=" << temp_sens->getTemperature() << std::endl;
+        auto& logger = Log::simulation->info();
+        logger << "Simstep=" << simstep << " t=" << t << " T=" << temp_sens->getTemperature();
+        if (config->enable_sensor_lj) logger << " u=" << pot_sens->getCurrentPotential();
+        logger << std::endl;
+
         t += dt;
         simstep++;
 

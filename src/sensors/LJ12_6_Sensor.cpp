@@ -7,7 +7,12 @@
 
 LJ12_6_Sensor::LJ12_6_Sensor() :
 Potential_Sensor("LJ12_6", Registry::instance->configuration()->sensor_lj_bins),
-m_cutoff2(std::pow(Registry::instance->configuration()->cutoff, 2)) {}
+m_cutoff2(std::pow(Registry::instance->configuration()->cutoff, 2)), m_total_pot(0) {}
+
+void LJ12_6_Sensor::measure() {
+    m_total_pot = 0;
+    Potential_Sensor::measure();
+}
 
 void LJ12_6_Sensor::handleCell(Cell &cell) {
     if (!p_use_soa) {
@@ -89,6 +94,7 @@ void LJ12_6_Sensor::computeForce(Site &site0, Site &site1) {
     p_data_u[bin] += u;
     p_count_f[bin] += 1;
     p_count_u[bin] += 1;
+    m_total_pot += u;
 }
 
 void LJ12_6_Sensor::computeForceSOA(uint64_t idx_0, uint64_t idx_1, SOA::vec_t<math::d3> &r0, SOA::vec_t<math::d3> &r1,
@@ -116,4 +122,5 @@ void LJ12_6_Sensor::computeForceSOA(uint64_t idx_0, uint64_t idx_1, SOA::vec_t<m
     p_data_u[bin] += u;
     p_count_f[bin] += 1;
     p_count_u[bin] += 1;
+    m_total_pot += u;
 }

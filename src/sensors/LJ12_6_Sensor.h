@@ -17,7 +17,8 @@ class LJ12_6_Sensor : public Potential_Sensor {
 public:
     LJ12_6_Sensor();
     virtual ~LJ12_6_Sensor() = default;
-
+    void measure() override;
+    double getCurrentPotential() { return m_total_pot; }
 protected:
     void handleCell(Cell &cell) override;
 
@@ -30,6 +31,7 @@ private:
                                 SOA::vec_t<double>& sigmas0, SOA::vec_t<double>& sigmas1,
                                 SOA::vec_t<double>& epsilons0, SOA::vec_t<double>& epsilons1);
     double m_cutoff2;
+    double m_total_pot;
 };
 
 
