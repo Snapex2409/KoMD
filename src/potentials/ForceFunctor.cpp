@@ -5,74 +5,42 @@
 #include "ForceFunctor.h"
 #include "Registry.h"
 
-ForceFunctor::ForceFunctor() : p_use_soa(Registry::instance->configuration()->enableSOA), p_run_cells(true), p_run_pairs(true) {}
+#include "Kokkos_Core.hpp"
+
+ForceFunctor::ForceFunctor() : p_run_cells(true), p_run_pairs(true), p_run_contribution(true) {}
 
 void ForceFunctor::operator()() {
-    if (p_run_cells) iterateCells();
-    if (p_run_pairs) iterateCellPairs();
-}
+    auto container = Registry::instance->moleculeContainer();
 
-void ForceFunctor::iterateCells() {
-    auto& cells = Registry::instance->moleculeContainer()->getCells();
-    const math::ul3 cell_dims = cells.dims();
+    // single cells
+    if (p_run_cells) {
+        for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it.isValid(); ++it) {
+            Cell& cell = it.cell();
+            handleCell(cell);
+            // was scatter view used?
+            if (p_run_contribution) Kokkos::Experimental::contribute(cell.soa().f(), cell.soa().fScatter());
+        }
+        Kokkos::fence("Potential - Single Cells");
+    }
 
-    for (uint64_t z = 1; z < cell_dims.z()-1; z++) {
-        for (uint64_t y = 1; y < cell_dims.y()-1; y++) {
-            for (uint64_t x = 1; x < cell_dims.x()-1; x++) {
-                Cell& cell = cells(x, y, z);
-                handleCell(cell);
+    // cell pairs
+    if (p_run_pairs) {
+        for (auto it = container->iteratorC08(); it.isValid(); ++it) {
+            if (it.colorSwitched()) Kokkos::fence("Potential - Cell Pairs Color");
+
+            Cell& cell0 = it.cell0();
+            Cell& cell1 = it.cell1();
+            handleCellPair(cell0, cell1);
+        }
+
+        // was scatter view used?
+        if (p_run_contribution) {
+            Kokkos::fence("Potential - Cell Pairs Computation");
+            for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it.isValid(); ++it) {
+                Cell& cell = it.cell();
+                Kokkos::Experimental::contribute(cell.soa().f(), cell.soa().fScatter());
             }
         }
     }
-}
-
-void ForceFunctor::iterateCellPairs() {
-    auto& cells = Registry::instance->moleculeContainer()->getCells();
-    const math::ul3 cell_dims = cells.dims();
-
-    static constexpr math::ul3 c_o   {0, 0, 0};
-    static constexpr math::ul3 c_x   {1, 0, 0};
-    static constexpr math::ul3 c_y   {0, 1, 0};
-    static constexpr math::ul3 c_z   {0, 0, 1};
-    static constexpr math::ul3 c_xy  {1, 1, 0};
-    static constexpr math::ul3 c_yz  {0, 1, 1};
-    static constexpr math::ul3 c_xz  {1, 0, 1};
-    static constexpr math::ul3 c_xyz {1, 1, 1};
-
-    using pair_t = std::pair<math::ul3, math::ul3>;
-    static constexpr std::array<pair_t, 13> pair_offsets {pair_t {c_o, c_y},
-                                                          pair_t {c_y, c_z},
-                                                          pair_t {c_o, c_z},
-                                                          pair_t {c_o, c_yz},
-                                                          pair_t {c_x, c_yz},
-                                                          pair_t {c_x, c_y},
-                                                          pair_t {c_x, c_z},
-                                                          pair_t {c_o, c_x},
-                                                          pair_t {c_o, c_xy},
-                                                          pair_t {c_xy, c_z},
-                                                          pair_t {c_y, c_xz},
-                                                          pair_t {c_o, c_xz},
-                                                          pair_t {c_o, c_xyz}};
-
-    //we are implementing C08 traversal here
-    for (uint64_t col = 0; col < 8; col++) {
-        const math::ul3 begin {col & 0b1, (col & 0b10) >> 1, (col & 0b100) >> 2};
-        const math::ul3 end = cell_dims - 1;
-
-        for (uint64_t z = begin.z(); z < end.z(); z += 2) {
-            for (uint64_t y = begin.y(); y < end.y(); y += 2) {
-                for (uint64_t x = begin.x(); x < end.x(); x += 2) {
-                    const math::ul3 base_coord {x, y, z};
-                    for (auto& [offset_first, offset_second] : pair_offsets) {
-                        const math::ul3 coordFirst = base_coord + offset_first;
-                        const math::ul3 coordSecond = base_coord + offset_second;
-
-                        Cell& cellFirst = cells(coordFirst);
-                        Cell& cellSecond = cells(coordSecond);
-                        handleCellPair(cellFirst, cellSecond);
-                    }
-                }
-            }
-        }
-    }
+    Kokkos::fence("Potential - Cell Pairs End");
 }

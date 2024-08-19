@@ -20,7 +20,6 @@ struct Configuration {
     double limit_factor = Defaults::limit_factor;
     math::d3 domainLow = Defaults::domainLow;
     math::d3 domainHigh = Defaults::domainHigh;
-    bool enableSOA = Defaults::enableSOA;
     bool loadCheckpoint = Defaults::loadCheckpoint;
     bool storeCheckpoint = Defaults::storeCheckpoint;
     bool enable_sensor_lj = Defaults::enable_sensor_lj;

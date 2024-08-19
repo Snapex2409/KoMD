@@ -22,20 +22,39 @@ m_temperature(0) { }
 void TemperatureSensor::measure() {
     auto container = Registry::instance->moleculeContainer();
 
-    double mv2 = 0;
-    double num_sites = 0;
-    for (auto it = container->iterator(MoleculeContainer::SITE, MoleculeContainer::DOMAIN); it.isValid(); ++it) {
-        if (!math::pointInBox(it.r(), p_low, p_high)) continue;
-        mv2 += it.mass() * it.v().dot(it.v());
-        num_sites += 1;
+    Kokkos::View<double*, Kokkos::SharedSpace> mv2("MV2", 1);
+    Kokkos::Experimental::ScatterView<double*> mv2_scatter(mv2);
+    Kokkos::View<double*, Kokkos::SharedSpace> num_sites("Num_Sites", 1);
+    Kokkos::Experimental::ScatterView<double*> num_sites_scatter(num_sites);
+    mv2[0] = 0;
+    num_sites[0] = 0;
+
+    for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it.isValid(); ++it) {
+        auto& cell = it.cell();
+        auto& soa = cell.soa();
+        Kokkos::parallel_for("Temp Measurement", soa.size(), Temperature_Kernel(soa, p_low, p_high, mv2_scatter, num_sites_scatter));
     }
+    Kokkos::fence("Temp fence");
+    Kokkos::Experimental::contribute(mv2, mv2_scatter);
+    Kokkos::Experimental::contribute(num_sites, num_sites_scatter);
 
     static const SciValue convDaInvkb = Constants::conv_Da_kg / Constants::kB;
     static const SciValue factor = Constants::conv_Aps_ms * Constants::conv_Aps_ms * convDaInvkb;
-    num_sites *= 3; // for 3 dimensions
-    m_temperature = factor * (mv2 / num_sites);
+    num_sites[0] *= 3; // for 3 dimensions
+    m_temperature = factor * (mv2[0] / num_sites[0]);
 }
 
 void TemperatureSensor::write(uint64_t simstep) { }
 
 double TemperatureSensor::getTemperature() { return m_temperature; }
+
+void TemperatureSensor::Temperature_Kernel::operator()(int idx) const {
+    if (!math::pointInBox(soa.r()[idx], low, high)) return;
+    const auto v = soa.v()[idx];
+
+    auto mv2_access = mv2.access();
+    auto num_sites_access = num_sites.access();
+
+    mv2_access(0) += soa.mass()[idx] * v.dot(v);
+    num_sites_access(0) += 1;
+}

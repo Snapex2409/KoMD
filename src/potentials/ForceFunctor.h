@@ -28,15 +28,12 @@ protected:
      * */
     virtual void handleCellPair(Cell& cell0, Cell& cell1) = 0;
 
-    /// Flag if soa should be used
-    bool p_use_soa;
     /// Flag if handle Cells should be called
     bool p_run_cells;
     /// Flag if handle Cell Pairs should be called
     bool p_run_pairs;
-private:
-    void iterateCells();
-    void iterateCellPairs();
+    /// Flag to write back scatter contributions
+    bool p_run_contribution;
 };
 
 

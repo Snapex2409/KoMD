@@ -8,101 +8,79 @@
 #include "container/Cell.h"
 #include "Registry.h"
 
+#include "Kokkos_Core.hpp"
+#include "Kokkos_ScatterView.hpp"
+
 LJ12_6::LJ12_6() : m_cutoff2(std::pow(Registry::instance->configuration()->cutoff, 2)) {}
 
 void LJ12_6::handleCell(Cell &cell) {
-    if (!p_use_soa) {
-        auto& molecules = cell.molecules();
-        for (uint64_t mi = 0; mi < molecules.size(); mi++) {
-            for (uint64_t mj = mi+1; mj < molecules.size(); mj++) {
-                Molecule& mol_i = molecules[mi];
-                Molecule& mol_j = molecules[mj];
-                for (Site& si : mol_i.getSites()) {
-                    for (Site& sj : mol_j.getSites()) {
-                        computeForce(si, sj);
-                    }
-                }
-            }
-        }
-    }
-    // use SOA
-    else {
-        auto& soa = cell.soa();
-        auto size = soa.size();
-        for (uint64_t idx_i = 0; idx_i < size; idx_i++) {
-            for (uint64_t idx_j = idx_i+1; idx_j < size; idx_j++) {
-                if (soa.id()[idx_i] == soa.id()[idx_j]) continue;
-                computeForceSOA(idx_i, idx_j, soa.r(), soa.r(), soa.f(), soa.f(), soa.sigma(), soa.sigma(), soa.epsilon(), soa.epsilon());
-            }
-        }
-    }
+    SOA& soa = cell.soa();
+    Kokkos::parallel_for("LJ12-6 - Cell", Kokkos::MDRangePolicy({0, 0}, {soa.size(), soa.size()}), LJ12_6_Force(soa, m_cutoff2));
 }
 
 void LJ12_6::handleCellPair(Cell &cell0, Cell &cell1) {
-    if (!p_use_soa) {
-        auto& molecules0 = cell0.molecules();
-        auto& molecules1 = cell1.molecules();
-        for (uint64_t mi = 0; mi < molecules0.size(); mi++) {
-            for (uint64_t mj = 0; mj < molecules1.size(); mj++) {
-                Molecule& mol_i = molecules0[mi];
-                Molecule& mol_j = molecules1[mj];
-                for (Site& si : mol_i.getSites()) {
-                    for (Site& sj : mol_j.getSites()) {
-                        computeForce(si, sj);
-                    }
-                }
-            }
-        }
-    }
-        // use SOA
-    else {
-        auto& soa0 = cell0.soa();
-        auto& soa1 = cell1.soa();
-        auto size0 = soa0.size();
-        auto size1 = soa1.size();
-        for (uint64_t idx_i = 0; idx_i < size0; idx_i++) {
-            for (uint64_t idx_j = 0; idx_j < size1; idx_j++) {
-                computeForceSOA(idx_i, idx_j, soa0.r(), soa1.r(), soa0.f(), soa1.f(), soa0.sigma(), soa1.sigma(), soa0.epsilon(), soa1.epsilon());
-            }
-        }
-    }
+    SOA& soa0 = cell0.soa();
+    SOA& soa1 = cell1.soa();
+    Kokkos::parallel_for("LJ12-6 - Cell Pair", Kokkos::MDRangePolicy({0, 0}, {soa0.size(), soa1.size()}), LJ12_6_ForcePair(soa0, soa1, m_cutoff2));
 }
 
-void LJ12_6::computeForce(Site &site0, Site &site1) const {
-    const math::d3 dr = site0.r_arr() - site1.r_arr();
+void LJ12_6::LJ12_6_Force::operator()(int idx_0, int idx_1) const {
+    if (idx_1 <= idx_0) return; // only compute pair once
+
+    auto access = soa.fScatter().access();
+
+    auto& id = soa.id();
+    auto& r = soa.r();
+    auto& sig = soa.sigma();
+    auto& eps = soa.epsilon();
+
+    if (id[idx_0] == id[idx_1]) return;
+
+    const math::d3 dr = r[idx_0] - r[idx_1];
     const double dr2 = dr.dot(dr);
-    if (dr2 > m_cutoff2) return;
+    if (dr2 > cutoff2) return;
     const double invdr2 = 1. / dr2;
 
-    const double sigma = (site0.getSigma() + site1.getSigma()) / 2.0;
-    const double epsilon = std::sqrt(site0.getEpsilon() * site1.getEpsilon());
+    const double sigma = (sig[idx_0] + sig[idx_1]) / 2.0;
+    const double epsilon = std::sqrt(eps[idx_0] * eps[idx_1]);
 
     const double sig2 = sigma * sigma;
     const double lj6 = std::pow(sig2 * invdr2, 3.0);
     const double lj12 = std::pow(lj6, 2.0);
     const double fac = 24.0 * epsilon * (2.0 * lj12 - lj6) * invdr2;
 
-    site0.f_arr() += dr * fac;
-    site1.f_arr() -= dr * fac;
+    access(idx_0) += dr * fac;
+    access(idx_1) += dr * (-fac);
 }
 
-void LJ12_6::computeForceSOA(uint64_t idx_0, uint64_t idx_1, SOA::vec_t<math::d3>& r0, SOA::vec_t<math::d3>& r1,
-                             SOA::vec_t<math::d3>& f0, SOA::vec_t<math::d3>& f1,
-                             SOA::vec_t<double>& sigmas0, SOA::vec_t<double>& sigmas1,
-                             SOA::vec_t<double>& epsilons0, SOA::vec_t<double>& epsilons1) const {
+void LJ12_6::LJ12_6_ForcePair::operator()(int idx_0, int idx_1) const {
+    auto access0 = soa0.fScatter().access();
+    auto access1 = soa1.fScatter().access();
+
+    auto& id0 = soa0.id();
+    auto& id1 = soa1.id();
+    auto& r0 = soa0.r();
+    auto& r1 = soa1.r();
+    auto& sig0 = soa0.sigma();
+    auto& sig1 = soa1.sigma();
+    auto& eps0 = soa0.epsilon();
+    auto& eps1 = soa1.epsilon();
+
+    if (id0[idx_0] == id1[idx_1]) return;
+
     const math::d3 dr = r0[idx_0] - r1[idx_1];
     const double dr2 = dr.dot(dr);
-    if (dr2 > m_cutoff2) return;
+    if (dr2 > cutoff2) return;
     const double invdr2 = 1. / dr2;
 
-    const double sigma = (sigmas0[idx_0] + sigmas1[idx_1]) / 2.0;
-    const double epsilon = std::sqrt(epsilons0[idx_0] * epsilons1[idx_1]);
+    const double sigma = (sig0[idx_0] + sig1[idx_1]) / 2.0;
+    const double epsilon = std::sqrt(eps0[idx_0] * eps1[idx_1]);
 
     const double sig2 = sigma * sigma;
     const double lj6 = std::pow(sig2 * invdr2, 3.0);
     const double lj12 = std::pow(lj6, 2.0);
     const double fac = 24.0 * epsilon * (2.0 * lj12 - lj6) * invdr2;
 
-    f0[idx_0] += dr * fac;
-    f1[idx_1] -= dr * fac;
+    access0(idx_0) += dr * fac;
+    access1(idx_1) += dr * (-fac);
 }

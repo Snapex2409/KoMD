@@ -22,7 +22,6 @@ namespace Defaults {
     static constexpr math::d3 domainLow {0, 0, 0};      // in Armstrong
     static constexpr math::d3 domainHigh {10, 10, 10};  // in Armstrong
     static constexpr double cutoff = sigma * 2.5;       // in Armstrong
-    static constexpr bool enableSOA = false;
     static constexpr bool enable_sensor_lj = false;
     static constexpr bool enable_sensor_fene = false;
     static constexpr bool enable_sensor_rdf = false;

@@ -7,43 +7,28 @@
 #include "molecule/Molecule.h"
 #include "container/Cell.h"
 #include "Registry.h"
+#include "math/Array.h"
+
+#include "Kokkos_Core.hpp"
 
 Limit::Limit() : m_limit_factor(Registry::instance->configuration()->limit_factor) {
     p_run_pairs = false;
+    p_run_contribution = false;
 }
 
 void Limit::handleCell(Cell &cell) {
-    if (!p_use_soa) {
-        auto& molecules = cell.molecules();
-        for (uint64_t mi = 0; mi < molecules.size(); mi++) {
-            Molecule& mol_i = molecules[mi];
-            uint64_t num_sites = mol_i.getSites().size();
-            for (uint64_t si = 0; si < num_sites; si++) {
-                Site& site = mol_i.getSites()[si];
-                computeForce(site);
-            }
-        }
-    }
-        // use SOA
-    else {
-        auto& soa = cell.soa();
-        auto size = soa.size();
-        for (uint64_t idx_i = 0; idx_i < size; idx_i++) {
-            computeForceSOA(idx_i, soa.r(), soa.f(), soa.sigma(), soa.epsilon());
-        }
-    }
+    SOA& soa = cell.soa();
+    Kokkos::parallel_for("Limit - Cell", soa.size(), Limit_Force(soa, m_limit_factor));
 }
 
 void Limit::handleCellPair(Cell &cell0, Cell &cell1) { }
 
-void Limit::computeForce(Site &site) const {
-    const double fmax = m_limit_factor * site.getEpsilon() / site.getSigma();
-    const math::d3 f = site.f_arr();
-    site.f_arr() = math::max(math::min(f, fmax), -fmax);
-}
+void Limit::Limit_Force::operator()(int idx) const {
+    auto& eps = soa.epsilon();
+    auto& sig = soa.sigma();
+    auto& f = soa.f();
 
-void Limit::computeForceSOA(uint64_t idx, SOA::vec_t<math::d3>& r0, SOA::vec_t<math::d3>& f0, SOA::vec_t<double>& sigmas, SOA::vec_t<double>& epsilons) const {
-    const double fmax = m_limit_factor * epsilons[idx] / sigmas[idx];
-    const math::d3 f = f0[idx];
-    f0[idx] = math::max(math::min(f, fmax), -fmax);
+    const double fmax = limit_factor * eps[idx] / sig[idx];
+    const math::d3 force = f[idx];
+    f[idx] = math::max(math::min(force, fmax), -fmax);
 }

@@ -23,7 +23,7 @@ public:
      * Moves a molecule into the correct cell. If no such cell exists, molecule will not be added.\n
      * Will check if domain bounds are reached. If so, then wrapping will be handled by this method.
      * */
-    void moveMolecule(Molecule& molecule);
+    bool moveMolecule(Molecule& molecule);
 
     /**
      * Moves all Halo molecules to the correct position

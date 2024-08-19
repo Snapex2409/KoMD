@@ -6,6 +6,9 @@
 #define VELOCITYSCALING_H
 
 #include "Thermostat.h"
+#include "Kokkos_Core.hpp"
+
+class SOA;
 
 class VelocityScaling : public Thermostat {
 public:
@@ -13,9 +16,14 @@ public:
     ~VelocityScaling() override = default;
 
     void apply() override;
+
+    struct VS_Kernel {
+        KOKKOS_FUNCTION void operator()(int idx) const;
+        SOA& soa;
+        const double beta;
+    };
 private:
     double m_temp_target;
-    bool m_use_soa;
 };
 
 

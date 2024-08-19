@@ -15,13 +15,16 @@ class Limit : public ForceFunctor {
 public:
     Limit();
     ~Limit() override = default;
+    struct Limit_Force {
+        KOKKOS_FUNCTION void operator()(int idx) const;
+        SOA& soa;
+        const double limit_factor;
+    };
 protected:
     void handleCell(Cell &cell) override;
 
     void handleCellPair(Cell &cell0, Cell &cell1) override;
 private:
-    inline void computeForce(Site& site) const;
-    inline void computeForceSOA(uint64_t idx, SOA::vec_t<math::d3>& r0, SOA::vec_t<math::d3>& f0, SOA::vec_t<double>& sigmas, SOA::vec_t<double>& epsilons) const;
     double m_limit_factor;
 };
 

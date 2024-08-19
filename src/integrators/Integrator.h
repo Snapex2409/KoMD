@@ -5,11 +5,27 @@
 #ifndef KOMD_INTEGRATOR_H
 #define KOMD_INTEGRATOR_H
 
+#include "Kokkos_Core.hpp"
+class SOA;
+
 /**
  * 2 Step Leapfrog integration
  * */
 class Integrator {
 public:
+    struct Step0 {
+        KOKKOS_FUNCTION void operator()(int idx) const;
+        SOA& soa;
+        const double dt_halve;
+        const double dt;
+    };
+
+    struct Step1 {
+        KOKKOS_FUNCTION void operator()(int idx) const;
+        SOA& soa;
+        const double dt_halve;
+    };
+
     /**
      * Creates new Integrator
      * */

@@ -101,6 +101,7 @@ public:
      * */
     void copyParentLocation(const math::d3& offset);
 
+    static Molecule INVALID;
 private:
     /// Collection of all sites
     sites_t m_sites;

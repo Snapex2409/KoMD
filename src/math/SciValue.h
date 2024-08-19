@@ -5,6 +5,8 @@
 #ifndef KOMD_SCIVALUE_H
 #define KOMD_SCIVALUE_H
 
+#include "Kokkos_Core.hpp"
+
 /**
  * Represents a floating point number in scientific notation
  * */
@@ -17,18 +19,28 @@ public:
         normalize();
     }
 
+    KOKKOS_FUNCTION
     SciValue& operator*=(const SciValue& other);
+    KOKKOS_FUNCTION
     SciValue& operator/=(const SciValue& other);
+    KOKKOS_FUNCTION
     SciValue& operator*=(double other);
+    KOKKOS_FUNCTION
     SciValue& operator/=(double other);
 
+    KOKKOS_FUNCTION
     SciValue operator*(const SciValue& other) const;
+    KOKKOS_FUNCTION
     SciValue operator/(const SciValue& other) const;
+    KOKKOS_FUNCTION
     SciValue operator*(double other) const;
+    KOKKOS_FUNCTION
     SciValue operator/(double other) const;
 
+    KOKKOS_FUNCTION
     operator double() const; // NOLINT(*-explicit-constructor)
 private:
+    KOKKOS_FUNCTION
     constexpr void normalize() {
         double abs_val = std::abs(m_factor);
         while (abs_val >= 10.0) {

@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <array>
 #include <cmath>
-#include "Kokkos_Macros.hpp"
+#include "Kokkos_Core.hpp"
 
 namespace math {
     template<typename T, uint64_t N>
@@ -115,14 +115,14 @@ namespace math {
         /**
          * Constructs Array filled with init value
          * */
-        explicit Array(T init) : m_data() {
+        KOKKOS_INLINE_FUNCTION explicit Array(T init) : m_data() {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = init;
         }
 
         /**
          * Constructs Array with provided coordinates
          * */
-        constexpr Array(T x, T y, T z) : m_data{x, y, z} {}
+        KOKKOS_INLINE_FUNCTION constexpr Array(T x, T y, T z) : m_data{x, y, z} {}
 
         /**
          * Constructs Array filled with 0
@@ -136,57 +136,66 @@ namespace math {
         }
 
         /// Access to raw pointer
-        T* data() { return m_data.data(); }
+        T* data() { return m_data; }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array& operator*=(const Array<O,3>& other) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] * other[idx];
             return *this;
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array& operator+=(const Array<O,3>& other) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] + other[idx];
             return *this;
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array& operator/=(const Array<O,3>& other) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] / other[idx];
             return *this;
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array& operator-=(const Array<O,3>& other) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] - other[idx];
             return *this;
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array& operator*=(O val) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] * val;
             return *this;
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array& operator+=(O val) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] + val;
             return *this;
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array& operator/=(O val) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] / val;
             return *this;
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array& operator-=(O val) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] - val;
             return *this;
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array operator*(const Array<O,3>& other) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] * other[idx];
@@ -194,6 +203,7 @@ namespace math {
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array operator+(const Array<O,3>& other) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] + other[idx];
@@ -201,6 +211,7 @@ namespace math {
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array operator/(const Array<O,3>& other) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] / other[idx];
@@ -208,6 +219,7 @@ namespace math {
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array operator-(const Array<O,3>& other) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] - other[idx];
@@ -215,6 +227,7 @@ namespace math {
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array operator*(O val) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] * val;
@@ -222,6 +235,7 @@ namespace math {
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array operator+(O val) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] + val;
@@ -229,6 +243,7 @@ namespace math {
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array operator/(O val) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] / val;
@@ -236,71 +251,78 @@ namespace math {
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         Array operator-(O val) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] - val;
             return result;
         }
 
+        KOKKOS_FUNCTION
         T& operator[](uint64_t idx) {
             return m_data[idx];
         }
 
+        KOKKOS_FUNCTION
         T operator[](uint64_t idx) const {
             return m_data[idx];
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         bool operator==(const Array<O,3>& other) {
             return other.m_data[0] == m_data[0] && other.m_data[1] == m_data[1] && other.m_data[2] == m_data[2];
         }
 
         template<typename O>
+        KOKKOS_FUNCTION
         bool operator!=(const Array<O,3>& other) {
             return other.m_data[0] != m_data[0] || other.m_data[1] != m_data[1] || other.m_data[2] != m_data[2];
         }
 
         template<typename O>
-        [[maybe_unused]] T dot(const Array<O,3>& other) const {
+        [[maybe_unused]] KOKKOS_FUNCTION T dot(const Array<O,3>& other) const {
             T result = 0;
             for (uint64_t idx = 0; idx < 3; idx++) result += m_data[idx] * other.m_data[idx];
             return result;
         }
 
-        [[maybe_unused]] T L1() const {
+        [[maybe_unused]] KOKKOS_FUNCTION T L1() const {
             T result = 0;
             for (uint64_t idx = 0; idx < 3; idx++) result += std::abs(m_data[idx]);
             return result;
         }
 
-        [[maybe_unused]] T L2() const {
+        [[maybe_unused]] KOKKOS_FUNCTION T L2() const {
             T result = 0;
             for (uint64_t idx = 0; idx < 3; idx++) result += std::pow(m_data[idx], 2);
             return std::sqrt(result);
         }
 
+        KOKKOS_FUNCTION
         T sum() const {
             T result = 0;
             for (uint64_t idx = 0; idx < 3; idx++) result += m_data[idx];
             return result;
         }
 
+        KOKKOS_FUNCTION
         T product() const {
             T result = 1;
             for (uint64_t idx = 0; idx < 3; idx++) result *= m_data[idx];
             return result;
         }
 
-        inline T& x() { return m_data[0]; }
-        inline T& y() { return m_data[1]; }
-        inline T& z() { return m_data[2]; }
-        inline T x() const { return m_data[0]; }
-        inline T y() const { return m_data[1]; }
-        inline T z() const { return m_data[2]; }
+        KOKKOS_INLINE_FUNCTION T& x() { return m_data[0]; }
+        KOKKOS_INLINE_FUNCTION T& y() { return m_data[1]; }
+        KOKKOS_INLINE_FUNCTION T& z() { return m_data[2]; }
+        KOKKOS_INLINE_FUNCTION T x() const { return m_data[0]; }
+        KOKKOS_INLINE_FUNCTION T y() const { return m_data[1]; }
+        KOKKOS_INLINE_FUNCTION T z() const { return m_data[2]; }
 
     private:
         /// storage of data
-        std::array<T, 3> m_data;
+        T m_data[3];
     };
 
     using i3 = Array<int32_t, 3>;
@@ -310,21 +332,79 @@ namespace math {
     using d3 = Array<double, 3>;
     using f3 = Array<float, 3>;
 
-    [[maybe_unused]] i3 ceil(const f3 &vec);
-    [[maybe_unused]] i3 floor(const f3& vec);
-    [[maybe_unused]] l3 ceil(const d3& vec);
-    [[maybe_unused]] l3 floor(const d3& vec);
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION i3 ceil(const f3 &vec) {
+        i3 result {0, 0, 0};
+        result[0] = Kokkos::ceil(vec[0]);
+        result[1] = Kokkos::ceil(vec[1]);
+        result[2] = Kokkos::ceil(vec[2]);
+        return result;
+    }
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION i3 floor(const f3& vec) {
+        i3 result {0, 0, 0};
+        result[0] = Kokkos::floor(vec[0]);
+        result[1] = Kokkos::floor(vec[1]);
+        result[2] = Kokkos::floor(vec[2]);
+        return result;
+    }
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION l3 ceil(const d3& vec) {
+        l3 result {0, 0, 0};
+        result[0] = Kokkos::ceil(vec[0]);
+        result[1] = Kokkos::ceil(vec[1]);
+        result[2] = Kokkos::ceil(vec[2]);
+        return result;
+    }
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION l3 floor(const d3& vec) {
+        l3 result {0, 0, 0};
+        result[0] = Kokkos::floor(vec[0]);
+        result[1] = Kokkos::floor(vec[1]);
+        result[2] = Kokkos::floor(vec[2]);
+        return result;
+    }
 
-    [[maybe_unused]] ui3 uceil(const f3 &vec);
-    [[maybe_unused]] ui3 ufloor(const f3& vec);
-    [[maybe_unused]] ul3 uceil(const d3& vec);
-    [[maybe_unused]] ul3 ufloor(const d3& vec);
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION ui3 uceil(const f3 &vec) {
+        ui3 result {0, 0, 0};
+        result[0] = Kokkos::ceil(vec[0]);
+        result[1] = Kokkos::ceil(vec[1]);
+        result[2] = Kokkos::ceil(vec[2]);
+        return result;
+    }
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION ui3 ufloor(const f3& vec) {
+        ui3 result {0, 0, 0};
+        result[0] = Kokkos::floor(vec[0]);
+        result[1] = Kokkos::floor(vec[1]);
+        result[2] = Kokkos::floor(vec[2]);
+        return result;
+    }
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION ul3 uceil(const d3& vec) {
+        ul3 result {0, 0, 0};
+        result[0] = Kokkos::ceil(vec[0]);
+        result[1] = Kokkos::ceil(vec[1]);
+        result[2] = Kokkos::ceil(vec[2]);
+        return result;
+    }
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION ul3 ufloor(const d3& vec) {
+        ul3 result {0, 0, 0};
+        result[0] = Kokkos::floor(vec[0]);
+        result[1] = Kokkos::floor(vec[1]);
+        result[2] = Kokkos::floor(vec[2]);
+        return result;
+    }
 
-    [[maybe_unused]] d3 max(const d3 &a, const d3 &b);
-    [[maybe_unused]] d3 min(const d3 &a, const d3 &b);
-    [[maybe_unused]] d3 max(const d3 &a, double v);
-    [[maybe_unused]] d3 min(const d3 &a, double v);
-    [[maybe_unused]] d3 abs(const d3 &vec);
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION d3 max(const d3 &a, const d3 &b) {
+        return {Kokkos::max(a.x(), b.x()), Kokkos::max(a.y(), b.y()), Kokkos::max(a.z(), b.z())};
+    }
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION d3 min(const d3 &a, const d3 &b) {
+        return {Kokkos::min(a.x(), b.x()), Kokkos::min(a.y(), b.y()), Kokkos::min(a.z(), b.z())};
+    }
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION d3 max(const d3 &a, double v) {
+        return {Kokkos::max(a.x(), v), Kokkos::max(a.y(), v), Kokkos::max(a.z(), v)};
+    }
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION d3 min(const d3 &a, double v) {
+        return {Kokkos::min(a.x(), v), Kokkos::min(a.y(), v), Kokkos::min(a.z(), v)};
+    }
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION d3 abs(const d3 &vec) {
+        return {Kokkos::abs(vec.x()), Kokkos::abs(vec.y()), Kokkos::abs(vec.z())};
+    }
 
 } // math
 

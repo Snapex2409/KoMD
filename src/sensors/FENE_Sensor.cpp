@@ -5,6 +5,9 @@
 #include "FENE_Sensor.h"
 #include "Registry.h"
 
+#include "Kokkos_Core.hpp"
+#include "Kokkos_ScatterView.hpp"
+
 FENE_Sensor::FENE_Sensor() :
 Potential_Sensor("FENE", Registry::instance->configuration()->sensor_fene_bins),
 m_stiffness_factor(Registry::instance->configuration()->stiffness_factor) {
@@ -12,78 +15,45 @@ m_stiffness_factor(Registry::instance->configuration()->stiffness_factor) {
 }
 
 void FENE_Sensor::handleCell(Cell &cell) {
-    if (!p_use_soa) {
-        auto& molecules = cell.molecules();
-        for (uint64_t mi = 0; mi < molecules.size(); mi++) {
-            Molecule& mol_i = molecules[mi];
-            uint64_t num_sites = mol_i.getSites().size();
-            for (uint64_t si = 0; si < num_sites; si++) {
-                for (uint64_t sj = si+1; sj < num_sites; sj++) {
-                    Site& site_i = mol_i.getSites()[si];
-                    Site& site_j = mol_i.getSites()[sj];
-                    computeForce(site_i, site_j);
-                }
-            }
-        }
-    }
-        // use SOA
-    else {
-        auto& soa = cell.soa();
-        auto size = soa.size();
-        for (uint64_t idx_i = 0; idx_i < size; idx_i++) {
-            for (uint64_t idx_j = idx_i+1; idx_j < size; idx_j++) {
-                if (soa.id()[idx_i] != soa.id()[idx_j]) break;
-                computeForceSOA(idx_i, idx_j, soa.r(), soa.r(), soa.f(), soa.f(), soa.sigma(), soa.sigma(), soa.epsilon(), soa.epsilon());
-            }
-        }
-    }
+    SOA& soa = cell.soa();
+    Kokkos::parallel_for("Sensor - FENE - Cell", Kokkos::MDRangePolicy({0, 0}, {soa.size(), soa.size()}), FENE_Pot(soa, *this, m_stiffness_factor, p_sigma, p_bins));
 }
 
 void FENE_Sensor::handleCellPair(Cell &cell0, Cell &cell1) { }
 
-void FENE_Sensor::computeForce(Site &site0, Site &site1) {
-    const math::d3 dr = site1.r_arr() - site0.r_arr();
+void FENE_Sensor::FENE_Pot::operator()(int idx_0, int idx_1) const {
+    if (idx_1 <= idx_0) return; // only compute pair once
+
+    auto data_f_access = sensor.p_data_f_scatter.access();
+    auto data_u_access = sensor.p_data_u_scatter.access();
+    auto count_f_access = sensor.p_count_f_scatter.access();
+    auto count_u_access = sensor.p_count_u_scatter.access();
+
+
+    auto& id = soa.id();
+    auto& r = soa.r();
+    auto& sig = soa.sigma();
+    auto& eps = soa.epsilon();
+
+    if (id[idx_0] != id[idx_1]) return;
+
+    const math::d3 dr = r[idx_1] - r[idx_0];
     const double dr2 = dr.dot(dr);
 
-    const double sigma = (site0.getSigma() + site1.getSigma()) / 2.0;
+    const double sigma = (sig[idx_0] + sig[idx_1]) / 2.0;
     const double R02 = std::pow(1.5 * sigma, 2);
     if (R02 <= dr2) return;
 
-    const double epsilon = std::sqrt(site0.getEpsilon() * site1.getEpsilon());
-    const double k = m_stiffness_factor * epsilon / std::pow(sigma, 2);
-    const double r = dr.L2();
+    const double epsilon = std::sqrt(eps[idx_0] * eps[idx_1]);
+    const double k = stiffness_factor * epsilon / std::pow(sigma, 2);
+    const double r_pos = dr.L2();
 
-    const double f = r * k / (1 - (dr2/R02));
+    const double f = r_pos * k / (1 - (dr2/R02));
     const double u = -0.5 * k * R02 * std::log(1 - (dr2/R02));
 
-    auto bin = get_bin(r);
-    p_data_f[bin] += f;
-    p_data_u[bin] += u;
-    p_count_f[bin] += 1;
-    p_count_u[bin] += 1;
-}
-
-void FENE_Sensor::computeForceSOA(uint64_t idx_0, uint64_t idx_1, SOA::vec_t<math::d3> &r0, SOA::vec_t<math::d3> &r1,
-                                  SOA::vec_t<math::d3> &f0, SOA::vec_t<math::d3> &f1, SOA::vec_t<double> &sigmas0,
-                                  SOA::vec_t<double> &sigmas1, SOA::vec_t<double> &epsilons0,
-                                  SOA::vec_t<double> &epsilons1) {
-    const math::d3 dr = r1[idx_1] - r0[idx_0];
-    const double dr2 = dr.dot(dr);
-
-    const double sigma = (sigmas0[idx_0] + sigmas1[idx_1]) / 2.0;
-    const double R02 = std::pow(1.5 * sigma, 2);
-    if (R02 <= dr2) return;
-
-    const double epsilon = std::sqrt(epsilons0[idx_0] * epsilons1[idx_1]);
-    const double k = m_stiffness_factor * epsilon / std::pow(sigma, 2);
-    const double r = dr.L2();
-
-    const double f = r * k / (1 - (dr2/R02));
-    const double u = -0.5 * k * R02 * std::log(1 - (dr2/R02));
-
-    auto bin = get_bin(r);
-    p_data_f[bin] += f;
-    p_data_u[bin] += u;
-    p_count_f[bin] += 1;
-    p_count_u[bin] += 1;
+    auto bin = get_bin(r_pos, max_sigma, bins);
+    data_f_access(bin) += f;
+    data_u_access(bin) += u;
+    count_f_access(bin) += 1;
+    count_u_access(bin) += 1;
 }

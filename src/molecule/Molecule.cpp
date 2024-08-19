@@ -5,6 +5,8 @@
 #include "Molecule.h"
 #include "container/Cell.h"
 
+Molecule Molecule::INVALID = Molecule();
+
 Molecule::id_t Molecule::NEXT_ID = 0;
 
 Molecule::Molecule() : m_sites(), m_id(NEXT_ID++), m_parent(Cell::INVALID), m_links(), m_cell(Cell::INVALID) {}

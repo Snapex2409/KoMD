@@ -18,20 +18,34 @@ public:
     LJ12_6_Sensor();
     virtual ~LJ12_6_Sensor() = default;
     void measure() override;
-    double getCurrentPotential() { return m_total_pot; }
+    double getCurrentPotential() { return m_total_pot[0]; }
+
+    struct LJ12_6_Pot {
+        KOKKOS_FUNCTION void operator()(int idx_0, int idx_1) const;
+        SOA& soa;
+        LJ12_6_Sensor& sensor;
+        const double cutoff2;
+        const double max_sigma;
+        const uint64_t bins;
+    };
+
+    struct LJ12_6_PotPair {
+        KOKKOS_FUNCTION void operator()(int idx_0, int idx_1) const;
+        SOA& soa0;
+        SOA& soa1;
+        LJ12_6_Sensor& sensor;
+        const double cutoff2;
+        const double max_sigma;
+        const uint64_t bins;
+    };
 protected:
     void handleCell(Cell &cell) override;
 
     void handleCellPair(Cell &cell0, Cell &cell1) override;
 private:
-    inline void computeForce(Site& site0, Site& site1);
-    inline void computeForceSOA(uint64_t idx_0, uint64_t idx_1,
-                                SOA::vec_t<math::d3>& r0, SOA::vec_t<math::d3>& r1,
-                                SOA::vec_t<math::d3>& f0, SOA::vec_t<math::d3>& f1,
-                                SOA::vec_t<double>& sigmas0, SOA::vec_t<double>& sigmas1,
-                                SOA::vec_t<double>& epsilons0, SOA::vec_t<double>& epsilons1);
     double m_cutoff2;
-    double m_total_pot;
+    Kokkos::View<double*, Kokkos::SharedSpace> m_total_pot;
+    Kokkos::Experimental::ScatterView<double*> m_total_pot_scatter;
 };
 
 

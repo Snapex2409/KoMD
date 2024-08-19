@@ -14,27 +14,22 @@ RDFSensor::RDFSensor() : Sensor("RDF"),
 m_max_r(Registry::instance->configuration()->sensor_rdf_max),
 m_delta_r(Registry::instance->configuration()->sensor_rdf_dr),
 m_rho_0(Registry::instance->configuration()->density),
-m_bins(), m_samples(0) {
+m_bins(), m_bins_scatter(), m_samples(0) {
     const uint64_t num_bins = m_max_r / m_delta_r;
-    m_bins.resize(num_bins, 0.0);
+    m_bins = Kokkos::View<double*, Kokkos::SharedSpace>("RDF", num_bins);
+    m_bins_scatter = Kokkos::Experimental::ScatterView<double*>(m_bins);
 }
 
 void RDFSensor::measure() {
     auto container = Registry::instance->moleculeContainer();
 
-    for (auto it0 = container->iterator(MoleculeContainer::MOLECULE, MoleculeContainer::DOMAIN); it0.isValid(); ++it0) {
-        auto it1 = it0;
-        ++it1;
-        for (; it1.isValid(); ++it1) {
-            const math::d3 r0 = it0.molecule().getCenterOfMass();
-            const math::d3 r1 = it1.molecule().getCenterOfMass();
-            const double r = (r0 - r1).L2();
-            if (r > m_max_r) continue;
+    const auto count = container->getNumMolecules();
+    Kokkos::View<math::d3*, Kokkos::SharedSpace> positions("RDF CoM", count);
+    container->getCenterOfMassPositions(positions);
 
-            const uint64_t bin = getBin(r);
-            m_bins[bin] += 2;
-        }
-    }
+    Kokkos::parallel_for("RDF", Kokkos::MDRangePolicy({0, 0}, {count, count}), RDF_Kernel(positions, *this, m_max_r, m_delta_r, static_cast<uint64_t>(m_max_r / m_delta_r)));
+    Kokkos::fence("RDF - fence");
+    Kokkos::Experimental::contribute(m_bins, m_bins_scatter);
 
     m_samples+=1;
 }
@@ -60,9 +55,13 @@ void RDFSensor::write(uint64_t simstep) {
     file.close();
 }
 
-uint64_t RDFSensor::getBin(double r) const {
-    if (r < 0) throw std::runtime_error("negative r not allowed");
+void RDFSensor::RDF_Kernel::operator()(int idx_0, int idx_1) const {
+    const math::d3 r0 = positions[idx_0];
+    const math::d3 r1 = positions[idx_1];
+    const double r = (r0 - r1).L2();
+    if (r > max_r) return;
 
-    auto bin = static_cast<uint64_t>(r / m_delta_r);
-    return std::clamp(bin, 0UL, m_bins.size()-1);
+    const uint64_t bin = getBin(r, delta_r, bins);
+    auto bin_access = sensor.m_bins_scatter.access();
+    bin_access(bin) += 1;
 }

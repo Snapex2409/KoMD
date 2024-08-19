@@ -11,12 +11,22 @@
 #include <fstream>
 
 Potential_Sensor::Potential_Sensor(std::string name, uint64_t bins) :
-    Sensor(std::move(name)), p_bins(bins), p_data_u(bins, 0.0), p_data_f(bins, 0.0),
-    p_count_u(bins, 0.0), p_count_f(bins, 0.0),
-    m_sigma(Registry::instance->configuration()->sigma) { }
+    Sensor(std::move(name)), p_bins(bins), p_data_u("POT_u", bins), p_data_f("POT_u", bins),
+    p_count_u("POT_u", bins), p_count_f("POT_u", bins),
+    p_sigma(Registry::instance->configuration()->sigma) {
+    p_data_u_scatter = Kokkos::Experimental::ScatterView<double*>(p_data_u);
+    p_data_f_scatter = Kokkos::Experimental::ScatterView<double*>(p_data_f);
+    p_count_u_scatter = Kokkos::Experimental::ScatterView<uint64_t*>(p_count_u);
+    p_count_f_scatter = Kokkos::Experimental::ScatterView<uint64_t*>(p_count_f);
+    p_run_contribution = false;
+}
 
 void Potential_Sensor::measure() {
     ForceFunctor::operator()();
+    Kokkos::Experimental::contribute(p_data_f, p_data_f_scatter);
+    Kokkos::Experimental::contribute(p_data_u, p_data_u_scatter);
+    Kokkos::Experimental::contribute(p_count_f, p_count_f_scatter);
+    Kokkos::Experimental::contribute(p_count_u, p_count_u_scatter);
 }
 
 void Potential_Sensor::write(uint64_t simstep) {
@@ -29,7 +39,7 @@ void Potential_Sensor::write(uint64_t simstep) {
     }
 
     double r = 0;
-    const double max_size = 3.0 * m_sigma;
+    const double max_size = 3.0 * p_sigma;
     const double bin_width = max_size / static_cast<double>(p_bins);
     for (uint64_t idx = 0; idx < p_bins; idx++) {
         file << r << " " << p_data_f[idx] / (double) p_count_f[idx] << " " << p_data_u[idx] / (double) p_count_u[idx] << "\n";
@@ -37,13 +47,4 @@ void Potential_Sensor::write(uint64_t simstep) {
     }
 
     file.close();
-}
-
-uint64_t Potential_Sensor::get_bin(double r) {
-    if (r < 0) throw std::runtime_error("negative r not allowed");
-
-    const double max_size = 3.0 * m_sigma;
-    const double bin_width = max_size / static_cast<double>(p_bins);
-    auto bin = static_cast<uint64_t>(r / bin_width);
-    return std::clamp(bin, 0UL, p_bins-1);
 }

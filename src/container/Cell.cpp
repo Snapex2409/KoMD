@@ -23,7 +23,6 @@ void Cell::addMolecule(const Molecule &molecule) {
 }
 
 void Cell::constructSOA() {
-    if (!Registry::instance->configuration()->enableSOA) return;
     // Allocate memory
     uint64_t num_sites = 0;
     for (Molecule& molecule : m_data) num_sites += molecule.getSites().size();
@@ -47,8 +46,6 @@ void Cell::constructSOA() {
 }
 
 void Cell::writeSOA2AOS() {
-    if (!Registry::instance->configuration()->enableSOA) return;
-
     // the order should not have changed from writing to SOA
     uint64_t idx = 0;
     for (Molecule& molecule : m_data) {

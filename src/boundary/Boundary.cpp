@@ -30,7 +30,7 @@ void Boundary::updateHalo() {
     });
 }
 
-void Boundary::moveMolecule(Molecule& molecule) {
+bool Boundary::moveMolecule(Molecule& molecule) {
     auto config = Registry::instance->configuration();
     auto container = Registry::instance->moleculeContainer();
 
@@ -39,7 +39,7 @@ void Boundary::moveMolecule(Molecule& molecule) {
     for (int dim = 0; dim < 3; dim++) {
         if (mol_pos[dim] < config->domainLow[dim] - config->cutoff ||
             mol_pos[dim] > config->domainHigh[dim] + config->cutoff) {
-            return;
+            return false;
         }
     }
 
@@ -62,6 +62,7 @@ void Boundary::moveMolecule(Molecule& molecule) {
 
     // add halo molecules if needed
     createHaloMolecules(cell.molecules().back(), cell, cell.molecules().size()-1, cell_coord, domain_size);
+    return true;
 }
 
 std::vector<Molecule>::iterator Boundary::deleteMolecule(Molecule &molecule) {
