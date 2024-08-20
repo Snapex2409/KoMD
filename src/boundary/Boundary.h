@@ -58,8 +58,6 @@ public:
      * Loops over all boundary cells while executing fun. Provides the current cell and it coordinate as parameters.
      * */
     void loopOverBoundary(std::function<void(Cell&, const math::ul3&)> fun);
-private:
-
 };
 
 

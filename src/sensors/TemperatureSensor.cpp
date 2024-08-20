@@ -22,10 +22,10 @@ m_temperature(0) { }
 void TemperatureSensor::measure() {
     auto container = Registry::instance->moleculeContainer();
 
-    Kokkos::View<double*, Kokkos::SharedSpace> mv2("MV2", 1);
-    Kokkos::Experimental::ScatterView<double*> mv2_scatter(mv2);
-    Kokkos::View<double*, Kokkos::SharedSpace> num_sites("Num_Sites", 1);
-    Kokkos::Experimental::ScatterView<double*> num_sites_scatter(num_sites);
+    SOA::vec_t<double> mv2("MV2", 1);
+    SOA::vec_scatter_t<double> mv2_scatter(mv2);
+    SOA::vec_t<double> num_sites("Num_Sites", 1);
+    SOA::vec_scatter_t<double> num_sites_scatter(num_sites);
     mv2[0] = 0;
     num_sites[0] = 0;
 

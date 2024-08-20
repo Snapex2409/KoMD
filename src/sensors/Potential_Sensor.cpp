@@ -14,10 +14,10 @@ Potential_Sensor::Potential_Sensor(std::string name, uint64_t bins) :
     Sensor(std::move(name)), p_bins(bins), p_data_u("POT_u", bins), p_data_f("POT_u", bins),
     p_count_u("POT_u", bins), p_count_f("POT_u", bins),
     p_sigma(Registry::instance->configuration()->sigma) {
-    p_data_u_scatter = Kokkos::Experimental::ScatterView<double*>(p_data_u);
-    p_data_f_scatter = Kokkos::Experimental::ScatterView<double*>(p_data_f);
-    p_count_u_scatter = Kokkos::Experimental::ScatterView<uint64_t*>(p_count_u);
-    p_count_f_scatter = Kokkos::Experimental::ScatterView<uint64_t*>(p_count_f);
+    p_data_u_scatter = SOA::vec_scatter_t<double>(p_data_u);
+    p_data_f_scatter = SOA::vec_scatter_t<double>(p_data_f);
+    p_count_u_scatter = SOA::vec_scatter_t<uint64_t>(p_count_u);
+    p_count_f_scatter = SOA::vec_scatter_t<uint64_t>(p_count_f);
     p_run_contribution = false;
 }
 

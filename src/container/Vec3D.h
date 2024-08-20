@@ -77,7 +77,9 @@ private:
         return x + m_dim.x() * y + m_dim.x() * m_dim.y() * z;
     }
 
+    /// data buffer
     std::vector<T> m_data;
+    /// dimension of buffer
     math::ul3 m_dim;
 };
 

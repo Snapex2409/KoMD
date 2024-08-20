@@ -8,7 +8,7 @@
 LJ12_6_Sensor::LJ12_6_Sensor() :
 Potential_Sensor("LJ12_6", Registry::instance->configuration()->sensor_lj_bins),
 m_cutoff2(std::pow(Registry::instance->configuration()->cutoff, 2)), m_total_pot("Sensor Total Pot", 1) {
-    m_total_pot_scatter = Kokkos::Experimental::ScatterView<double*>(m_total_pot);
+    m_total_pot_scatter = SOA::vec_scatter_t<double>(m_total_pot);
 }
 
 void LJ12_6_Sensor::measure() {

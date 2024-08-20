@@ -16,15 +16,15 @@ m_delta_r(Registry::instance->configuration()->sensor_rdf_dr),
 m_rho_0(Registry::instance->configuration()->density),
 m_bins(), m_bins_scatter(), m_samples(0) {
     const uint64_t num_bins = m_max_r / m_delta_r;
-    m_bins = Kokkos::View<double*, Kokkos::SharedSpace>("RDF", num_bins);
-    m_bins_scatter = Kokkos::Experimental::ScatterView<double*>(m_bins);
+    m_bins = SOA::vec_t<double>("RDF", num_bins);
+    m_bins_scatter = SOA::vec_scatter_t<double>(m_bins);
 }
 
 void RDFSensor::measure() {
     auto container = Registry::instance->moleculeContainer();
 
     const auto count = container->getNumMolecules();
-    Kokkos::View<math::d3*, Kokkos::SharedSpace> positions("RDF CoM", count);
+    SOA::vec_t<math::d3> positions("RDF CoM", count);
     container->getCenterOfMassPositions(positions);
 
     Kokkos::parallel_for("RDF", Kokkos::MDRangePolicy({0, 0}, {count, count}), RDF_Kernel(positions, m_bins_scatter, m_max_r, m_delta_r, static_cast<uint64_t>(m_max_r / m_delta_r)));

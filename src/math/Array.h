@@ -12,6 +12,9 @@
 #include "Kokkos_Core.hpp"
 
 namespace math {
+    /**
+     * General N-dimensional array template.
+     * */
     template<typename T, uint64_t N>
     requires std::is_arithmetic_v<T>
     class Array {
@@ -87,18 +90,27 @@ namespace math {
             return m_data[idx];
         }
 
+        /**
+         * Computes dot product with other Array
+         * */
         [[maybe_unused]] T dot(const Array& other) const {
             T result = 0;
             for (uint64_t idx = 0; idx < N; idx++) result += m_data[idx] * other.m_data[idx];
             return result;
         }
 
+        /**
+         * Computes L1 norm of this array
+         * */
         [[maybe_unused]] T L1() const {
             T result = 0;
             for (uint64_t idx = 0; idx < N; idx++) result += std::abs(m_data[idx]);
             return result;
         }
 
+        /**
+         * Computes L2 norm of this array
+         * */
         [[maybe_unused]] T L2() const {
             T result = 0;
             for (uint64_t idx = 0; idx < N; idx++) result += std::pow(m_data[idx], 2);
@@ -109,6 +121,9 @@ namespace math {
         std::array<T, N> m_data;
     };
 
+    /**
+     * Specialized 3D array template. Is specialized for Kokkos usage.
+     * */
     template<typename T>
     class Array<T, 3>{
     public:
@@ -139,147 +154,130 @@ namespace math {
         T* data() { return m_data; }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array& operator*=(const Array<O,3>& other) {
+        KOKKOS_FUNCTION Array& operator*=(const Array<O,3>& other) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] * other[idx];
             return *this;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array& operator+=(const Array<O,3>& other) {
+        KOKKOS_FUNCTION Array& operator+=(const Array<O,3>& other) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] + other[idx];
             return *this;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array& operator/=(const Array<O,3>& other) {
+        KOKKOS_FUNCTION Array& operator/=(const Array<O,3>& other) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] / other[idx];
             return *this;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array& operator-=(const Array<O,3>& other) {
+        KOKKOS_FUNCTION Array& operator-=(const Array<O,3>& other) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] - other[idx];
             return *this;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array& operator*=(O val) {
+        KOKKOS_FUNCTION Array& operator*=(O val) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] * val;
             return *this;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array& operator+=(O val) {
+        KOKKOS_FUNCTION Array& operator+=(O val) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] + val;
             return *this;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array& operator/=(O val) {
+        KOKKOS_FUNCTION Array& operator/=(O val) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] / val;
             return *this;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array& operator-=(O val) {
+        KOKKOS_FUNCTION Array& operator-=(O val) {
             for (uint64_t idx = 0; idx < 3; idx++) m_data[idx] = m_data[idx] - val;
             return *this;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array operator*(const Array<O,3>& other) const {
+        KOKKOS_FUNCTION Array operator*(const Array<O,3>& other) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] * other[idx];
             return result;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array operator+(const Array<O,3>& other) const {
+        KOKKOS_FUNCTION Array operator+(const Array<O,3>& other) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] + other[idx];
             return result;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array operator/(const Array<O,3>& other) const {
+        KOKKOS_FUNCTION Array operator/(const Array<O,3>& other) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] / other[idx];
             return result;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array operator-(const Array<O,3>& other) const {
+        KOKKOS_FUNCTION Array operator-(const Array<O,3>& other) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] - other[idx];
             return result;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array operator*(O val) const {
+        KOKKOS_FUNCTION Array operator*(O val) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] * val;
             return result;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array operator+(O val) const {
+        KOKKOS_FUNCTION Array operator+(O val) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] + val;
             return result;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array operator/(O val) const {
+        KOKKOS_FUNCTION Array operator/(O val) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] / val;
             return result;
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        Array operator-(O val) const {
+        KOKKOS_FUNCTION Array operator-(O val) const {
             Array<T, 3> result;
             for (uint64_t idx = 0; idx < 3; idx++) result.m_data[idx] = m_data[idx] - val;
             return result;
         }
 
-        KOKKOS_FUNCTION
-        T& operator[](uint64_t idx) {
+        KOKKOS_FUNCTION T& operator[](uint64_t idx) {
             return m_data[idx];
         }
 
-        KOKKOS_FUNCTION
-        T operator[](uint64_t idx) const {
+        KOKKOS_FUNCTION T operator[](uint64_t idx) const {
             return m_data[idx];
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        bool operator==(const Array<O,3>& other) {
+        KOKKOS_FUNCTION bool operator==(const Array<O,3>& other) {
             return other.m_data[0] == m_data[0] && other.m_data[1] == m_data[1] && other.m_data[2] == m_data[2];
         }
 
         template<typename O>
-        KOKKOS_FUNCTION
-        bool operator!=(const Array<O,3>& other) {
+        KOKKOS_FUNCTION bool operator!=(const Array<O,3>& other) {
             return other.m_data[0] != m_data[0] || other.m_data[1] != m_data[1] || other.m_data[2] != m_data[2];
         }
 
+        /**
+         * Computes dot product of this and another array
+         * */
         template<typename O>
         [[maybe_unused]] KOKKOS_FUNCTION T dot(const Array<O,3>& other) const {
             T result = 0;
@@ -287,37 +285,53 @@ namespace math {
             return result;
         }
 
+        /**
+         * Computes L1 norm of this array
+         * */
         [[maybe_unused]] KOKKOS_FUNCTION T L1() const {
             T result = 0;
             for (uint64_t idx = 0; idx < 3; idx++) result += std::abs(m_data[idx]);
             return result;
         }
 
+        /**
+         * Computes L2 norm of this array
+         * */
         [[maybe_unused]] KOKKOS_FUNCTION T L2() const {
             T result = 0;
             for (uint64_t idx = 0; idx < 3; idx++) result += std::pow(m_data[idx], 2);
             return std::sqrt(result);
         }
 
-        KOKKOS_FUNCTION
-        T sum() const {
+        /**
+         * Computes sum of elements
+         * */
+        KOKKOS_FUNCTION T sum() const {
             T result = 0;
             for (uint64_t idx = 0; idx < 3; idx++) result += m_data[idx];
             return result;
         }
 
-        KOKKOS_FUNCTION
-        T product() const {
+        /**
+         * Computes product of elements
+         * */
+        KOKKOS_FUNCTION T product() const {
             T result = 1;
             for (uint64_t idx = 0; idx < 3; idx++) result *= m_data[idx];
             return result;
         }
 
+        /// @returns value at dim 0
         KOKKOS_INLINE_FUNCTION T& x() { return m_data[0]; }
+        /// @returns value at dim 1
         KOKKOS_INLINE_FUNCTION T& y() { return m_data[1]; }
+        /// @returns value at dim 2
         KOKKOS_INLINE_FUNCTION T& z() { return m_data[2]; }
+        /// @returns value at dim 0
         KOKKOS_INLINE_FUNCTION T x() const { return m_data[0]; }
+        /// @returns value at dim 1
         KOKKOS_INLINE_FUNCTION T y() const { return m_data[1]; }
+        /// @returns value at dim 2
         KOKKOS_INLINE_FUNCTION T z() const { return m_data[2]; }
 
     private:

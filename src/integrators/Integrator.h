@@ -13,21 +13,33 @@
  * */
 class Integrator {
 public:
+    /// Kernel for device
     struct Step0 {
         KOKKOS_FUNCTION void operator()(int idx) const;
+        /// shallow copy of SOA::r
         SOA::vec_t<math::d3> r;
+        /// shallow copy of SOA::v
         SOA::vec_t<math::d3> v;
+        /// shallow copy of SOA::f
         SOA::vec_t<math::d3> f;
+        /// shallow copy of SOA::mass
         SOA::vec_t<double> m;
+        /// delta_t / 2
         const double dt_halve;
+        /// delta_t
         const double dt;
     };
 
+    /// Kernel for device
     struct Step1 {
         KOKKOS_FUNCTION void operator()(int idx) const;
+        /// shallow copy of SOA::v
         SOA::vec_t<math::d3> v;
+        /// shallow copy of SOA::f
         SOA::vec_t<math::d3> f;
+        /// shallow copy of SOA::mass
         SOA::vec_t<double> m;
+        /// delta_t / 2
         const double dt_halve;
     };
 
@@ -46,6 +58,7 @@ public:
      * */
     void integrate1();
 private:
+    /// delta_t
     double m_delta_t;
 };
 

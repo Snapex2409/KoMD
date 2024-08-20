@@ -16,6 +16,9 @@ namespace math {
                point.x() <= high.x() && point.y() <= high.y() && point.z() <= high.z();
     }
 
+    /**
+     * Checks if the boxes defines by the pairs (low_0, high_0) and (low_1, high_1) have any sort of intersection
+     * */
     KOKKOS_INLINE_FUNCTION bool boxesIntersect(const d3& low_0, const d3& high_0, const d3& low_1, const d3& high_1) {
         return high_0.x() >= low_1.x() && high_1.x() >= low_0.x() &&
                high_0.y() >= low_1.y() && high_1.y() >= low_0.y() &&

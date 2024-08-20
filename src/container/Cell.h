@@ -44,11 +44,15 @@ public:
 
     static Cell INVALID;
 private:
-
+    /// lower corner of cell
     math::d3 m_low;
+    /// upper corner of cell
     math::d3 m_high;
+    /// buffer of molecules
     std::vector<Molecule> m_data;
+    /// soa
     SOA m_soa;
+    /// flag if soa is valid
     bool m_valid_soa = false;
 };
 

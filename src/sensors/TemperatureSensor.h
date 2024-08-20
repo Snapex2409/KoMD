@@ -28,29 +28,41 @@ public:
     TemperatureSensor(const math::d3& low, const math::d3& high);
 
     ~TemperatureSensor() override = default;
-
     void measure() override;
 
     /// NOP
     void write(uint64_t simstep) override;
 
+    /// @returns current measured temperature
     [[maybe_unused, nodiscard]] double getTemperature();
 
+    /// Kernel for device
     struct Temperature_Kernel {
         KOKKOS_FUNCTION void operator()(int idx) const;
+        /// shallow copy of SOA::r
         SOA::vec_t<math::d3> r;
+        /// shallow copy of SOA::v
         SOA::vec_t<math::d3> v;
+        /// shallow copy of SOA::mass
         SOA::vec_t<double> m;
+        /// lower corner of measuring region
         const math::d3 low;
+        /// upper corner of measuring region
         const math::d3 high;
+        /// ScatterView to mv2 buffer
         SOA::vec_scatter_t<double> mv2;
+        /// ScatterView to num_sites buffer
         SOA::vec_scatter_t<double> num_sites;
     };
+
 protected:
+    /// lower corner of measuring region
     math::d3 p_low;
+    /// upper corner of measuring region
     math::d3 p_high;
 private:
     bool m_enable_opt_approx;
+    /// last measured temperature
     double m_temperature;
 };
 

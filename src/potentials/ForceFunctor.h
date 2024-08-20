@@ -7,6 +7,9 @@
 
 class Cell;
 
+/**
+ * General force function interface
+ * */
 class ForceFunctor {
 public:
     ForceFunctor();

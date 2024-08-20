@@ -9,15 +9,15 @@
 
 #include "IO/Configuration.h"
 
+/**
+ * Contains main simulation loop, that calls all other components.
+ * */
 class Simulation {
 public:
     /**
      * Runs the simulation
      * */
     void run();
-
-private:
-
 };
 
 

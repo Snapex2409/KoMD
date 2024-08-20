@@ -127,12 +127,20 @@ public:
      * Only to be used for IO functionality on CPU side
      * */
     Iterator iterator(const IteratorType type, const IteratorRegion region);
+    /**
+     * Only to be used on CPU side
+     * */
     CellIterator iteratorCell(const IteratorRegion region);
+    /**
+     * Only to be used on CPU side
+     * */
     C08Iterator iteratorC08();
 private:
+    /// 3d cell buffer
     Vec3D<Cell> m_data;
     void constructSOAs();
     void clearForces();
+    /// total number of molecules
     uint64_t m_molecule_count;
 };
 
