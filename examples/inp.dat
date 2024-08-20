@@ -3,7 +3,7 @@
 # General
 temperature 300
 delta_t 0.001
-cutoff 2.5
+cutoff 5
 timesteps 10000
 
 # Phasespace
@@ -20,7 +20,7 @@ domain_low 0 0 0
 domain_high 10 10 10
 
 # Algorithm
-enableSOA 0
+# enableSOA 0
 
 # IO
 write_freq 10000
@@ -28,7 +28,7 @@ write_freq 10000
 # checkpoint_file ../examples/ckpt_10000.ps
 
 # Measurements
-enable_sensor_lj 1
+enable_sensor_lj 0
 enable_sensor_fene 0
 enable_sensor_rdf 0
 

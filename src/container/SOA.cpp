@@ -4,7 +4,7 @@
 
 #include "SOA.h"
 
-SOA::SOA(uint64_t size) { resize(size); }
+SOA::SOA() : m_current_size(0) { }
 
 void SOA::resize(uint64_t newSize) {
     m_epsilon = vec_t<double>("SOA_eps", newSize);

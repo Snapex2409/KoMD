@@ -9,8 +9,7 @@
 #include "Sensor.h"
 #include "math/Array.h"
 #include "Kokkos_ScatterView.hpp"
-
-class SOA;
+#include "container/SOA.h"
 
 /**
  * Measures temperature using: sum mv2 = N*k_B*T \n
@@ -39,11 +38,13 @@ public:
 
     struct Temperature_Kernel {
         KOKKOS_FUNCTION void operator()(int idx) const;
-        SOA& soa;
+        SOA::vec_t<math::d3> r;
+        SOA::vec_t<math::d3> v;
+        SOA::vec_t<double> m;
         const math::d3 low;
         const math::d3 high;
-        Kokkos::Experimental::ScatterView<double*>& mv2;
-        Kokkos::Experimental::ScatterView<double*>& num_sites;
+        SOA::vec_scatter_t<double> mv2;
+        SOA::vec_scatter_t<double> num_sites;
     };
 protected:
     math::d3 p_low;

@@ -18,14 +18,27 @@ public:
 
     struct LJ12_6_Force {
         KOKKOS_FUNCTION void operator()(int idx_0, int idx_1) const;
-        SOA& soa;
+        SOA::vec_scatter_t<math::d3> scatter;
+        SOA::vec_t<uint64_t> id;
+        SOA::vec_t<math::d3> r;
+        SOA::vec_t<double> sig;
+        SOA::vec_t<double> eps;
         const double cutoff2;
     };
 
     struct LJ12_6_ForcePair {
         KOKKOS_FUNCTION void operator()(int idx_0, int idx_1) const;
-        SOA& soa0;
-        SOA& soa1;
+        SOA::vec_scatter_t<math::d3> scatter0;
+        SOA::vec_scatter_t<math::d3> scatter1;
+
+        SOA::vec_t<uint64_t> id0;
+        SOA::vec_t<uint64_t> id1;
+        SOA::vec_t<math::d3> r0;
+        SOA::vec_t<math::d3> r1;
+        SOA::vec_t<double> sig0;
+        SOA::vec_t<double> sig1;
+        SOA::vec_t<double> eps0;
+        SOA::vec_t<double> eps1;
         const double cutoff2;
     };
 protected:

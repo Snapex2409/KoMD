@@ -17,7 +17,11 @@ public:
     ~FENE() override = default;
     struct FENE_Force {
         KOKKOS_FUNCTION void operator()(int idx_0, int idx_1) const;
-        SOA& soa;
+        SOA::vec_scatter_t<math::d3> scatter;
+        SOA::vec_t<uint64_t> id;
+        SOA::vec_t<math::d3> r;
+        SOA::vec_t<double> sig;
+        SOA::vec_t<double> eps;
         const double stiffness_factor;
     };
 protected:

@@ -19,11 +19,11 @@ void VelocityScaling::apply() {
     for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it.isValid(); ++it) {
         auto& cell = it.cell();
         auto& soa = cell.soa();
-        Kokkos::parallel_for("Velocity Scaling", soa.size(), VS_Kernel(soa, beta));
+        Kokkos::parallel_for("Velocity Scaling", soa.size(), VS_Kernel(soa.v(), beta));
     }
     Kokkos::fence("VS fence");
 }
 
 void VelocityScaling::VS_Kernel::operator()(int idx) const {
-    soa.v()[idx] *= beta;
+    v[idx] *= beta;
 }

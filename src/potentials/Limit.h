@@ -17,7 +17,9 @@ public:
     ~Limit() override = default;
     struct Limit_Force {
         KOKKOS_FUNCTION void operator()(int idx) const;
-        SOA& soa;
+        SOA::vec_t<math::d3> f;
+        SOA::vec_t<double> sig;
+        SOA::vec_t<double> eps;
         const double limit_factor;
     };
 protected:

@@ -19,30 +19,30 @@ void LJ12_6_Sensor::measure() {
 
 void LJ12_6_Sensor::handleCell(Cell &cell) {
     SOA& soa = cell.soa();
-    Kokkos::parallel_for("Sensor - LJ12-6 - Cell", Kokkos::MDRangePolicy({0, 0}, {soa.size(), soa.size()}), LJ12_6_Pot(soa, *this, m_cutoff2, p_sigma, p_bins));
+    Kokkos::parallel_for("Sensor - LJ12-6 - Cell", Kokkos::MDRangePolicy({0, 0}, {soa.size(), soa.size()}),
+                         LJ12_6_Pot(soa.id(), soa.r(), soa.sigma(), soa.epsilon(),
+                                    p_data_u_scatter, p_data_f_scatter, p_count_u_scatter, p_count_f_scatter,
+                                    m_total_pot_scatter, m_cutoff2, p_sigma, p_bins));
 }
 
 void LJ12_6_Sensor::handleCellPair(Cell &cell0, Cell &cell1) {
     SOA& soa0 = cell0.soa();
     SOA& soa1 = cell1.soa();
-    Kokkos::parallel_for("Sensor - LJ12-6 - Cell Pair", Kokkos::MDRangePolicy({0, 0}, {soa0.size(), soa1.size()}), LJ12_6_PotPair(soa0, soa1, *this, m_cutoff2, p_sigma, p_bins));
+    Kokkos::parallel_for("Sensor - LJ12-6 - Cell Pair", Kokkos::MDRangePolicy({0, 0}, {soa0.size(), soa1.size()}),
+                         LJ12_6_PotPair(soa0.id(), soa1.id(), soa0.r(), soa1.r(), soa0.sigma(), soa1.sigma(), soa0.epsilon(), soa1.epsilon(),
+                                        p_data_u_scatter, p_data_f_scatter, p_count_u_scatter, p_count_f_scatter,
+                                        m_total_pot_scatter, m_cutoff2, p_sigma, p_bins));
 }
 
 void LJ12_6_Sensor::LJ12_6_Pot::operator()(int idx_0, int idx_1) const {
     if (idx_1 <= idx_0) return; // only compute pair once
-
-    auto data_f_access = sensor.p_data_f_scatter.access();
-    auto data_u_access = sensor.p_data_u_scatter.access();
-    auto count_f_access = sensor.p_count_f_scatter.access();
-    auto count_u_access = sensor.p_count_u_scatter.access();
-    auto total_pot_access = sensor.m_total_pot_scatter.access();
-
-    auto& id = soa.id();
-    auto& r = soa.r();
-    auto& sig = soa.sigma();
-    auto& eps = soa.epsilon();
-
     if (id[idx_0] == id[idx_1]) return;
+
+    auto data_f_access = data_f_scatter.access();
+    auto data_u_access = data_u_scatter.access();
+    auto count_f_access = count_f_scatter.access();
+    auto count_u_access = count_u_scatter.access();
+    auto total_pot_access = total_pot_scatter.access();
 
     const math::d3 dr = r[idx_0] - r[idx_1];
     const double dr2 = dr.dot(dr);
@@ -69,20 +69,11 @@ void LJ12_6_Sensor::LJ12_6_Pot::operator()(int idx_0, int idx_1) const {
 }
 
 void LJ12_6_Sensor::LJ12_6_PotPair::operator()(int idx_0, int idx_1) const {
-    auto data_f_access = sensor.p_data_f_scatter.access();
-    auto data_u_access = sensor.p_data_u_scatter.access();
-    auto count_f_access = sensor.p_count_f_scatter.access();
-    auto count_u_access = sensor.p_count_u_scatter.access();
-    auto total_pot_access = sensor.m_total_pot_scatter.access();
-
-    auto& id0 = soa0.id();
-    auto& id1 = soa1.id();
-    auto& r0 = soa0.r();
-    auto& r1 = soa1.r();
-    auto& sig0 = soa0.sigma();
-    auto& sig1 = soa1.sigma();
-    auto& eps0 = soa0.epsilon();
-    auto& eps1 = soa1.epsilon();
+    auto data_f_access = data_f_scatter.access();
+    auto data_u_access = data_u_scatter.access();
+    auto count_f_access = count_f_scatter.access();
+    auto count_u_access = count_u_scatter.access();
+    auto total_pot_access = total_pot_scatter.access();
 
     if (id0[idx_0] == id1[idx_1]) return;
 

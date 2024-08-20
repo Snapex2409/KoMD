@@ -18,7 +18,7 @@ public:
     template<typename T>
     using vec_scatter_t = Kokkos::Experimental::ScatterView<T*>;
 
-    explicit SOA(uint64_t size = 0);
+    explicit SOA();
     void resize(uint64_t newSize);
     KOKKOS_INLINE_FUNCTION vec_scatter_t<double>& epsilonScatter() { return m_epsilon_scatter; };
     KOKKOS_INLINE_FUNCTION vec_scatter_t<double>& sigmaScatter() { return m_sigma_scatter; };

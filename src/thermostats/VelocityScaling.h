@@ -6,9 +6,9 @@
 #define VELOCITYSCALING_H
 
 #include "Thermostat.h"
+#include "container/SOA.h"
 #include "Kokkos_Core.hpp"
 
-class SOA;
 
 class VelocityScaling : public Thermostat {
 public:
@@ -19,7 +19,7 @@ public:
 
     struct VS_Kernel {
         KOKKOS_FUNCTION void operator()(int idx) const;
-        SOA& soa;
+        SOA::vec_t<math::d3> v;
         const double beta;
     };
 private:

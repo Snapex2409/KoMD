@@ -18,8 +18,14 @@ public:
 
     struct FENE_Pot {
         KOKKOS_FUNCTION void operator()(int idx_0, int idx_1) const;
-        SOA& soa;
-        FENE_Sensor& sensor;
+        SOA::vec_t<uint64_t> id;
+        SOA::vec_t<math::d3> r;
+        SOA::vec_t<double> sig;
+        SOA::vec_t<double> eps;
+        SOA::vec_scatter_t<double> data_u_scatter;
+        SOA::vec_scatter_t<double> data_f_scatter;
+        SOA::vec_scatter_t<uint64_t> count_u_scatter;
+        SOA::vec_scatter_t<uint64_t> count_f_scatter;
         const double stiffness_factor;
         const double max_sigma;
         const uint64_t bins;

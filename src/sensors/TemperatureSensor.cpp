@@ -32,7 +32,7 @@ void TemperatureSensor::measure() {
     for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it.isValid(); ++it) {
         auto& cell = it.cell();
         auto& soa = cell.soa();
-        Kokkos::parallel_for("Temp Measurement", soa.size(), Temperature_Kernel(soa, p_low, p_high, mv2_scatter, num_sites_scatter));
+        Kokkos::parallel_for("Temp Measurement", soa.size(), Temperature_Kernel(soa.r(), soa.v(), soa.mass(), p_low, p_high, mv2_scatter, num_sites_scatter));
     }
     Kokkos::fence("Temp fence");
     Kokkos::Experimental::contribute(mv2, mv2_scatter);
@@ -49,12 +49,12 @@ void TemperatureSensor::write(uint64_t simstep) { }
 double TemperatureSensor::getTemperature() { return m_temperature; }
 
 void TemperatureSensor::Temperature_Kernel::operator()(int idx) const {
-    if (!math::pointInBox(soa.r()[idx], low, high)) return;
-    const auto v = soa.v()[idx];
+    if (!math::pointInBox(r[idx], low, high)) return;
+    const auto vel = v[idx];
 
     auto mv2_access = mv2.access();
     auto num_sites_access = num_sites.access();
 
-    mv2_access(0) += soa.mass()[idx] * v.dot(v);
+    mv2_access(0) += m[idx] * vel.dot(vel);
     num_sites_access(0) += 1;
 }

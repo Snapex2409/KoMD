@@ -11,6 +11,7 @@
 #include "Kokkos_Core.hpp"
 #include "Kokkos_ScatterView.hpp"
 #include "math/Array.h"
+#include "container/SOA.h"
 
 class Molecule;
 
@@ -25,8 +26,8 @@ public:
 
     struct RDF_Kernel {
         KOKKOS_FUNCTION void operator()(int idx_0, int idx_1) const;
-        Kokkos::View<math::d3*, Kokkos::SharedSpace>& positions;
-        RDFSensor& sensor;
+        SOA::vec_t<math::d3> positions;
+        SOA::vec_scatter_t<double> bins_scatter;
         const double max_r;
         const double delta_r;
         const uint64_t bins;

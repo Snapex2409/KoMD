@@ -20,13 +20,13 @@ void Simulation::run() {
 
     const double dt = config->delta_t;
     const uint64_t write_freq = config->write_freq;
+    container->updateContainer();
     vtkWriter->write("VTK_Output", 0);
     //initial pass to compute forces
-    container->updateContainer();
     for (auto& potential : potentials) (*potential)();
     temp_sens->measure();
-    pot_sens->measure();
     Log::simulation->info() << "Initial temperature T=" << temp_sens->getTemperature() << std::endl;
+    if (config->enable_sensor_lj) pot_sens->measure();
     if (config->enable_sensor_lj) Log::simulation->info() << "Initial potential u=" << pot_sens->getCurrentPotential() << std::endl;
     for (auto& thermostat : thermostats) thermostat->apply();
 

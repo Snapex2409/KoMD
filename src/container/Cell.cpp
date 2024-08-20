@@ -46,6 +46,8 @@ void Cell::constructSOA() {
 }
 
 void Cell::writeSOA2AOS() {
+    if (!m_valid_soa) return; // can skip if soa is not valid
+
     // the order should not have changed from writing to SOA
     uint64_t idx = 0;
     for (Molecule& molecule : m_data) {
