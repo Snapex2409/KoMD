@@ -11,10 +11,30 @@
 #include "Kokkos_Core.hpp"
 #include "Kokkos_ScatterView.hpp"
 
+#if defined(KOKKOS_ENABLE_CUDA)
+#else
+namespace Kokkos {
+    template<>
+    struct reduction_identity<math::d3> {
+        KOKKOS_FORCEINLINE_FUNCTION constexpr static math::d3 sum() { return {0, 0, 0}; }
+        KOKKOS_FORCEINLINE_FUNCTION constexpr static math::d3 prod() { return {1, 1, 1}; }
+        KOKKOS_FORCEINLINE_FUNCTION constexpr static math::d3 max() { return {-DBL_MAX, -DBL_MAX, -DBL_MAX}; }
+        KOKKOS_FORCEINLINE_FUNCTION constexpr static math::d3 min() { return {DBL_MAX, DBL_MAX, DBL_MAX}; }
+    };
+};
+#endif
+
 class SOA {
 public:
+
+#if defined(KOKKOS_ENABLE_CUDA)
+using memory_space = Kokkos::SharedSpace;
+#else
+using memory_space = Kokkos::HostSpace;
+#endif
+
     template<typename T>
-    using vec_t = Kokkos::View<T*, Kokkos::SharedSpace>;
+    using vec_t = Kokkos::View<T*, memory_space>;
     template<typename T>
     using vec_scatter_t = Kokkos::Experimental::ScatterView<T*>;
 
