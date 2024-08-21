@@ -266,13 +266,25 @@ namespace math {
         }
 
         template<typename O>
-        KOKKOS_FUNCTION bool operator==(const Array<O,3>& other) {
+        KOKKOS_FUNCTION bool operator==(const Array<O,3>& other) const {
             return other.m_data[0] == m_data[0] && other.m_data[1] == m_data[1] && other.m_data[2] == m_data[2];
         }
 
         template<typename O>
-        KOKKOS_FUNCTION bool operator!=(const Array<O,3>& other) {
+        KOKKOS_FUNCTION bool operator!=(const Array<O,3>& other) const {
             return other.m_data[0] != m_data[0] || other.m_data[1] != m_data[1] || other.m_data[2] != m_data[2];
+        }
+
+        template<typename O>
+        KOKKOS_FUNCTION Array<T,3> operator<=(const Array<O,3>& other) const {
+            Array<T,3> result {1, 1, 1};
+            for (int dim = 0; dim < 3; dim++) result[dim] = m_data[dim] <= other.m_data[dim];
+            return result;
+        }
+
+        template<typename O>
+        KOKKOS_FUNCTION bool operator==(O val) const {
+            return val == m_data[0] && val == m_data[1] && val == m_data[2];
         }
 
         /**

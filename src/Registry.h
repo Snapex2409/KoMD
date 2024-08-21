@@ -13,7 +13,7 @@
 #include "IO/Configuration.h"
 #include "potentials/ForceFunctor.h"
 #include "Simulation.h"
-#include "boundary/Boundary.h"
+#include "boundary/LCBoundary.h"
 #include "IO/VTKWriter.h"
 #include "sensors/Sensor.h"
 #include "sensors/TemperatureSensor.h"
@@ -31,7 +31,6 @@ public:
     std::vector<std::shared_ptr<Sensor>>& sensors();
     std::shared_ptr<MoleculeContainer> moleculeContainer();
     std::shared_ptr<Simulation> simulation();
-    std::shared_ptr<Boundary> boundary();
     std::shared_ptr<VTKWriter> vtkWriter();
     std::shared_ptr<TemperatureSensor> temperature_sensor();
     std::shared_ptr<LJ12_6_Sensor> potential_sensor();
@@ -40,7 +39,6 @@ public:
     std::shared_ptr<Configuration>& configuration_ptr();
     std::shared_ptr<MoleculeContainer>& moleculeContainer_ptr();
     std::shared_ptr<Simulation>& simulation_ptr();
-    std::shared_ptr<Boundary>& boundary_ptr();
     std::shared_ptr<VTKWriter>& vtkWriter_ptr();
     std::shared_ptr<TemperatureSensor>& temperature_sensor_ptr();
     std::shared_ptr<LJ12_6_Sensor>& potential_sensor_ptr();
@@ -51,7 +49,6 @@ private:
     std::vector<std::shared_ptr<Sensor>> m_sensors;
     std::shared_ptr<MoleculeContainer> m_moleculeContainer;
     std::shared_ptr<Simulation> m_simulation;
-    std::shared_ptr<Boundary> m_boundary;
     std::shared_ptr<VTKWriter> m_vtk_writer;
     std::shared_ptr<TemperatureSensor> m_sensor_temp;
     std::shared_ptr<LJ12_6_Sensor> m_sensor_pot;

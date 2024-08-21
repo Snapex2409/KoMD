@@ -15,17 +15,16 @@
 class MoleculeContainer {
 public:
     MoleculeContainer();
-    void addMolecule(const Molecule& molecule);
-    void updateContainer();
-    Vec3D<Cell>& getCells();
-    uint64_t getNumMolecules() { return m_molecule_count; }
-    /**
-     * Returns a valid cell coordinate if pos is within simulation bounds, else returned result is invalid and valid is set to false
-     * */
-    math::ul3 findCell(const math::d3& pos, bool& valid);
-    void gatherMolecules(std::vector<std::reference_wrapper<Molecule>>& buffer);
-    void getCenterOfMassPositions(Kokkos::View<math::d3*, Kokkos::SharedSpace>& buffer);
-    void writeSOA2AOS();
+    virtual ~MoleculeContainer() = default;
+
+    virtual void init() = 0;
+    virtual void addMolecule(const Molecule& molecule) = 0;
+    virtual void updateContainer() = 0;
+
+    uint64_t getNumMolecules() { return p_molecule_count; }
+
+    virtual void getCenterOfMassPositions(SOA::vec_t<math::d3>& buffer) = 0;
+    virtual void writeSOA2AOS() = 0;
 
     enum IteratorType {
         MOLECULE,
@@ -37,111 +36,60 @@ public:
         DOMAIN_HALO
     };
 
-    /**
-     * Only to be used for IO functionality on CPU side
-     * */
-    struct Iterator {
+    class Iterator {
     public:
-        Iterator(const math::ul3& min, const math::ul3& max, bool only_mol, Vec3D<Cell>& cells);
-        void operator++();
-        bool isValid();
+        virtual ~Iterator() = default;
+        virtual void operator++() = 0;
+        virtual bool isValid() const = 0;
 
-        math::d3& f();
-        math::d3& r();
-        math::d3& v();
-        double epsilon();
-        double sigma();
-        double mass();
-        uint64_t ID();
-
-        Molecule& molecule();
-    private:
-        void findNextCell();
-
-        math::ul3 m_cell_coord;
-        const math::ul3 m_cell_min;
-        const math::ul3 m_cell_max;
-        const bool m_only_molecule;
-        uint64_t m_site_idx;
-        uint64_t m_molecule_idx;
-        uint64_t m_visited_sites_cell;
-        Vec3D<Cell>& m_cells;
+        virtual math::d3& f() = 0;
+        virtual math::d3& r() = 0;
+        virtual math::d3& v() = 0;
+        virtual double epsilon() = 0;
+        virtual double sigma() = 0;
+        virtual double mass() = 0;
+        virtual uint64_t ID() = 0;
+        virtual Molecule& molecule() = 0;
     };
 
-    struct CellIterator {
+    class CellIterator {
     public:
-        CellIterator(const math::ul3& min, const math::ul3& max, Vec3D<Cell>& cells);
-        void operator++();
-        bool isValid();
-        Cell& cell();
-    private:
-        math::ul3 m_cell_coord;
-        const math::ul3 m_cell_min;
-        const math::ul3 m_cell_max;
-        Vec3D<Cell>& m_cells;
+        virtual ~CellIterator() = default;
+        virtual void operator++() = 0;
+        virtual bool isValid() const = 0;
+
+        virtual Cell& cell() = 0;
     };
 
-    struct C08Iterator {
+    class CellPairIterator {
     public:
-        C08Iterator(const math::ul3& min, const math::ul3& max, Vec3D<Cell>& cells);
-        void operator++();
-        bool isValid() const;
-        Cell& cell0();
-        Cell& cell1();
-        bool colorSwitched();
-    private:
-        math::ul3 m_cell_coord;
-        math::ul3 m_cell_min;
-        const math::ul3 m_cell_max;
-        Vec3D<Cell>& m_cells;
-        int m_offset_idx;
-        int m_color;
-        bool m_color_switched;
+        virtual ~CellPairIterator() = default;
+        virtual void operator++() = 0;
+        virtual bool isValid() const = 0;
+        virtual bool colorSwitched() = 0;
 
-        static constexpr math::ul3 c_o   {0, 0, 0};
-        static constexpr math::ul3 c_x   {1, 0, 0};
-        static constexpr math::ul3 c_y   {0, 1, 0};
-        static constexpr math::ul3 c_z   {0, 0, 1};
-        static constexpr math::ul3 c_xy  {1, 1, 0};
-        static constexpr math::ul3 c_yz  {0, 1, 1};
-        static constexpr math::ul3 c_xz  {1, 0, 1};
-        static constexpr math::ul3 c_xyz {1, 1, 1};
-
-        using pair_t = std::pair<math::ul3, math::ul3>;
-        static constexpr std::array<pair_t, 13> pair_offsets {pair_t {c_o, c_y},
-                                                              pair_t {c_y, c_z},
-                                                              pair_t {c_o, c_z},
-                                                              pair_t {c_o, c_yz},
-                                                              pair_t {c_x, c_yz},
-                                                              pair_t {c_x, c_y},
-                                                              pair_t {c_x, c_z},
-                                                              pair_t {c_o, c_x},
-                                                              pair_t {c_o, c_xy},
-                                                              pair_t {c_xy, c_z},
-                                                              pair_t {c_y, c_xz},
-                                                              pair_t {c_o, c_xz},
-                                                              pair_t {c_o, c_xyz}};
+        virtual Cell& cell0() = 0;
+        virtual Cell& cell1() = 0;
     };
 
     /**
      * Only to be used for IO functionality on CPU side
      * */
-    Iterator iterator(const IteratorType type, const IteratorRegion region);
+    virtual std::unique_ptr<Iterator> iterator(const IteratorType type, const IteratorRegion region) = 0;
     /**
      * Only to be used on CPU side
      * */
-    CellIterator iteratorCell(const IteratorRegion region);
+    virtual std::unique_ptr<CellIterator> iteratorCell(const IteratorRegion region) = 0;
     /**
      * Only to be used on CPU side
      * */
-    C08Iterator iteratorC08();
+    virtual std::unique_ptr<CellPairIterator> iteratorC08() = 0;
 private:
-    /// 3d cell buffer
-    Vec3D<Cell> m_data;
-    void constructSOAs();
-    void clearForces();
+    virtual void constructSOAs() = 0;
+    virtual void clearForces() = 0;
+protected:
     /// total number of molecules
-    uint64_t m_molecule_count;
+    uint64_t p_molecule_count;
 };
 
 

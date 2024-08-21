@@ -16,8 +16,8 @@ void VelocityScaling::apply() {
 
     auto container = Registry::instance->moleculeContainer();
 
-    for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it.isValid(); ++it) {
-        auto& cell = it.cell();
+    for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it->isValid(); ++(*it)) {
+        auto& cell = it->cell();
         auto& soa = cell.soa();
         Kokkos::parallel_for("Velocity Scaling", soa.size(), VS_Kernel(soa.v(), beta));
     }

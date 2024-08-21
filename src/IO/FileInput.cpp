@@ -48,6 +48,7 @@ bool FileInput::readFile(const std::string &filename) {
                 file >> config->checkpoint_file;
                 config->loadCheckpoint = true;
             }
+            if (var == "enable_one_cell") file >> config->enable_one_cell;
         }
     }
     file.close();

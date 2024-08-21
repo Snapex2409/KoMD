@@ -2,17 +2,20 @@
 // Created by alex on 8/1/24.
 //
 
-#ifndef KOMD_BOUNDARY_H
-#define KOMD_BOUNDARY_H
+#ifndef KOMD_LCBOUNDARY_H
+#define KOMD_LCBOUNDARY_H
 
 #include <functional>
 #include "math/Array.h"
 
 class Cell;
 class Molecule;
+class LinkedCells;
 
-class Boundary {
+class LCBoundary {
 public:
+    LCBoundary(LinkedCells& container);
+
     /**
      * Called once before simulation start, to set up Halo correctly.\n
      * Must be called after Molecule container is constructed and all desired molecules were inserted.
@@ -58,7 +61,9 @@ public:
      * Loops over all boundary cells while executing fun. Provides the current cell and it coordinate as parameters.
      * */
     void loopOverBoundary(std::function<void(Cell&, const math::ul3&)> fun);
+private:
+    LinkedCells& m_container;
 };
 
 
-#endif //KOMD_BOUNDARY_H
+#endif //KOMD_LCBOUNDARY_H

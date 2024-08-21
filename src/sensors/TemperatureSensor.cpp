@@ -29,8 +29,8 @@ void TemperatureSensor::measure() {
     mv2[0] = 0;
     num_sites[0] = 0;
 
-    for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it.isValid(); ++it) {
-        auto& cell = it.cell();
+    for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it->isValid(); ++(*it)) {
+        auto& cell = it->cell();
         auto& soa = cell.soa();
         Kokkos::parallel_for("Temp Measurement", soa.size(), Temperature_Kernel(soa.r(), soa.v(), soa.mass(), p_low, p_high, mv2_scatter, num_sites_scatter));
     }

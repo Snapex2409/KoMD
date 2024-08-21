@@ -2,13 +2,16 @@
 // Created by alex on 8/1/24.
 //
 
-#include "Boundary.h"
+#include "LCBoundary.h"
 
 #include "molecule/Molecule.h"
 #include "container/Cell.h"
 #include "Registry.h"
+#include "container/LinkedCells.h"
 
-void Boundary::setup() {
+LCBoundary::LCBoundary(LinkedCells &container) : m_container(container) { }
+
+void LCBoundary::setup() {
     // We want to find all molecules close to the boundary region and make copies to all sides
     auto config = Registry::instance->configuration();
     const math::d3 domain_size = config->domainHigh - config->domainLow;
@@ -20,7 +23,7 @@ void Boundary::setup() {
     });
 }
 
-void Boundary::updateHalo() {
+void LCBoundary::updateHalo() {
     auto config = Registry::instance->configuration();
     const math::d3 domain_size = config->domainHigh - config->domainLow;
     loopOverBoundary([&](Cell& cell, const math::ul3& cell_coord) -> void {
@@ -30,9 +33,8 @@ void Boundary::updateHalo() {
     });
 }
 
-bool Boundary::moveMolecule(Molecule& molecule) {
+bool LCBoundary::moveMolecule(Molecule& molecule) {
     auto config = Registry::instance->configuration();
-    auto container = Registry::instance->moleculeContainer();
 
     // check if molecule is still within simulation bounds
     const math::d3 mol_pos = molecule.getCenterOfMass();
@@ -55,8 +57,8 @@ bool Boundary::moveMolecule(Molecule& molecule) {
     // insert molecule based on new position
     bool valid = false;
     const math::d3 new_pos = molecule.getCenterOfMass();
-    const math::ul3 cell_coord = container->findCell(new_pos, valid);
-    Cell& cell = container->getCells()(cell_coord);
+    const math::ul3 cell_coord = m_container.findCell(new_pos, valid);
+    Cell& cell = m_container.getCells()(cell_coord);
     cell.addMolecule(molecule);
     cell.invalidateSOA();
 
@@ -65,7 +67,7 @@ bool Boundary::moveMolecule(Molecule& molecule) {
     return true;
 }
 
-std::vector<Molecule>::iterator Boundary::deleteMolecule(Molecule &molecule) {
+std::vector<Molecule>::iterator LCBoundary::deleteMolecule(Molecule &molecule) {
     // remove all linked molecules
     for (auto& [cell_ref, _] : molecule.getCopies()) {
         Cell& cell = cell_ref.get();
@@ -80,10 +82,8 @@ std::vector<Molecule>::iterator Boundary::deleteMolecule(Molecule &molecule) {
     return molecule.getCell().removeMolecule(molecule.ID());
 }
 
-void Boundary::createHaloMolecules(Molecule& molecule, Cell& cell, uint64_t idx, const math::ul3& cell_coord, const math::d3& domain_size) {
-    auto container = Registry::instance->moleculeContainer();
-
-    const math::ul3 cell_dims = container->getCells().dims();
+void LCBoundary::createHaloMolecules(Molecule& molecule, Cell& cell, uint64_t idx, const math::ul3& cell_coord, const math::d3& domain_size) {
+    const math::ul3 cell_dims = m_container.getCells().dims();
     math::d3 is_bound {0, 0, 0};
     if (cell_coord.x() == 1) is_bound.x() = 1;
     if (cell_coord.x() == cell_dims.x() - 2) is_bound.x() = -1;
@@ -104,7 +104,7 @@ void Boundary::createHaloMolecules(Molecule& molecule, Cell& cell, uint64_t idx,
                 halo_copy.setParent(cell);
 
                 const math::ul3 halo_cell_coord = cell_coord + (is_bound * shiftVec) * (cell_dims - 2);
-                Cell& halo_cell = container->getCells()(halo_cell_coord);
+                Cell& halo_cell = m_container.getCells()(halo_cell_coord);
                 halo_cell.addMolecule(halo_copy);
                 molecule.registerCopy(halo_cell, shiftVec);
                 halo_cell.invalidateSOA();
@@ -113,10 +113,8 @@ void Boundary::createHaloMolecules(Molecule& molecule, Cell& cell, uint64_t idx,
     }
 }
 
-void Boundary::updateHaloMolecules(Molecule &molecule, const math::ul3 &cell_coord, const math::d3 &domain_size) {
-    auto container = Registry::instance->moleculeContainer();
-
-    const math::ul3 cell_dims = container->getCells().dims();
+void LCBoundary::updateHaloMolecules(Molecule &molecule, const math::ul3 &cell_coord, const math::d3 &domain_size) {
+    const math::ul3 cell_dims = m_container.getCells().dims();
     math::d3 is_bound {0, 0, 0};
     if (cell_coord.x() == 1) is_bound.x() = 1;
     if (cell_coord.x() == cell_dims.x() - 2) is_bound.x() = -1;
@@ -143,10 +141,9 @@ void Boundary::updateHaloMolecules(Molecule &molecule, const math::ul3 &cell_coo
     }
 }
 
-void Boundary::loopOverBoundary(std::function<void(Cell&, const math::ul3&)> fun) {
-    auto container = Registry::instance->moleculeContainer();
-    auto& cells = container->getCells();
-    const math::ul3 cell_dims = container->getCells().dims();
+void LCBoundary::loopOverBoundary(std::function<void(Cell&, const math::ul3&)> fun) {
+    auto& cells = m_container.getCells();
+    const math::ul3 cell_dims = m_container.getCells().dims();
 
     for (uint64_t z = 1; z < cell_dims.z()-1; z++) {
         for (uint64_t y = 1; y < cell_dims.y()-1; y++) {

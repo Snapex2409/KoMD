@@ -13,8 +13,8 @@ void Integrator::integrate0() {
     auto container = Registry::instance->moleculeContainer();
 
     const double dt_halve = m_delta_t * 0.5;
-    for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it.isValid(); ++it) {
-        Cell& cell = it.cell();
+    for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it->isValid(); ++(*it)) {
+        Cell& cell = it->cell();
         SOA& soa = cell.soa();
         Kokkos::parallel_for("Integrate 0", soa.size(), Step0(soa.r(), soa.v(), soa.f(), soa.mass(), dt_halve, m_delta_t));
     }
@@ -25,8 +25,8 @@ void Integrator::integrate1() {
     auto container = Registry::instance->moleculeContainer();
 
     const double dt_halve = m_delta_t * 0.5;
-    for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it.isValid(); ++it) {
-        Cell& cell = it.cell();
+    for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it->isValid(); ++(*it)) {
+        Cell& cell = it->cell();
         SOA& soa = cell.soa();
         Kokkos::parallel_for("Integrate 1", soa.size(), Step1(soa.v(), soa.f(), soa.mass(), dt_halve));
     }

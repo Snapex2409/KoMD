@@ -34,6 +34,8 @@ struct Configuration {
     bool sensor_temp_opt = Defaults::sensor_temp_opt;
     double sensor_rdf_max = Defaults::sensor_rdf_max;
     double sensor_rdf_dr = Defaults::sensor_rdf_dr;
+
+    bool enable_one_cell = false;
 };
 
 

@@ -5,6 +5,7 @@
 #include "IO/FileInput.h"
 #include "IO/CheckpointIO.h"
 #include "potentials/LJ12_6.h"
+#include "potentials/OCLJ.h"
 #include "potentials/FENE.h"
 #include "util/PhasespaceGenerator.h"
 #include "potentials/Limit.h"
@@ -12,6 +13,8 @@
 #include "sensors/FENE_Sensor.h"
 #include "sensors/RDFSensor.h"
 #include "thermostats/VelocityScaling.h"
+#include "container/LinkedCells.h"
+#include "container/OneCell.h"
 
 #include "Kokkos_Core.hpp"
 
@@ -28,10 +31,11 @@ int main(int argc, char** argv) {
     }
 
     if(!FileInput::readFile(argv[1])) quit(0);
-    Registry::instance->moleculeContainer_ptr() = std::make_shared<MoleculeContainer>();
-    Registry::instance->boundary_ptr() = std::make_shared<Boundary>();
+    if (Registry::instance->configuration()->enable_one_cell) Registry::instance->moleculeContainer_ptr() = std::make_shared<OneCell>();
+    else Registry::instance->moleculeContainer_ptr() = std::make_shared<LinkedCells>();
     Registry::instance->simulation_ptr() = std::make_shared<Simulation>();
-    Registry::instance->forceFunctors().push_back(std::make_unique<LJ12_6>());
+    if (Registry::instance->configuration()->enable_one_cell) Registry::instance->forceFunctors().push_back(std::make_unique<OCLJ>());
+    else Registry::instance->forceFunctors().push_back(std::make_unique<LJ12_6>());
     Registry::instance->forceFunctors().push_back(std::make_unique<FENE>());
     Registry::instance->forceFunctors().push_back(std::make_unique<Limit>());
     Registry::instance->integrators().push_back(std::make_unique<Integrator>());
@@ -48,7 +52,7 @@ int main(int argc, char** argv) {
 
     Registry::instance->thermostats().push_back(std::make_unique<VelocityScaling>());
 
-    Registry::instance->boundary()->setup();
+    Registry::instance->moleculeContainer()->init();
     Registry::instance->simulation()->run();
 
     finalize();
@@ -64,6 +68,7 @@ static void init(int argc, char** argv) {
 }
 
 static void finalize() {
+    Registry::instance = nullptr;
     Log::finalize();
     Kokkos::finalize();
 }

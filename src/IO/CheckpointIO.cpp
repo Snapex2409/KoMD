@@ -22,11 +22,11 @@ void CheckpointIO::writeCheckpoint(uint64_t simstep) {
         return;
     }
 
-    for (auto it = container->iterator(MoleculeContainer::SITE, MoleculeContainer::DOMAIN); it.isValid(); ++it) {
-        file << it.ID() << "\t";
-        file << it.r().x() << " " << it.r().y()  << " " << it.r().z()  << "\t";
-        file << it.v().x() << " " << it.v().y()  << " " << it.v().z()  << "\t";
-        file << it.mass()  << " " << it.epsilon()<< " " << it.sigma()  << "\n";
+    for (auto it = container->iterator(MoleculeContainer::SITE, MoleculeContainer::DOMAIN); it->isValid(); ++(*it)) {
+        file << it->ID() << "\t";
+        file << it->r().x() << " " << it->r().y()  << " " << it->r().z()  << "\t";
+        file << it->v().x() << " " << it->v().y()  << " " << it->v().z()  << "\t";
+        file << it->mass()  << " " << it->epsilon()<< " " << it->sigma()  << "\n";
     }
 
     file.close();

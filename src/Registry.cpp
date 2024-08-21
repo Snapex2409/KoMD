@@ -47,14 +47,6 @@ std::shared_ptr<Simulation> &Registry::simulation_ptr() {
     return m_simulation;
 }
 
-std::shared_ptr<Boundary> Registry::boundary() {
-    return m_boundary;
-}
-
-std::shared_ptr<Boundary> &Registry::boundary_ptr() {
-    return m_boundary;
-}
-
 std::shared_ptr<VTKWriter> Registry::vtkWriter() {
     return m_vtk_writer;
 }
