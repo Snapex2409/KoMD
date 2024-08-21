@@ -16,7 +16,7 @@ public:
 
     void addMolecule(const Molecule &molecule) override;
     void updateContainer() override;
-    void getCenterOfMassPositions(Kokkos::View<math::d3 *, Kokkos::SharedSpace> &buffer) override;
+    void getCenterOfMassPositions(SOA::vec_t<math::d3> &buffer) override;
     void writeSOA2AOS() override;
     void init() override {};
 

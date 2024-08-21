@@ -46,7 +46,7 @@ void OneCell::updateContainer() {
     Kokkos::fence("OneCell - update");
 }
 
-void OneCell::getCenterOfMassPositions(Kokkos::View<math::d3 *, Kokkos::SharedSpace> &buffer) {
+void OneCell::getCenterOfMassPositions(SOA::vec_t<math::d3> &buffer) {
     Kokkos::deep_copy(buffer, m_com);
 }
 

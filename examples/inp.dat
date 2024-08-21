@@ -7,7 +7,7 @@ cutoff 5
 timesteps 1000
 
 # Phasespace
-density 1.0
+density 0.5
 
 # Potentials
 epsilon 1
@@ -17,14 +17,14 @@ limit 20
 
 # Domain
 domain_low 0 0 0
-domain_high 10 10 10
+domain_high 80 20 20
 
 # Algorithm
 # enableSOA 0
 enable_one_cell 1
 
 # IO
-write_freq 1
+write_freq 100
 # store_checkpoint 1
 # checkpoint_file ../examples/ckpt_10000.ps
 
