@@ -23,6 +23,7 @@ void OneCell::addMolecule(const Molecule &molecule) {
 
 void OneCell::updateContainer() {
     if (m_first_update) {
+        m_data.soa().createBuffers();
         constructSOAs();
         m_first_update = false;
         m_com = SOA::vec_t<math::d3>("Center of Masses", m_data.soa().size());

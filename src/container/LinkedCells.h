@@ -127,6 +127,7 @@ private:
     /// 3d cell buffer
     Vec3D<Cell> m_data;
     void constructSOAs() override;
+    void constructSOABuffers();
     void clearForces() override;
     LCBoundary m_boundary;
 };

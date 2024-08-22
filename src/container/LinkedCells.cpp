@@ -149,6 +149,16 @@ void LinkedCells::writeSOA2AOS() {
     }
 }
 
+void LinkedCells::constructSOABuffers() {
+    for (uint64_t z = 0; z < m_data.dims().z(); z++) {
+        for (uint64_t y = 0; y < m_data.dims().y(); y++) {
+            for (uint64_t x = 0; x < m_data.dims().x(); x++) {
+                m_data(x, y, z).soa().createBuffers();
+            }
+        }
+    }
+}
+
 math::ul3 LinkedCells::findCell(const math::d3 &pos, bool& valid) {
     auto config = Registry::instance->configuration();
 
@@ -201,6 +211,7 @@ void LinkedCells::getCenterOfMassPositions(SOA::vec_t<math::d3> &buffer) {
 }
 
 void LinkedCells::init() {
+    constructSOABuffers();
     m_boundary.setup();
 }
 

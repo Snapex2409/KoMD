@@ -40,6 +40,7 @@ using memory_space = Kokkos::HostSpace;
 
     explicit SOA();
     void resize(uint64_t newSize);
+    void createBuffers();
     KOKKOS_INLINE_FUNCTION vec_scatter_t<double>& epsilonScatter() { return m_epsilon_scatter; };
     KOKKOS_INLINE_FUNCTION vec_scatter_t<double>& sigmaScatter() { return m_sigma_scatter; };
     KOKKOS_INLINE_FUNCTION vec_scatter_t<double>& massScatter() { return m_mass_scatter; };
