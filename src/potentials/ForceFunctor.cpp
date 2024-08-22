@@ -17,7 +17,6 @@ void ForceFunctor::operator()() {
         for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it->isValid(); ++(*it)) {
             Cell& cell = it->cell();
             handleCell(cell);
-            Kokkos::fence("DBG - Single Cells");
             // was scatter view used?
             if (p_run_contribution) Kokkos::Experimental::contribute(cell.soa().f(), cell.soa().fScatter());
         }

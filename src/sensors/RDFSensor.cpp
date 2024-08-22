@@ -35,8 +35,6 @@ void RDFSensor::measure() {
 }
 
 void RDFSensor::write(uint64_t simstep) {
-    const double fac = 4.0 * M_PI * m_delta_r * m_rho_0;
-
     std::stringstream file_name;
     file_name << "rdf_" << simstep << ".txt";
     std::ofstream file(file_name.str());
@@ -45,9 +43,15 @@ void RDFSensor::write(uint64_t simstep) {
         return;
     }
 
+    auto config = Registry::instance->configuration();
+    const double v_total = (config->domainHigh - config->domainLow).product();
+    const double n = m_rho_0 * v_total;
+    const double n_total = 0.5 * n * (n-1);
     double r = m_delta_r / 2.0;
     for (uint64_t idx = 0; idx < m_bins.size(); idx++) {
-        const double g_r = (m_bins[idx] / m_samples) / (r * r * fac);
+        const double n_bin = m_bins[idx] / m_samples;
+        const double v_bin = 4.0 * M_PI * m_delta_r * r * r;
+        const double g_r = (n_bin * v_total) / (v_bin * n_total);
         file << r << " " << g_r << "\n";
         r += m_delta_r;
     }

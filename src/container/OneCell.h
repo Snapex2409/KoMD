@@ -96,6 +96,7 @@ private:
     SOA::vec_t<math::d3> m_com;
     void constructSOAs() override;
     void clearForces() override;
+    void updateCOM();
 };
 
 

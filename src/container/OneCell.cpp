@@ -29,15 +29,7 @@ void OneCell::updateContainer() {
         m_com = SOA::vec_t<math::d3>("Center of Masses", m_data.soa().size());
     }
 
-    // update com vector
-    uint64_t s_idx = 0;
-    for (uint64_t idx = 0; idx < p_molecule_count; idx++) {
-        Molecule& molecule = m_data.molecules()[idx];
-        const math::d3 com = molecule.getCenterOfMass();
-        for (uint64_t s_counter = 0; s_counter < molecule.getSites().size(); s_counter++) {
-            m_com[s_idx++] = com;
-        }
-    }
+    updateCOM();
 
     // apply periodic boundary kernel
     Kokkos::parallel_for("Periodic Bound", m_data.soa().size(), Periodic_Kernel(m_com, m_data.soa().r(), m_data.low(), m_data.high(), m_data.high() - m_data.low()));
@@ -45,6 +37,9 @@ void OneCell::updateContainer() {
     Kokkos::parallel_for("Force Reset", m_data.soa().size(), FReset_Kernel(m_data.soa().f()));
 
     Kokkos::fence("OneCell - update");
+
+    // update com vector
+    updateCOM();
 }
 
 void OneCell::getCenterOfMassPositions(SOA::vec_t<math::d3> &buffer) {
@@ -68,6 +63,26 @@ std::unique_ptr<MoleculeContainer::CellPairIterator> OneCell::iteratorC08() {
 void OneCell::writeSOA2AOS() { m_data.writeSOA2AOS(); }
 void OneCell::constructSOAs() { m_data.constructSOA(); }
 void OneCell::clearForces() { m_data.clearForces(); }
+void OneCell::updateCOM() {
+    uint64_t s_idx = 0;
+    for (uint64_t idx = 0; idx < p_molecule_count; idx++) {
+        const uint64_t num_sites = m_data.molecules()[idx].getSites().size();
+
+        // compute com
+        math::d3 com {0, 0, 0};
+        double total_mass = 0;
+        for (uint64_t s_counter = 0; s_counter < num_sites; s_counter++) {
+            com += m_data.soa().r()[s_idx + s_counter];
+            total_mass += m_data.soa().mass()[s_idx + s_counter];
+        }
+        com /= total_mass;
+
+        // update com buffer
+        for (uint64_t s_counter = 0; s_counter < num_sites; s_counter++) {
+            m_com[s_idx++] = com;
+        }
+    }
+}
 
 OneCell::OCIterator::OCIterator(bool only_mol, Cell &cell) : m_only_molecule(only_mol), m_site_idx(0), m_molecule_idx(0), m_visited_sites_cell(0), m_cell(cell) {}
 
