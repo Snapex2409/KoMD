@@ -69,7 +69,7 @@ protected:
     /// ScatterView for force number samples bins
     SOA::vec_scatter_t<uint64_t> p_count_f_scatter;
     /// max sigma
-    const double p_sigma;
+    const double p_max_sigma;
 };
 
 

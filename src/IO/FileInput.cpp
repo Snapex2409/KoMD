@@ -16,6 +16,7 @@ bool FileInput::readFile(const std::string &filename) {
     }
 
     auto config = Registry::instance->configuration();
+    auto& components = Registry::instance->components();
 
     const int MAX_LINE_LENGTH = 1024;
     std::string var;
@@ -28,8 +29,6 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "delta_t") file >> config->delta_t;
             if (var == "cutoff") file >> config->cutoff;
             if (var == "density") file >> config->density;
-            if (var == "epsilon") file >> config->epsilon;
-            if (var == "sigma") file >> config->sigma;
             if (var == "stiffness") file >> config->stiffness_factor;
             if (var == "limit") file >> config->limit_factor;
             if (var == "domain_low") file >> config->domainLow.x() >> config->domainLow.y() >> config->domainLow.z();
@@ -45,14 +44,43 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "sensor_rdf_max") file >> config->sensor_rdf_max;
             if (var == "sensor_rdf_dr") file >> config->sensor_rdf_dr;
             if (var == "store_checkpoint") file >> config->storeCheckpoint;
+            if (var == "ps_gen_region") {
+                math::d3 begin, end; int cid;
+                file >> begin.x() >> begin.y() >> begin.z() >> end.x() >> end.y() >> end.z() >> cid;
+                if (cid < 0) { Log::io->error() << "negative component id not allowed" << std::endl; return false; }
+                config->phasespace_gen_regions.emplace_back(begin, end, cid);
+            }
             if (var == "checkpoint_file") {
-                file >> config->checkpoint_file;
-                config->loadCheckpoint = true;
+                std::string path; math::d3 offset;
+                file >> path >> offset.x() >> offset.y() >> offset.z();
+                config->checkpoint_files.emplace_back(path, offset);
             }
             if (var == "enable_one_cell") file >> config->enable_one_cell;
+
+            // Handle component loading
+            if (var == "COMP") {
+                int cid; double eps, sig, mass; math::d3 r;
+                file >> cid >> eps >> sig >> mass >> r.x() >> r.y() >> r.z();
+                if (cid < 0) { Log::io->error() << "negative component id not allowed" << std::endl; return false; }
+                if (components.size() <= cid) components.resize(cid + 1);
+                components[cid].addSite(eps, sig, mass, r);
+                if (eps > config->max_epsilon) config->max_epsilon = eps;
+                if (sig > config->max_sigma) config->max_sigma = sig;
+            }
         }
     }
     file.close();
 
+    // perform some final checks
+    if (components.empty()) { Log::io->error() << "no components defined" << std::endl; return false; }
+    if (config->max_epsilon == std::numeric_limits<double>::min()) { Log::io->error() << "invalid epsilon specified" << std::endl; return false; }
+    if (config->max_sigma == std::numeric_limits<double>::min()) { Log::io->error() << "invalid sigma specified" << std::endl; return false; }
+    if (config->phasespace_gen_regions.empty() && config->checkpoint_files.empty()) { Log::io->error() << "No phasespace data specified" << std::endl; return false; }
+    for (auto& ps_region : config->phasespace_gen_regions) {
+        if (std::get<2>(ps_region) >= components.size()) {
+            Log::io->error() << "phasespace gen region uses unknown component" << std::endl;
+            return false;
+        }
+    }
     return true;
 }

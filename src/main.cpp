@@ -40,8 +40,8 @@ int main(int argc, char** argv) {
     Registry::instance->forceFunctors().push_back(std::make_unique<Limit>());
     Registry::instance->integrators().push_back(std::make_unique<Integrator>());
 
-    if (Registry::instance->configuration()->loadCheckpoint) CheckpointIO::loadCheckpoint();
-    else PhasespaceGenerator::generate();
+    CheckpointIO::loadCheckpoint();
+    PhasespaceGenerator::generate();
 
     Registry::instance->temperature_sensor_ptr() = std::make_shared<TemperatureSensor>();
     Registry::instance->sensors().push_back(std::dynamic_pointer_cast<Sensor>(Registry::instance->temperature_sensor()));

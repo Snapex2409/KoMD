@@ -9,23 +9,26 @@ Molecule Molecule::INVALID = Molecule();
 
 Molecule::id_t Molecule::NEXT_ID = 0;
 
-Molecule::Molecule() : m_sites(), m_id(NEXT_ID++), m_parent(Cell::INVALID), m_links(), m_cell(Cell::INVALID) {}
+Molecule::Molecule() : m_sites(), m_id(NEXT_ID++), m_cid(), m_parent(Cell::INVALID), m_links(), m_cell(Cell::INVALID) {}
 
 Molecule::Molecule(const Molecule &copy) : m_parent(copy.m_parent), m_cell(copy.m_cell) {
     m_sites = copy.m_sites;
     m_id = copy.m_id;
+    m_cid = copy.m_cid;
     m_links = copy.m_links;
 }
 
 Molecule::Molecule(Molecule &&move) noexcept : m_parent(move.m_parent), m_cell(move.m_cell) {
     m_sites = std::move(move.m_sites);
     m_id = move.m_id;
+    m_cid = move.m_cid;
     m_links = std::move(move.m_links);
 }
 
 Molecule& Molecule::operator=(const Molecule &copy) {
     m_sites = copy.m_sites;
     m_id = copy.m_id;
+    m_cid = copy.m_cid;
     m_parent = copy.m_parent;
     m_links = copy.m_links;
     m_cell = copy.m_cell;
@@ -35,6 +38,7 @@ Molecule& Molecule::operator=(const Molecule &copy) {
 Molecule& Molecule::operator=(Molecule &&move) noexcept {
     m_sites = std::move(move.m_sites);
     m_id = move.m_id;
+    m_cid = move.m_cid;
     m_parent = move.m_parent;
     m_links = std::move(move.m_links);
     m_cell = move.m_cell;

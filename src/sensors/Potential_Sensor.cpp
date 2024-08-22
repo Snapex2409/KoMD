@@ -11,9 +11,9 @@
 #include <fstream>
 
 Potential_Sensor::Potential_Sensor(std::string name, uint64_t bins) :
-    Sensor(std::move(name)), p_bins(bins), p_data_u("POT_u", bins), p_data_f("POT_u", bins),
-    p_count_u("POT_u", bins), p_count_f("POT_u", bins),
-    p_sigma(Registry::instance->configuration()->sigma) {
+        Sensor(std::move(name)), p_bins(bins), p_data_u("POT_u", bins), p_data_f("POT_u", bins),
+        p_count_u("POT_u", bins), p_count_f("POT_u", bins),
+        p_max_sigma(Registry::instance->configuration()->max_sigma) {
     p_data_u_scatter = SOA::vec_scatter_t<double>(p_data_u);
     p_data_f_scatter = SOA::vec_scatter_t<double>(p_data_f);
     p_count_u_scatter = SOA::vec_scatter_t<uint64_t>(p_count_u);
@@ -39,7 +39,7 @@ void Potential_Sensor::write(uint64_t simstep) {
     }
 
     double r = 0;
-    const double max_size = 3.0 * p_sigma;
+    const double max_size = 3.0 * p_max_sigma;
     const double bin_width = max_size / static_cast<double>(p_bins);
     for (uint64_t idx = 0; idx < p_bins; idx++) {
         file << r << " " << p_data_f[idx] / (double) p_count_f[idx] << " " << p_data_u[idx] / (double) p_count_u[idx] << "\n";

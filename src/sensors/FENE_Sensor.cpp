@@ -19,7 +19,7 @@ void FENE_Sensor::handleCell(Cell &cell) {
     Kokkos::parallel_for("Sensor - FENE - Cell", Kokkos::MDRangePolicy({0, 0}, {soa.size(), soa.size()}),
                          FENE_Pot(soa.id(), soa.r(), soa.sigma(), soa.epsilon(),
                                   p_data_u_scatter, p_data_f_scatter, p_count_u_scatter, p_count_f_scatter,
-                                  m_stiffness_factor, p_sigma, p_bins));
+                                  m_stiffness_factor, p_max_sigma, p_bins));
 }
 
 void FENE_Sensor::handleCellPair(Cell &cell0, Cell &cell1) { }

@@ -29,13 +29,8 @@ void PhasespaceGenerator::generate() {
     double density = Registry::instance->configuration()->density;
     auto container = Registry::instance->moleculeContainer();
     auto config = Registry::instance->configuration();
-
-    static const std::array<math::d3, 4> coords {
-        math::d3 {0.35355339, 0.35355339, 0.35355339},
-        math::d3 {-0.35355339, -0.35355339, 0.35355339},
-        math::d3 {-0.35355339, 0.35355339, -0.35355339},
-        math::d3 {0.35355339, -0.35355339, -0.35355339}
-    };
+    auto& ps_regions = config->phasespace_gen_regions;
+    auto& components = Registry::instance->components();
 
     const math::d3 domain_size = config->domainHigh - config->domainLow;
     const double domain_volume = domain_size.product();
@@ -46,21 +41,26 @@ void PhasespaceGenerator::generate() {
     static std::default_random_engine rng(43); // NOLINT(*-msc51-cpp) I know... that's the point
     std::uniform_real_distribution<double> uniform(0, M_PI * 2);
 
-    for (double z = config->domainLow.z() + 0.5; z < config->domainHigh.z(); z += spacing.z()) {
-        for (double y = config->domainLow.y() + 0.5; y < config->domainHigh.y(); y += spacing.y()) {
-            for (double x = config->domainLow.x() + 0.5; x < config->domainHigh.x(); x += spacing.x()) {
-                const math::d3 center_pos {x, y, z};
-                Molecule molecule;
+    for (auto [begin, end, cid] : ps_regions) {
+        for (double z = begin.z() + 0.5; z < end.z(); z += spacing.z()) {
+            for (double y = begin.y() + 0.5; y < end.y(); y += spacing.y()) {
+                for (double x = begin.x() + 0.5; x < end.x(); x += spacing.x()) {
+                    const math::d3 center_pos {x, y, z};
+                    Molecule molecule;
+                    molecule.setCID(cid);
+                    Component& component = components[cid];
 
-                //velocity and rotation should be same for all sites
-                double alpha = uniform(rng), beta = uniform(rng), gamma = uniform(rng);
-                const math::d3 v = getMaxwellBoltzmannVelocity(config->temperature, 1.0);
-                for (int idx = 0; idx < 4; idx++) {
-                    const math::d3 site_pos = center_pos + random_rotate(alpha, beta, gamma, coords[idx]);
-                    molecule.addSite(config->epsilon, config->sigma, 1.0, site_pos, v);
+                    //velocity and rotation should be same for all sites
+                    double alpha = uniform(rng), beta = uniform(rng), gamma = uniform(rng);
+                    const math::d3 v = getMaxwellBoltzmannVelocity(config->temperature, 1.0);
+                    for (int s_idx = 0; s_idx < component.getSites().size(); s_idx++) {
+                        Site& site = component.getSites()[s_idx];
+                        const math::d3 site_pos = center_pos + random_rotate(alpha, beta, gamma, site.r_arr());
+                        molecule.addSite(site.getEpsilon(), site.getSigma(), site.getMass(), site_pos, v);
+                    }
+
+                    container->addMolecule(molecule);
                 }
-                //molecule.addSite(config->epsilon, config->sigma, 1.0, center_pos, v);
-                container->addMolecule(molecule);
             }
         }
     }

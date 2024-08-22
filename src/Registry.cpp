@@ -4,7 +4,6 @@
 
 #include "Registry.h"
 
-
 std::unique_ptr<Registry> Registry::instance;
 
 Registry::Registry() : m_configuration(), m_forceFunctors(), m_integrators(), m_moleculeContainer(), m_simulation() {
@@ -81,4 +80,8 @@ std::shared_ptr<DisplacementSensor> Registry::displacement_sensor() {
 
 std::shared_ptr<DisplacementSensor> &Registry::displacement_sensor_ptr() {
     return m_sensor_disp;
+}
+
+std::vector<Component> &Registry::components() {
+    return m_components;
 }

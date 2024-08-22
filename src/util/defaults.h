@@ -26,11 +26,9 @@ namespace Defaults {
     static constexpr bool enable_sensor_fene = false;
     static constexpr bool enable_sensor_rdf = false;
     static constexpr bool enable_sensor_disp = false;
-    static constexpr bool loadCheckpoint = false;
     static constexpr bool storeCheckpoint = false;
     static constexpr uint64_t timesteps = 1;            // unit-less
     static constexpr uint64_t write_freq = 10;          // unit-less
-    static constexpr std::string checkpoint_file = "ckpt_0.ps";
 
     static constexpr uint64_t sensor_lj_bins = 100;
     static constexpr uint64_t sensor_fene_bins = 100;

@@ -76,8 +76,9 @@ void OneCell::updateCOM() {
         math::d3 com {0, 0, 0};
         double total_mass = 0;
         for (uint64_t s_counter = 0; s_counter < num_sites; s_counter++) {
-            com += m_data.soa().r()[s_idx + s_counter];
-            total_mass += m_data.soa().mass()[s_idx + s_counter];
+            const double mass = m_data.soa().mass()[s_idx + s_counter];
+            com += m_data.soa().r()[s_idx + s_counter] * mass;
+            total_mass += mass;
         }
         com /= total_mass;
 

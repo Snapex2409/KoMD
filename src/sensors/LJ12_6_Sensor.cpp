@@ -22,7 +22,7 @@ void LJ12_6_Sensor::handleCell(Cell &cell) {
     Kokkos::parallel_for("Sensor - LJ12-6 - Cell", Kokkos::MDRangePolicy({0, 0}, {soa.size(), soa.size()}),
                          LJ12_6_Pot(soa.id(), soa.r(), soa.sigma(), soa.epsilon(),
                                     p_data_u_scatter, p_data_f_scatter, p_count_u_scatter, p_count_f_scatter,
-                                    m_total_pot_scatter, m_cutoff2, p_sigma, p_bins));
+                                    m_total_pot_scatter, m_cutoff2, p_max_sigma, p_bins));
 }
 
 void LJ12_6_Sensor::handleCellPair(Cell &cell0, Cell &cell1) {
@@ -31,7 +31,7 @@ void LJ12_6_Sensor::handleCellPair(Cell &cell0, Cell &cell1) {
     Kokkos::parallel_for("Sensor - LJ12-6 - Cell Pair", Kokkos::MDRangePolicy({0, 0}, {soa0.size(), soa1.size()}),
                          LJ12_6_PotPair(soa0.id(), soa1.id(), soa0.r(), soa1.r(), soa0.sigma(), soa1.sigma(), soa0.epsilon(), soa1.epsilon(),
                                         p_data_u_scatter, p_data_f_scatter, p_count_u_scatter, p_count_f_scatter,
-                                        m_total_pot_scatter, m_cutoff2, p_sigma, p_bins));
+                                        m_total_pot_scatter, m_cutoff2, p_max_sigma, p_bins));
 }
 
 void LJ12_6_Sensor::LJ12_6_Pot::operator()(int idx_0, int idx_1) const {

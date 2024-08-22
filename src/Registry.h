@@ -20,6 +20,7 @@
 #include "sensors/LJ12_6_Sensor.h"
 #include "thermostats/Thermostat.h"
 #include "sensors/DisplacementSensor.h"
+#include "molecule/Component.h"
 
 class Registry {
 public:
@@ -37,6 +38,7 @@ public:
     std::shared_ptr<LJ12_6_Sensor> potential_sensor();
     std::shared_ptr<DisplacementSensor> displacement_sensor();
     std::vector<std::unique_ptr<Thermostat>>& thermostats();
+    std::vector<Component>& components();
 
     std::shared_ptr<Configuration>& configuration_ptr();
     std::shared_ptr<MoleculeContainer>& moleculeContainer_ptr();
@@ -57,6 +59,7 @@ private:
     std::shared_ptr<LJ12_6_Sensor> m_sensor_pot;
     std::shared_ptr<DisplacementSensor> m_sensor_disp;
     std::vector<std::unique_ptr<Thermostat>> m_thermostats;
+    std::vector<Component> m_components;
 };
 
 

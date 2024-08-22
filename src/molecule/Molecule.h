@@ -44,6 +44,16 @@ public:
     void setID(id_t id) { m_id = id; }
 
     /**
+     * Gets molecule cid
+     * */
+    [[nodiscard]] id_t CID() const { return m_cid; }
+
+    /**
+     * Sets the molecule cid
+     * */
+    void setCID(id_t cid) { m_cid = cid; }
+
+    /**
      * Gets reference to this molecules sites
      * */
     sites_t& getSites();
@@ -107,6 +117,8 @@ private:
     sites_t m_sites;
     /// Globally unique id
     id_t m_id;
+    /// Component id
+    id_t m_cid;
     /// Linked Molecules
     std::vector<std::pair<std::reference_wrapper<Cell>, math::i3>> m_links;
     /// Parent Molecule

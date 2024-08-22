@@ -35,37 +35,39 @@ void CheckpointIO::writeCheckpoint(uint64_t simstep) {
 void CheckpointIO::loadCheckpoint() {
     auto config = Registry::instance->configuration();
     auto container = Registry::instance->moleculeContainer();
-    const std::string& file_name = config->checkpoint_file;
 
-    std::ifstream file(file_name);
-    if (!file.is_open()) {
-        Log::io->error() << "Could not open checkpoint file: " << file_name << std::endl;
-        return;
-    }
-
-    uint64_t id;
-    math::d3 r, v;
-    double mass, eps, sig;
-    bool read_line = false;
-    Molecule molecule;
-    while (!file.eof() && file.good()) {
-        file >> id >> r.x() >> r.y() >> r.z() >> v.x() >> v.y() >> v.z() >> mass >> eps >> sig;
-
-        if (!read_line) {
-            molecule.setID(id);
-            read_line = true;
+    auto& checkpoint_files = config->checkpoint_files;
+    for (const auto& [path, offset] : checkpoint_files) {
+        std::ifstream file(path);
+        if (!file.is_open()) {
+            Log::io->error() << "Could not open checkpoint file: " << path << std::endl;
+            return;
         }
 
-        if (id != molecule.ID()) {
-            container->addMolecule(molecule);
-            molecule = Molecule();
-            molecule.setID(id);
+        uint64_t id;
+        math::d3 r, v;
+        double mass, eps, sig;
+        bool read_line = false;
+        Molecule molecule;
+        while (!file.eof() && file.good()) {
+            file >> id >> r.x() >> r.y() >> r.z() >> v.x() >> v.y() >> v.z() >> mass >> eps >> sig;
+
+            if (!read_line) {
+                molecule.setID(id);
+                read_line = true;
+            }
+
+            if (id != molecule.ID()) {
+                container->addMolecule(molecule);
+                molecule = Molecule();
+                molecule.setID(id);
+            }
+            molecule.addSite(eps, sig, mass, r + offset, v);
         }
-        molecule.addSite(eps, sig, mass, r, v);
+
+        // add last molecule
+        if (read_line) container->addMolecule(molecule);
+
+        file.close();
     }
-
-    // add last molecule
-    if (read_line) container->addMolecule(molecule);
-
-    file.close();
 }

@@ -46,10 +46,12 @@ void VTKWriter::initializeOutput(int numParticles) {
     DataArray_t velocity(type::Float32, "velocity", 3);
     DataArray_t forces(type::Float32, "force", 3);
     DataArray_t id(type::Int32, "id", 1);
+    DataArray_t cid(type::Int32, "cid", 1);
     pointData.DataArray().push_back(mass);
     pointData.DataArray().push_back(velocity);
     pointData.DataArray().push_back(forces);
     pointData.DataArray().push_back(id);
+    pointData.DataArray().push_back(cid);
 
     CellData cellData; // we don't have cell data => leave it empty
 
@@ -103,6 +105,9 @@ void VTKWriter::plotMolecule(Molecule &m) {
 
         dataIterator++;
         dataIterator->push_back(m.ID());
+
+        dataIterator++;
+        dataIterator->push_back(m.CID());
 
         Points::DataArray_sequence &pointsSequence =
                 vtkFile->UnstructuredGrid()->Piece().Points().DataArray();
