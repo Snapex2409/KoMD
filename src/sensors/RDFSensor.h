@@ -44,7 +44,7 @@ private:
      * @param bins number of bins
      * */
     static KOKKOS_INLINE_FUNCTION uint64_t getBin(double r, double delta_r, uint64_t bins) {
-        if (r < 0) return 0;
+        if (r < 0) return bins-1;
 
         auto bin = static_cast<uint64_t>(r / delta_r);
         return Kokkos::clamp(bin, 0UL, bins - 1);
@@ -62,6 +62,8 @@ private:
     SOA::vec_scatter_t<double> m_bins_scatter;
     /// number of samples
     double m_samples;
+    /// com buffer
+    SOA::vec_t<math::d3> m_com;
 };
 
 

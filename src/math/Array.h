@@ -302,7 +302,7 @@ namespace math {
          * */
         [[maybe_unused]] KOKKOS_FUNCTION T L1() const {
             T result = 0;
-            for (uint64_t idx = 0; idx < 3; idx++) result += std::abs(m_data[idx]);
+            for (uint64_t idx = 0; idx < 3; idx++) result += Kokkos::abs(m_data[idx]);
             return result;
         }
 
@@ -311,8 +311,8 @@ namespace math {
          * */
         [[maybe_unused]] KOKKOS_FUNCTION T L2() const {
             T result = 0;
-            for (uint64_t idx = 0; idx < 3; idx++) result += std::pow(m_data[idx], 2);
-            return std::sqrt(result);
+            for (uint64_t idx = 0; idx < 3; idx++) result += Kokkos::pow(m_data[idx], 2);
+            return Kokkos::sqrt(result);
         }
 
         /**

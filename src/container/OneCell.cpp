@@ -43,7 +43,11 @@ void OneCell::updateContainer() {
 }
 
 void OneCell::getCenterOfMassPositions(SOA::vec_t<math::d3> &buffer) {
-    Kokkos::deep_copy(buffer, m_com);
+    uint64_t idx = 0;
+    for (auto it = iterator(MOLECULE, DOMAIN); it->isValid(); ++(*it)) {
+        buffer[idx] = it->molecule().getCenterOfMass();
+        idx++;
+    }
 }
 
 std::unique_ptr<MoleculeContainer::Iterator>
