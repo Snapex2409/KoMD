@@ -25,6 +25,7 @@ struct Configuration {
     bool enable_sensor_lj = Defaults::enable_sensor_lj;
     bool enable_sensor_fene = Defaults::enable_sensor_fene;
     bool enable_sensor_rdf = Defaults::enable_sensor_rdf;
+    bool enable_sensor_disp = Defaults::enable_sensor_disp;
     uint64_t timesteps = Defaults::timesteps;
     uint64_t write_freq = Defaults::write_freq;
     std::string checkpoint_file = Defaults::checkpoint_file;

@@ -19,6 +19,7 @@
 #include "sensors/TemperatureSensor.h"
 #include "sensors/LJ12_6_Sensor.h"
 #include "thermostats/Thermostat.h"
+#include "sensors/DisplacementSensor.h"
 
 class Registry {
 public:
@@ -34,6 +35,7 @@ public:
     std::shared_ptr<VTKWriter> vtkWriter();
     std::shared_ptr<TemperatureSensor> temperature_sensor();
     std::shared_ptr<LJ12_6_Sensor> potential_sensor();
+    std::shared_ptr<DisplacementSensor> displacement_sensor();
     std::vector<std::unique_ptr<Thermostat>>& thermostats();
 
     std::shared_ptr<Configuration>& configuration_ptr();
@@ -42,6 +44,7 @@ public:
     std::shared_ptr<VTKWriter>& vtkWriter_ptr();
     std::shared_ptr<TemperatureSensor>& temperature_sensor_ptr();
     std::shared_ptr<LJ12_6_Sensor>& potential_sensor_ptr();
+    std::shared_ptr<DisplacementSensor>& displacement_sensor_ptr();
 private:
     std::shared_ptr<Configuration> m_configuration;
     std::vector<std::unique_ptr<ForceFunctor>> m_forceFunctors;
@@ -52,6 +55,7 @@ private:
     std::shared_ptr<VTKWriter> m_vtk_writer;
     std::shared_ptr<TemperatureSensor> m_sensor_temp;
     std::shared_ptr<LJ12_6_Sensor> m_sensor_pot;
+    std::shared_ptr<DisplacementSensor> m_sensor_disp;
     std::vector<std::unique_ptr<Thermostat>> m_thermostats;
 };
 

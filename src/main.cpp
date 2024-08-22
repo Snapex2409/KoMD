@@ -49,6 +49,8 @@ int main(int argc, char** argv) {
     if (Registry::instance->configuration()->enable_sensor_lj) Registry::instance->sensors().push_back(std::dynamic_pointer_cast<Sensor>(Registry::instance->potential_sensor()));
     if (Registry::instance->configuration()->enable_sensor_fene) Registry::instance->sensors().push_back(std::make_shared<FENE_Sensor>());
     if (Registry::instance->configuration()->enable_sensor_rdf) Registry::instance->sensors().push_back(std::make_shared<RDFSensor>());
+    if (Registry::instance->configuration()->enable_sensor_disp) Registry::instance->displacement_sensor_ptr() = std::make_shared<DisplacementSensor>();
+    if (Registry::instance->configuration()->enable_sensor_disp) Registry::instance->sensors().push_back(std::dynamic_pointer_cast<Sensor>(Registry::instance->displacement_sensor()));
 
     Registry::instance->thermostats().push_back(std::make_unique<VelocityScaling>());
 

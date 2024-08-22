@@ -74,3 +74,11 @@ std::shared_ptr<TemperatureSensor> & Registry::temperature_sensor_ptr() {
 std::vector<std::unique_ptr<Thermostat>> & Registry::thermostats() {
     return m_thermostats;
 }
+
+std::shared_ptr<DisplacementSensor> Registry::displacement_sensor() {
+    return m_sensor_disp;
+}
+
+std::shared_ptr<DisplacementSensor> &Registry::displacement_sensor_ptr() {
+    return m_sensor_disp;
+}

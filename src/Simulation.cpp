@@ -13,6 +13,7 @@ void Simulation::run() {
     auto& sensors = Registry::instance->sensors();
     auto temp_sens = Registry::instance->temperature_sensor();
     auto pot_sens = Registry::instance->potential_sensor();
+    auto disp_sens = Registry::instance->displacement_sensor();
     auto container = Registry::instance->moleculeContainer();
     auto& potentials = Registry::instance->forceFunctors();
     auto vtkWriter = Registry::instance->vtkWriter();
@@ -28,6 +29,9 @@ void Simulation::run() {
     Log::simulation->info() << "Initial temperature T=" << temp_sens->getTemperature() << std::endl;
     if (config->enable_sensor_lj) pot_sens->measure();
     if (config->enable_sensor_lj) Log::simulation->info() << "Initial potential u=" << pot_sens->getCurrentPotential() << std::endl;
+    if (config->enable_sensor_disp) disp_sens->measure();
+    if (config->enable_sensor_disp) Log::simulation->info() << "Initial displacement lambda=" << disp_sens->getDisplacement() << std::endl;
+
     for (auto& thermostat : thermostats) thermostat->apply();
 
     // main loop
@@ -45,6 +49,7 @@ void Simulation::run() {
         auto& logger = Log::simulation->info();
         logger << "Simstep=" << simstep << " t=" << t << " T=" << temp_sens->getTemperature();
         if (config->enable_sensor_lj) logger << " u=" << pot_sens->getCurrentPotential();
+        if (config->enable_sensor_disp) logger << " lambda=" << disp_sens->getDisplacement();
         logger << std::endl;
 
         t += dt;
