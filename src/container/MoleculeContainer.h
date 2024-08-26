@@ -23,7 +23,7 @@ public:
 
     uint64_t getNumMolecules() { return p_molecule_count; }
 
-    virtual void getCenterOfMassPositions(SOA::vec_t<math::d3>& buffer) = 0;
+    virtual void getCenterOfMassPositions(KW::vec_t<math::d3>& buffer) = 0;
     virtual void writeSOA2AOS() = 0;
 
     enum IteratorType {

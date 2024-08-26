@@ -6,8 +6,7 @@
 #define VELOCITYSCALING_H
 
 #include "Thermostat.h"
-#include "container/SOA.h"
-#include "Kokkos_Core.hpp"
+#include "util/Kokkos_Wrapper.h"
 
 /**
  * Velocity scaling thermostat with no ramp
@@ -28,7 +27,7 @@ public:
          * */
         KOKKOS_FUNCTION void operator()(int idx) const;
         /// shallow copy of v vector
-        SOA::vec_t<math::d3> v;
+        KW::vec_t<math::d3> v;
         /// scaling factor
         const double beta;
     };

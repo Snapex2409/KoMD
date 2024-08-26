@@ -10,7 +10,7 @@
 
 namespace Defaults {
     static constexpr double sigma = 1.0;                // 1 Armstrong
-    static constexpr double epsilon = 1.0;              // 1 Joule
+    static constexpr double epsilon = 1.0;              // 1 Joule (from outside) (internally in u * A² / ps²)
     static constexpr double mass = 1.0;                 // 1 Dalton = 1u
     static constexpr double delta_t = 0.001;            // 1 ps, 0.001 = 1 fs
     static constexpr double stiffness_factor = 30;      // unit-less

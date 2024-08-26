@@ -7,7 +7,7 @@
 
 #include <cstdint>
 #include "ForceFunctor.h"
-#include "container/SOA.h"
+#include "util/Kokkos_Wrapper.h"
 #include "container/OneCell.h"
 
 class OCLJ : public ForceFunctor {
@@ -18,18 +18,18 @@ public:
     /// Kernel for device
     struct OCLJ_Force {
         KOKKOS_FUNCTION void operator()(int idx_0, int idx_1, int s_idx) const;
-        /// ScatterView to SOA::f
-        SOA::vec_scatter_t<math::d3> scatter;
+        /// shallow copy of SOA::f
+        KW::vec_t<math::d3> f;
         /// shallow copy of SOA::id
-        SOA::vec_t<uint64_t> id;
+        KW::vec_t<uint64_t> id;
         /// shallow copy of SOA::r
-        SOA::vec_t<math::d3> r;
+        KW::vec_t<math::d3> r;
         /// shallow copy of CoM
-        SOA::vec_t<math::d3> com;
+        KW::vec_t<math::d3> com;
         /// shallow copy of SOA::sigma
-        SOA::vec_t<double> sig;
+        KW::vec_t<double> sig;
         /// shallow copy of SOA::epsilon
-        SOA::vec_t<double> eps;
+        KW::vec_t<double> eps;
         /// cutoff radius squared
         const double cutoff2;
         /// domain size

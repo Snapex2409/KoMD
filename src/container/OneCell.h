@@ -6,7 +6,7 @@
 #define KOMD_ONECELL_H
 
 #include "MoleculeContainer.h"
-#include "Kokkos_Core.hpp"
+#include "util/Kokkos_Wrapper.h"
 #include "SOA.h"
 
 class OneCell : public MoleculeContainer{
@@ -16,7 +16,7 @@ public:
 
     void addMolecule(const Molecule &molecule) override;
     void updateContainer() override;
-    void getCenterOfMassPositions(SOA::vec_t<math::d3> &buffer) override;
+    void getCenterOfMassPositions(KW::vec_t<math::d3> &buffer) override;
     void writeSOA2AOS() override;
     void init() override {};
 
@@ -76,8 +76,8 @@ public:
 
     struct Periodic_Kernel {
         KOKKOS_FUNCTION void operator()(int idx) const;
-        SOA::vec_t<math::d3> com;
-        SOA::vec_t<math::d3> r;
+        KW::vec_t<math::d3> com;
+        KW::vec_t<math::d3> r;
         const math::d3 low;
         const math::d3 high;
         const math::d3 domain_size;
@@ -85,15 +85,15 @@ public:
 
     struct FReset_Kernel {
         KOKKOS_FUNCTION void operator()(int idx) const;
-        SOA::vec_t<math::d3> f;
+        KW::vec_t<math::d3> f;
     };
 
-    SOA::vec_t<math::d3> getCoM() { return m_com; }
+    KW::vec_t<math::d3> getCoM() { return m_com; }
 private:
     Cell m_data;
     bool m_first_update;
     /// center of mass positions for all molecules (has size of all sites)
-    SOA::vec_t<math::d3> m_com;
+    KW::vec_t<math::d3> m_com;
     void constructSOAs() override;
     void clearForces() override;
     void updateCOM();

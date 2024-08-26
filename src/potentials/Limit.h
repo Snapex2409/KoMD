@@ -6,7 +6,7 @@
 #define KOMD_Limit_H
 
 #include "ForceFunctor.h"
-#include "container/SOA.h"
+#include "util/Kokkos_Wrapper.h"
 #include <cstdint>
 
 /**
@@ -21,11 +21,11 @@ public:
     struct Limit_Force {
         KOKKOS_FUNCTION void operator()(int idx) const;
         /// shallow copy of SOA::f
-        SOA::vec_t<math::d3> f;
+        KW::vec_t<math::d3> f;
         /// shallow copy of SOA::sigma
-        SOA::vec_t<double> sig;
+        KW::vec_t<double> sig;
         /// shallow copy of SOA::epsilon
-        SOA::vec_t<double> eps;
+        KW::vec_t<double> eps;
         /// threshold
         const double limit_factor;
     };

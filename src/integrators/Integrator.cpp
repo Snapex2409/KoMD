@@ -5,8 +5,6 @@
 #include "Integrator.h"
 #include "Registry.h"
 
-#include "Kokkos_Core.hpp"
-
 Integrator::Integrator() : m_delta_t(Registry::instance->configuration()->delta_t) { }
 
 void Integrator::integrate0() {

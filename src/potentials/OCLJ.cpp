@@ -21,14 +21,13 @@ void OCLJ::handleCell(Cell &cell) {
     Kokkos::parallel_for("OCLJ - Cell", Kokkos::MDRangePolicy<Kokkos::Rank<3>>(
             {0,0,0},
             {static_cast<long>(soa.size()), static_cast<long>(soa.size()), 8}),
-            OCLJ_Force(soa.fScatter(), soa.id(), soa.r(), m_container->getCoM(), soa.sigma(), soa.epsilon(),
+            OCLJ_Force(soa.f(), soa.id(), soa.r(), m_container->getCoM(), soa.sigma(), soa.epsilon(),
                        m_cutoff2, m_domain_size, m_low_bound));
 }
 
 void OCLJ::OCLJ_Force::operator()(int idx_0, int idx_1, int s_idx) const {
     if (idx_0 == idx_1) return; // do not compute for same site, we do not use Newton 3 here
     if (id(idx_0) == id(idx_1)) return; // must be different molecule
-    auto access = scatter.access();
 
     const math::i3 shift_dir {s_idx & 0b1, (s_idx & 0b10) >> 1, (s_idx & 0b100) >> 2};
     const math::d3 shift = (com[idx_0] <= low_bound) * shift_dir * domain_size;
@@ -46,6 +45,9 @@ void OCLJ::OCLJ_Force::operator()(int idx_0, int idx_1, int s_idx) const {
     const double lj6 = Kokkos::pow(sig2 * invdr2, 3.0);
     const double lj12 = Kokkos::pow(lj6, 2.0);
     const double fac = 24.0 * epsilon * (2.0 * lj12 - lj6) * invdr2;
-
-    access(idx_0) += dr * fac;
+    const math::d3 force = dr * fac;
+    Kokkos::atomic_add(&f[idx_0], force);
+    if (s_idx > 0) {
+        Kokkos::atomic_sub(&f[idx_1], force);
+    }
 }

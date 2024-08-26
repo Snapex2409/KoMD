@@ -7,8 +7,7 @@
 
 
 #include "Potential_Sensor.h"
-#include "container/SOA.h"
-#include "math/Array.h"
+#include "util/Kokkos_Wrapper.h"
 
 /**
  * Measures potential of LJ126
@@ -26,24 +25,24 @@ public:
     struct LJ12_6_Pot {
         KOKKOS_FUNCTION void operator()(int idx_0, int idx_1) const;
         /// shallow copy of SOA::id
-        SOA::vec_t<uint64_t> id;
+        KW::vec_t<uint64_t> id;
         /// shallow copy of SOA::r
-        SOA::vec_t<math::d3> r;
+        KW::vec_t<math::d3> r;
         /// shallow copy of SOA::sigma
-        SOA::vec_t<double> sig;
+        KW::vec_t<double> sig;
         /// shallow copy of SOA::epsilon
-        SOA::vec_t<double> eps;
+        KW::vec_t<double> eps;
 
         /// ScatterView for Potential_Sensor::p_data_u
-        SOA::vec_scatter_t<double> data_u_scatter;
+        KW::vec_scatter_t<double> data_u_scatter;
         /// ScatterView for Potential_Sensor::p_data_f
-        SOA::vec_scatter_t<double> data_f_scatter;
+        KW::vec_scatter_t<double> data_f_scatter;
         /// ScatterView for Potential_Sensor::p_count_u
-        SOA::vec_scatter_t<uint64_t> count_u_scatter;
+        KW::vec_scatter_t<uint64_t> count_u_scatter;
         /// ScatterView for Potential_Sensor::p_count_f
-        SOA::vec_scatter_t<uint64_t> count_f_scatter;
+        KW::vec_scatter_t<uint64_t> count_f_scatter;
         /// ScatterView for total potential buffer
-        SOA::vec_scatter_t<double> total_pot_scatter;
+        KW::vec_scatter_t<double> total_pot_scatter;
 
         /// cutoff radius squared
         const double cutoff2;
@@ -57,32 +56,32 @@ public:
     struct LJ12_6_PotPair {
         KOKKOS_FUNCTION void operator()(int idx_0, int idx_1) const;
         /// shallow copy of SOA::id
-        SOA::vec_t<uint64_t> id0;
+        KW::vec_t<uint64_t> id0;
         /// shallow copy of SOA::id
-        SOA::vec_t<uint64_t> id1;
+        KW::vec_t<uint64_t> id1;
         /// shallow copy of SOA::r
-        SOA::vec_t<math::d3> r0;
+        KW::vec_t<math::d3> r0;
         /// shallow copy of SOA::r
-        SOA::vec_t<math::d3> r1;
+        KW::vec_t<math::d3> r1;
         /// shallow copy of SOA::sigma
-        SOA::vec_t<double> sig0;
+        KW::vec_t<double> sig0;
         /// shallow copy of SOA::sigma
-        SOA::vec_t<double> sig1;
+        KW::vec_t<double> sig1;
         /// shallow copy of SOA::epsilon
-        SOA::vec_t<double> eps0;
+        KW::vec_t<double> eps0;
         /// shallow copy of SOA::epsilon
-        SOA::vec_t<double> eps1;
+        KW::vec_t<double> eps1;
 
         /// ScatterView for Potential_Sensor::p_data_u
-        SOA::vec_scatter_t<double> data_u_scatter;
+        KW::vec_scatter_t<double> data_u_scatter;
         /// ScatterView for Potential_Sensor::p_data_f
-        SOA::vec_scatter_t<double> data_f_scatter;
+        KW::vec_scatter_t<double> data_f_scatter;
         /// ScatterView for Potential_Sensor::p_count_u
-        SOA::vec_scatter_t<uint64_t> count_u_scatter;
+        KW::vec_scatter_t<uint64_t> count_u_scatter;
         /// ScatterView for Potential_Sensor::p_count_f
-        SOA::vec_scatter_t<uint64_t> count_f_scatter;
+        KW::vec_scatter_t<uint64_t> count_f_scatter;
         /// ScatterView for total potential buffer
-        SOA::vec_scatter_t<double> total_pot_scatter;
+        KW::vec_scatter_t<double> total_pot_scatter;
 
         /// cutoff radius squared
         const double cutoff2;
@@ -98,9 +97,9 @@ private:
     /// cutoff radius squared
     double m_cutoff2;
     /// total potential buffer
-    SOA::vec_t<double> m_total_pot;
+    KW::vec_t<double> m_total_pot;
     /// scatter view for total potential buffer
-    SOA::vec_scatter_t<double> m_total_pot_scatter;
+    KW::vec_scatter_t<double> m_total_pot_scatter;
 };
 
 

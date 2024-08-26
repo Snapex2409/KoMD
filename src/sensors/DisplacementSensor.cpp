@@ -15,7 +15,7 @@ DisplacementSensor::DisplacementSensor() : Sensor("Displacement"), m_lambda(1) {
     const math::d3 spacing = domain_size / mol_per_dim;
     m_lattice_unit_size = spacing;
 
-    m_com = SOA::vec_t<math::d3>("Displacement Sensor CoM", Registry::instance->moleculeContainer()->getNumMolecules());
+    m_com = KW::vec_t<math::d3>("Displacement Sensor CoM", Registry::instance->moleculeContainer()->getNumMolecules());
 }
 
 void DisplacementSensor::measure() {

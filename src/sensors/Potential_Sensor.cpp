@@ -14,14 +14,17 @@ Potential_Sensor::Potential_Sensor(std::string name, uint64_t bins) :
         Sensor(std::move(name)), p_bins(bins), p_data_u("POT_u", bins), p_data_f("POT_u", bins),
         p_count_u("POT_u", bins), p_count_f("POT_u", bins),
         p_max_sigma(Registry::instance->configuration()->max_sigma) {
-    p_data_u_scatter = SOA::vec_scatter_t<double>(p_data_u);
-    p_data_f_scatter = SOA::vec_scatter_t<double>(p_data_f);
-    p_count_u_scatter = SOA::vec_scatter_t<uint64_t>(p_count_u);
-    p_count_f_scatter = SOA::vec_scatter_t<uint64_t>(p_count_f);
-    p_run_contribution = false;
+    p_data_u_scatter = KW::vec_scatter_t<double>(p_data_u);
+    p_data_f_scatter = KW::vec_scatter_t<double>(p_data_f);
+    p_count_u_scatter = KW::vec_scatter_t<uint64_t>(p_count_u);
+    p_count_f_scatter = KW::vec_scatter_t<uint64_t>(p_count_f);
 }
 
 void Potential_Sensor::measure() {
+    if constexpr (!KW::enabled_cuda) p_data_f_scatter.reset();
+    if constexpr (!KW::enabled_cuda) p_data_u_scatter.reset();
+    if constexpr (!KW::enabled_cuda) p_count_f_scatter.reset();
+    if constexpr (!KW::enabled_cuda) p_count_u_scatter.reset();
     ForceFunctor::operator()();
     Kokkos::Experimental::contribute(p_data_f, p_data_f_scatter);
     Kokkos::Experimental::contribute(p_data_u, p_data_u_scatter);
@@ -42,7 +45,7 @@ void Potential_Sensor::write(uint64_t simstep) {
     const double max_size = 3.0 * p_max_sigma;
     const double bin_width = max_size / static_cast<double>(p_bins);
     for (uint64_t idx = 0; idx < p_bins; idx++) {
-        file << r << " " << p_data_f[idx] / (double) p_count_f[idx] << " " << p_data_u[idx] / (double) p_count_u[idx] << "\n";
+        file << r << "\t\t" << p_data_f[idx] / (double) p_count_f[idx] << "\t\t" << p_data_u[idx] / (double) p_count_u[idx] << "\n";
         r += bin_width;
     }
 

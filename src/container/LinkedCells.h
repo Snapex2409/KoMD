@@ -22,7 +22,7 @@ public:
     void init() override;
     Vec3D<Cell>& getCells();
     math::ul3 findCell(const math::d3& pos, bool& valid);
-    void getCenterOfMassPositions(SOA::vec_t<math::d3>& buffer) override;
+    void getCenterOfMassPositions(KW::vec_t<math::d3>& buffer) override;
     void writeSOA2AOS() override;
 
     class LCIterator : public Iterator {

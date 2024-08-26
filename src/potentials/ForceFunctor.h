@@ -35,8 +35,6 @@ protected:
     bool p_run_cells;
     /// Flag if handle Cell Pairs should be called
     bool p_run_pairs;
-    /// Flag to write back scatter contributions
-    bool p_run_contribution;
 };
 
 

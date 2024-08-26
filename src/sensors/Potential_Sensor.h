@@ -8,13 +8,7 @@
 
 #include "Sensor.h"
 #include "potentials/ForceFunctor.h"
-#include "math/Array.h"
-#include "container/SOA.h"
-
-#include "Kokkos_Core.hpp"
-#include "Kokkos_ScatterView.hpp"
-
-#include <vector>
+#include "util/Kokkos_Wrapper.h"
 
 /**
  * Sensor to measure potentials
@@ -52,22 +46,22 @@ protected:
     /// number of bins for spatial discretization of U(r)
     uint64_t p_bins;
     /// potential bins
-    SOA::vec_t<double> p_data_u;
+    KW::vec_t<double> p_data_u;
     /// force bins
-    SOA::vec_t<double> p_data_f;
+    KW::vec_t<double> p_data_f;
     /// potential number samples bins
-    SOA::vec_t<uint64_t> p_count_u;
+    KW::vec_t<uint64_t> p_count_u;
     /// force number samples bins
-    SOA::vec_t<uint64_t> p_count_f;
+    KW::vec_t<uint64_t> p_count_f;
 
     /// ScatterView for potential bins
-    SOA::vec_scatter_t<double> p_data_u_scatter;
+    KW::vec_scatter_t<double> p_data_u_scatter;
     /// ScatterView for force bins
-    SOA::vec_scatter_t<double> p_data_f_scatter;
+    KW::vec_scatter_t<double> p_data_f_scatter;
     /// ScatterView for potential number samples bins
-    SOA::vec_scatter_t<uint64_t> p_count_u_scatter;
+    KW::vec_scatter_t<uint64_t> p_count_u_scatter;
     /// ScatterView for force number samples bins
-    SOA::vec_scatter_t<uint64_t> p_count_f_scatter;
+    KW::vec_scatter_t<uint64_t> p_count_f_scatter;
     /// max sigma
     const double p_max_sigma;
 };

@@ -26,7 +26,7 @@ void OneCell::updateContainer() {
         m_data.soa().createBuffers();
         constructSOAs();
         m_first_update = false;
-        m_com = SOA::vec_t<math::d3>("Center of Masses", m_data.soa().size());
+        m_com = KW::vec_t<math::d3>("Center of Masses", m_data.soa().size());
     }
 
     updateCOM();
@@ -42,7 +42,7 @@ void OneCell::updateContainer() {
     updateCOM();
 }
 
-void OneCell::getCenterOfMassPositions(SOA::vec_t<math::d3> &buffer) {
+void OneCell::getCenterOfMassPositions(KW::vec_t<math::d3> &buffer) {
     uint64_t idx = 0;
     for (auto it = iterator(MOLECULE, DOMAIN); it->isValid(); ++(*it)) {
         buffer[idx] = it->molecule().getCenterOfMass();
@@ -103,27 +103,11 @@ void OneCell::OCIterator::operator++() {
     }
 
     // move to next molecule
-    if (m_molecule_idx < molecules.size() - 1) {
-        m_molecule_idx++;
-        m_site_idx = 0;
-        return;
-    }
+    m_molecule_idx++;
+    m_site_idx = 0;
 }
 
-bool OneCell::OCIterator::isValid() const {
-    auto& cell_molecules = m_cell.molecules();
-    // cell is valid
-    // check if current molecule has more sites
-    if (!m_only_molecule) // only do this if we iterate over sites
-        if (m_site_idx < cell_molecules[m_molecule_idx].getSites().size() - 1) return true;
-
-    // no more sites
-    // check if there is another molecule in this cell
-    if (m_molecule_idx < cell_molecules.size() - 1) return true;
-
-    // all checks failed
-    return false;
-}
+bool OneCell::OCIterator::isValid() const { return m_molecule_idx < m_cell.molecules().size(); }
 
 math::d3 &OneCell::OCIterator::f() { return m_cell.soa().f()[m_visited_sites_cell]; }
 math::d3 &OneCell::OCIterator::r() { return m_cell.soa().r()[m_visited_sites_cell]; }

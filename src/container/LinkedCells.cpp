@@ -202,7 +202,7 @@ void LinkedCells::clearForces() {
     }
 }
 
-void LinkedCells::getCenterOfMassPositions(SOA::vec_t<math::d3> &buffer) {
+void LinkedCells::getCenterOfMassPositions(KW::vec_t<math::d3> &buffer) {
     uint64_t idx = 0;
     for (auto it = iterator(MOLECULE, DOMAIN); it->isValid(); ++(*it)) {
         buffer[idx] = it->molecule().getCenterOfMass();
@@ -250,37 +250,8 @@ void LinkedCells::LCIterator::operator++() {
 
 bool LinkedCells::LCIterator::isValid() const {
     // check if cell is invalid
-    if (m_cell_coord.x() == m_cell_max.x() + 1 &&
-        m_cell_coord.y() == m_cell_max.y() + 1 &&
-        m_cell_coord.z() == m_cell_max.z() + 1) return false;
-
-    Cell& cell = m_cells(m_cell_coord);
-    auto& cell_molecules = cell.molecules();
-    // cell is valid
-    // check if current molecule has more sites
-    if (!m_only_molecule) // only do this if we iterate over sites
-        if (m_site_idx < cell_molecules[m_molecule_idx].getSites().size() - 1) return true;
-
-    // no more sites
-    // check if there is another molecule in this cell
-    if (m_molecule_idx < cell_molecules.size() - 1) return true;
-
-    // no more molecules in this cell
-    // check if there is another cell with molecules
-    bool init = false;
-    for (uint64_t z = m_cell_coord.z(); z <= m_cell_max.z(); z++) {
-        for (uint64_t y = init ? m_cell_min.y() : m_cell_coord.y(); y <= m_cell_max.y(); y++) {
-            for (uint64_t x = init ? m_cell_min.x() : m_cell_coord.x(); x <= m_cell_max.x(); x++) {
-                if (m_cells(x, y, z).molecules().empty()) continue;
-                // found non empty cell
-                return true;
-            }
-            init = true;
-        }
-    }
-
-    // all checks failed
-    return false;
+    if (m_cell_coord == m_cell_max + 1) return false;
+    return true;
 }
 
 math::d3 & LinkedCells::LCIterator::f() {

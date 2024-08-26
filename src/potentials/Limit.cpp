@@ -9,11 +9,8 @@
 #include "Registry.h"
 #include "math/Array.h"
 
-#include "Kokkos_Core.hpp"
-
 Limit::Limit() : m_limit_factor(Registry::instance->configuration()->limit_factor) {
     p_run_pairs = false;
-    p_run_contribution = false;
 }
 
 void Limit::handleCell(Cell &cell) {

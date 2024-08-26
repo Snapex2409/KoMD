@@ -52,11 +52,13 @@ void PhasespaceGenerator::generate() {
 
                     //velocity and rotation should be same for all sites
                     double alpha = uniform(rng), beta = uniform(rng), gamma = uniform(rng);
-                    const math::d3 v = getMaxwellBoltzmannVelocity(config->temperature, 1.0);
+                    double total_mass = 0;
+                    for (Site& site : component.getSites()) total_mass += site.getMass();
+                    const math::d3 v = getMaxwellBoltzmannVelocity(config->temperature, total_mass);
                     for (int s_idx = 0; s_idx < component.getSites().size(); s_idx++) {
                         Site& site = component.getSites()[s_idx];
                         const math::d3 site_pos = center_pos + random_rotate(alpha, beta, gamma, site.r_arr());
-                        molecule.addSite(site.getEpsilon(), site.getSigma(), site.getMass(), site_pos, v);
+                        molecule.addSite(site.getEpsilon() * Constants::conv_J_Ei, site.getSigma(), site.getMass(), site_pos, v);
                     }
 
                     container->addMolecule(molecule);

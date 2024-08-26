@@ -16,5 +16,7 @@ namespace Constants {
     static constexpr SciValue conv_ms_Aps = SciValue(1.0, -2);
     /// A/ps to m/s
     static constexpr SciValue conv_Aps_ms = SciValue(1.0, 2);
+    /// Joule to internal energy (u*A²/ps²)
+    static constexpr SciValue conv_J_Ei = SciValue(6.022140754, 22);
 }
 #endif //KOMD_CONSTANTS_H

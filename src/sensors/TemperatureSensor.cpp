@@ -22,10 +22,10 @@ m_temperature(0) { }
 void TemperatureSensor::measure() {
     auto container = Registry::instance->moleculeContainer();
 
-    SOA::vec_t<double> mv2("MV2", 1);
-    SOA::vec_scatter_t<double> mv2_scatter(mv2);
-    SOA::vec_t<double> num_sites("Num_Sites", 1);
-    SOA::vec_scatter_t<double> num_sites_scatter(num_sites);
+    KW::vec_t<double> mv2("MV2", 1);
+    KW::vec_scatter_t<double> mv2_scatter(mv2);
+    KW::vec_t<double> num_sites("Num_Sites", 1);
+    KW::vec_scatter_t<double> num_sites_scatter(num_sites);
     mv2[0] = 0;
     num_sites[0] = 0;
 
