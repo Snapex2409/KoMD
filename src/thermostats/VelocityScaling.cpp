@@ -15,12 +15,8 @@ void VelocityScaling::apply() {
     const double beta = std::sqrt(m_temp_target / temp_current);
 
     auto container = Registry::instance->moleculeContainer();
-
-    for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it->isValid(); ++(*it)) {
-        auto& cell = it->cell();
-        auto& soa = cell.soa();
-        Kokkos::parallel_for("Velocity Scaling", soa.size(), VS_Kernel(soa.v(), beta));
-    }
+    SOA& soa = container->getSOA();
+    Kokkos::parallel_for("Velocity Scaling", soa.size(), VS_Kernel(soa.v(), beta));
     Kokkos::fence("VS fence");
 }
 

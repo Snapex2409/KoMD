@@ -10,7 +10,7 @@
 #include "util/Kokkos_Wrapper.h"
 
 /**
- * Computes LJ126 between all sites of !different! molecules.
+ * Computes LJ126 between all sites of !different! indices.
  * */
 class LJ12_6 : public ForceFunctor {
 public:
@@ -30,6 +30,8 @@ public:
         KW::vec_t<double> sig;
         /// shallow copy of SOA::epsilon
         KW::vec_t<double> eps;
+        /// shallow copy of Cell::indices
+        KW::vec_t<uint64_t> indices;
         /// cutoff radius squared
         const double cutoff2;
     };
@@ -38,32 +40,27 @@ public:
     struct LJ12_6_ForcePair {
         KOKKOS_FUNCTION void operator()(int idx_0, int idx_1) const;
         /// shallow copy of SOA::f
-        KW::vec_t<math::d3> f0;
-        /// shallow copy of SOA::f
-        KW::vec_t<math::d3> f1;
-
+        KW::vec_t<math::d3> f;
         /// shallow copy of SOA::id
-        KW::vec_t<uint64_t> id0;
-        /// shallow copy of SOA::id
-        KW::vec_t<uint64_t> id1;
+        KW::vec_t<uint64_t> id;
         /// shallow copy of SOA::r
-        KW::vec_t<math::d3> r0;
-        /// shallow copy of SOA::r
-        KW::vec_t<math::d3> r1;
+        KW::vec_t<math::d3> r;
         /// shallow copy of SOA::sigma
-        KW::vec_t<double> sig0;
-        /// shallow copy of SOA::sigma
-        KW::vec_t<double> sig1;
+        KW::vec_t<double> sig;
         /// shallow copy of SOA::epsilon
-        KW::vec_t<double> eps0;
-        /// shallow copy of SOA::epsilon
-        KW::vec_t<double> eps1;
+        KW::vec_t<double> eps;
+        /// shallow copy of Cell::indices
+        KW::vec_t<uint64_t> indices0;
+        /// shallow copy of Cell::indices
+        KW::vec_t<uint64_t> indices1;
         /// cutoff radius squared
         const double cutoff2;
+        /// idx_1 position shift
+        const math::d3 shift;
     };
 protected:
     void handleCell(Cell &cell) override;
-    void handleCellPair(Cell &cell0, Cell &cell1) override;
+    void handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell1_shift) override;
 
 private:
     /// cutoff radius squared

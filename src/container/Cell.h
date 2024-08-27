@@ -6,41 +6,30 @@
 #define KOMD_CELL_H
 
 #include "math/Array.h"
-#include "SOA.h"
-#include <vector>
-#include <memory>
-
-class Molecule;
+#include "util/Kokkos_Wrapper.h"
 
 class Cell {
 public:
     Cell() = default;
     Cell(const math::d3& low, const math::d3& high);
     void setBounds(const math::d3& low, const math::d3& high);
-    void addMolecule(const Molecule& molecule);
-    std::vector<Molecule>::iterator removeMolecule(uint64_t id);
-    void constructSOA();
-    void writeSOA2AOS();
-    void invalidateSOA();
-    void clearForces();
 
     /**
      * Checks if the point is within the bounds of this cell
      * */
     bool insideBounds(const math::d3& point);
 
-    /**
-     * Searches for the location of a molecule defined by its id.\n
-     * Location expressed in terms of iterator of the local molecule vector.\n
-     * If molecule was not found, then end iterator is returned.
-     * */
-    std::vector<Molecule>::iterator findBy(uint64_t id);
-
     [[nodiscard]] const math::d3& low() const { return m_low; }
     [[nodiscard]] const math::d3& high() const { return m_high; }
-    [[nodiscard]] SOA& soa() { return m_soa; }
-    [[nodiscard]] std::vector<Molecule>& molecules() { return m_data; }
-    [[nodiscard]] bool validSOA() { return m_valid_soa; }
+    [[nodiscard]] KW::vec_t<uint64_t>& indices() { return m_data; }
+    void addIndex(uint64_t idx);
+    [[nodiscard]] uint64_t getNumIndices() { return m_num_indices; }
+    void resetIndices();
+
+    /**
+     * Creates Kokkos buffers that stores buffers into global SOA
+     * */
+    void createIndexBuffers(uint64_t size);
 
     static Cell INVALID;
 private:
@@ -48,12 +37,10 @@ private:
     math::d3 m_low;
     /// upper corner of cell
     math::d3 m_high;
-    /// buffer of molecules
-    std::vector<Molecule> m_data;
-    /// soa
-    SOA m_soa;
-    /// flag if soa is valid
-    bool m_valid_soa = false;
+    /// buffer of indices of indices inside active molecule container
+    KW::vec_t<uint64_t> m_data;
+    /// number of inserted indices
+    uint64_t m_num_indices;
 };
 
 

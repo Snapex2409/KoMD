@@ -12,7 +12,6 @@
 
 void CheckpointIO::writeCheckpoint(uint64_t simstep) {
     auto container = Registry::instance->moleculeContainer();
-    container->writeSOA2AOS();
 
     std::stringstream file_name;
     file_name << "ckpt_" << simstep << ".ps";
@@ -23,14 +22,14 @@ void CheckpointIO::writeCheckpoint(uint64_t simstep) {
     }
 
     bool begin = true;
-    for (auto it = container->iterator(MoleculeContainer::SITE, MoleculeContainer::DOMAIN); it->isValid(); ++(*it)) {
+    for (auto it = container->iterator(MoleculeContainer::SITE); it.isValid(); ++it) {
         if (begin) begin = false;
         else file << "\n";
 
-        file << it->ID() << "\t";
-        file << it->r().x() << " " << it->r().y()  << " " << it->r().z()  << "\t";
-        file << it->v().x() << " " << it->v().y()  << " " << it->v().z()  << "\t";
-        file << it->mass()  << " " << it->epsilon()<< " " << it->sigma();
+        file << it.ID() << "\t";
+        file << it.r().x() << " " << it.r().y()  << " " << it.r().z()  << "\t";
+        file << it.v().x() << " " << it.v().y()  << " " << it.v().z()  << "\t";
+        file << it.mass()  << " " << it.epsilon()<< " " << it.sigma();
     }
 
     file.close();

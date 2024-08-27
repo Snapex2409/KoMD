@@ -16,7 +16,7 @@ public:
     VelocityScaling();
     ~VelocityScaling() override = default;
 
-    /// scales the velocities of all non halo molecules
+    /// scales the velocities of all non halo indices
     void apply() override;
 
     /// Kernel for device

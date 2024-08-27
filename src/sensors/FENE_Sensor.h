@@ -27,6 +27,8 @@ public:
         KW::vec_t<double> sig;
         /// shallow copy of SOA::epsilon
         KW::vec_t<double> eps;
+        /// shallow copy of Cell::indices
+        KW::vec_t<uint64_t> indices;
 
         /// ScatterView for Potential_Sensor::p_data_u
         KW::vec_scatter_t<double> data_u_scatter;
@@ -46,7 +48,7 @@ public:
     };
 protected:
     void handleCell(Cell &cell) override;
-    void handleCellPair(Cell &cell0, Cell &cell1) override;
+    void handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell1_shift) override;
 private:
     /// stiffness of FENE pot
     double m_stiffness_factor;

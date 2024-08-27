@@ -9,7 +9,7 @@
 #include "Molecule.h"
 #include "util/defaults.h"
 /**
- * Acts as a "description" as how to construct molecules of this kind
+ * Acts as a "description" as how to construct indices of this kind
  * */
 class Component {
 public:

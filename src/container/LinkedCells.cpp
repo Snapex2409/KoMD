@@ -6,27 +6,29 @@
 #include "molecule/Molecule.h"
 #include "Registry.h"
 
-LinkedCells::LinkedCells() : MoleculeContainer(), m_data(), m_boundary(*this) {
+LinkedCells::LinkedCells() : MoleculeContainer(), m_data() {
     auto config = Registry::instance->configuration();
 
     // create cell structure
-    math::d3 domain_size = (config->domainHigh - config->domainLow);
-    math::ul3 num_cells_domain = math::ufloor(domain_size / config->cutoff) + 2;
+    m_low = config->domainLow;
+    m_high = config->domainHigh;
+    m_dom_size = m_high - m_low;
+    math::ul3 num_cells_domain = math::ufloor(m_dom_size / config->cutoff);
     m_data.init(num_cells_domain);
+    m_cutoff = config->cutoff;
+
     // set up cell bounds
     math::d3 low, high;
-    low.z() = config->domainLow.z() - config->cutoff;
+    low.z() = m_low.z();
     for (uint64_t cz = 0; cz < num_cells_domain.z(); cz++) {
-        high.z() = (cz == num_cells_domain.z() - 2) ? config->domainHigh.z() : (low.z() + config->cutoff);
-        low.y() = config->domainLow.y() - config->cutoff;
+        high.z() = (cz == num_cells_domain.z() - 1) ? m_high.z() : (low.z() + m_cutoff);
+        low.y() = m_low.y();
         for (uint64_t cy = 0; cy < num_cells_domain.y(); cy++) {
-            high.y() = (cy == num_cells_domain.y() - 2) ? config->domainHigh.y() : (low.y() + config->cutoff);
-            low.x() = config->domainLow.x() - config->cutoff;
+            high.y() = (cy == num_cells_domain.y() - 1) ? m_high.y() : (low.y() + m_cutoff);
+            low.x() = m_low.x();
             for (uint64_t cx = 0; cx < num_cells_domain.x(); cx++) {
-                high.x() = (cx == num_cells_domain.x() - 2) ? config->domainHigh.x() : (low.x() + config->cutoff);
-
+                high.x() = (cx == num_cells_domain.x() - 1) ? m_high.x() : (low.x() + m_cutoff);
                 m_data(cx, cy, cz).setBounds(low, high);
-
                 low.x() = high.x();
             }
             low.y() = high.y();
@@ -35,276 +37,90 @@ LinkedCells::LinkedCells() : MoleculeContainer(), m_data(), m_boundary(*this) {
     }
 }
 
-void LinkedCells::addMolecule(const Molecule &molecule) {
-    auto config = Registry::instance->configuration();
+void LinkedCells::init() {
+    uint64_t num_sites = 0;
+    for (auto& molecule : p_molecules) num_sites += molecule.getSites().size();
+    p_soa.createBuffers(num_sites);
+    constructSOAs();
+    for (auto c_it = iteratorCell(); c_it->isValid(); ++(*c_it)) c_it->cell().createIndexBuffers(num_sites);
 
-    // first find correct cell
-    const math::d3 pos = molecule.getCenterOfMass();
-    bool valid = false;
-    math::ul3 cell_coord = findCell(pos, valid);
-    if (!valid) throw std::runtime_error("Inserting Molecule at invalid position.");
-
-    // insert into cell
-    m_data(cell_coord).addMolecule(molecule);
-    p_molecule_count++;
+    // write indices
+    updateCOM();
+    writeIndices();
 }
 
 void LinkedCells::updateContainer() {
-    // Move data back into AOS to move molecules
-    writeSOA2AOS();
+    resetIndices();
+    updateCOM();
 
-    // check all cells
-    std::vector<Molecule> deletedMolecules;
-    for (uint64_t z = 1; z < m_data.dims().z()-1; z++) {
-        for (uint64_t y = 1; y < m_data.dims().y()-1; y++) {
-            for (uint64_t x = 1; x < m_data.dims().x()-1; x++) {
-                Cell& cell = m_data(x, y, z);
-                auto& molecules = cell.molecules();
-                for (auto it = molecules.begin(); it != molecules.end();) {
-                    // check if molecule is within bounds of cell
-                    const math::d3 mol_pos = it->getCenterOfMass();
-                    if (cell.insideBounds(mol_pos)) {
-                        ++it;
-                        continue;
-                    }
+    // apply periodic boundary kernel
+    Kokkos::parallel_for("Periodic Bound", p_soa.size(), LinkedCells::Periodic_Kernel(p_com, p_soa.r(), m_low, m_high, m_dom_size));
+    // apply force reset kernel
+    Kokkos::parallel_for("Force Reset", p_soa.size(), LinkedCells::FReset_Kernel(p_soa.f()));
+    Kokkos::fence("OneCell - update");
 
-                    // not in cell -> must delete (and move optionally)
-                    Molecule molecule = *it;
-                    it = m_boundary.deleteMolecule(molecule);
-                    //boundary->moveMolecule(molecule);
-                    deletedMolecules.push_back(molecule);
-                }
-            }
+    updateCOM();
+    writeIndices();
+}
+
+void LinkedCells::writeIndices() {
+    uint64_t s_idx = 0;
+    for (uint64_t m_idx = 0; m_idx < p_molecule_count; m_idx++) {
+        Molecule& molecule = p_molecules[m_idx];
+        // first find correct cell
+        const math::d3 com_pos = p_com[s_idx];
+        math::ul3 cell_coord;
+        for (int dim = 0; dim < 3; dim++) {
+            double fBin = (com_pos[dim] - m_low[dim]) / m_cutoff;
+            cell_coord[dim] = static_cast<uint64_t>(std::clamp((int64_t) fBin, 0L, (int64_t) m_data.dims()[dim]-1));
+        }
+
+        for (auto& _ : molecule.getSites()) {
+            m_data(cell_coord).addIndex(s_idx);
+            s_idx++;
         }
     }
-
-    // update halo now, to not touch work twice
-    m_boundary.updateHalo();
-
-    // reinsert molecules scheduled for moving
-    uint64_t insertedMolecules = 0;
-    for (Molecule& molecule : deletedMolecules) {
-        bool inserted = m_boundary.moveMolecule(molecule);
-        if (inserted) insertedMolecules++;
-    }
-    p_molecule_count -= deletedMolecules.size() - insertedMolecules;
-
-    // reconstruct all broken SOAs
-    constructSOAs();
-
-    clearForces();
 }
 
-std::unique_ptr<MoleculeContainer::Iterator> LinkedCells::iterator(const IteratorType type, const IteratorRegion region) {
-    math::ul3 low, high;
-    if (region == DOMAIN) {
-        low = {1, 1, 1};
-        high = m_data.dims() - 2;
+void LinkedCells::resetIndices() {
+    for (auto c_it = iteratorCell(); c_it->isValid(); ++(*c_it)) {
+        Cell& cell = c_it->cell();
+        cell.resetIndices();
     }
-    if (region == DOMAIN_HALO) {
-        low = {0, 0, 0};
-        high = m_data.dims() - 1;
-    }
-
-    if (type == MOLECULE) writeSOA2AOS();
-
-    return std::make_unique<LCIterator>(low, high, type == MOLECULE, m_data);
 }
 
-std::unique_ptr<MoleculeContainer::CellIterator> LinkedCells::iteratorCell(const LinkedCells::IteratorRegion region) {
+void LinkedCells::FReset_Kernel::operator()(int idx) const {
+    f[idx] = math::d3 {0, 0, 0};
+}
+
+void LinkedCells::Periodic_Kernel::operator()(int idx) const {
+    const math::d3 pos = com[idx];
+
+    math::d3 offset {0, 0, 0};
+    for (int dim = 0; dim < 3; dim++) {
+        if (pos[dim] < low[dim]) offset[dim] = domain_size[dim];
+        if (pos[dim] > high[dim]) offset[dim] = -domain_size[dim];
+    }
+
+    r[idx] += offset;
+}
+
+//===========================================================================
+// Iterator
+//===========================================================================
+
+std::unique_ptr<MoleculeContainer::CellIterator> LinkedCells::iteratorCell() {
     math::ul3 low, high;
-    if (region == DOMAIN) {
-        low = {1, 1, 1};
-        high = m_data.dims() - 2;
-    }
-    if (region == DOMAIN_HALO) {
-        low = {0, 0, 0};
-        high = m_data.dims() - 1;
-    }
+    low = {0, 0, 0};
+    high = m_data.dims()-1;
 
     return std::make_unique<LCCellIterator>(low, high, m_data);
 }
 
 std::unique_ptr<MoleculeContainer::CellPairIterator> LinkedCells::iteratorC08() {
-    return std::make_unique<LCC08Iterator>(math::ul3{0,0,0}, m_data.dims() - 1, m_data);
+    return std::make_unique<LCC08Iterator>(math::ul3{0,0,0}, m_data.dims() - 1, m_data, m_dom_size);
 }
 
-void LinkedCells::constructSOAs() {
-    for (uint64_t z = 0; z < m_data.dims().z(); z++) {
-        for (uint64_t y = 0; y < m_data.dims().y(); y++) {
-            for (uint64_t x = 0; x < m_data.dims().x(); x++) {
-                m_data(x, y, z).constructSOA();
-            }
-        }
-    }
-}
-
-void LinkedCells::writeSOA2AOS() {
-    for (uint64_t z = 0; z < m_data.dims().z(); z++) {
-        for (uint64_t y = 0; y < m_data.dims().y(); y++) {
-            for (uint64_t x = 0; x < m_data.dims().x(); x++) {
-                m_data(x, y, z).writeSOA2AOS();
-            }
-        }
-    }
-}
-
-void LinkedCells::constructSOABuffers() {
-    for (uint64_t z = 0; z < m_data.dims().z(); z++) {
-        for (uint64_t y = 0; y < m_data.dims().y(); y++) {
-            for (uint64_t x = 0; x < m_data.dims().x(); x++) {
-                m_data(x, y, z).soa().createBuffers();
-            }
-        }
-    }
-}
-
-math::ul3 LinkedCells::findCell(const math::d3 &pos, bool& valid) {
-    auto config = Registry::instance->configuration();
-
-    // first find correct cell
-    math::ul3 cell_coord {0, 0, 0};
-    valid = true;
-
-    for (int dim = 0; dim < 3; dim++) {
-        // check for invalid
-        if (pos[dim] < config->domainLow[dim] - config->cutoff ||
-            pos[dim] > config->domainHigh[dim] + config->cutoff) {
-            valid = false;
-            return cell_coord;
-        }
-
-        // get cell coord in this dimension
-        if (pos[dim] < config->domainLow[dim]) cell_coord[dim] = 0;
-        else if (pos[dim] > config->domainHigh[dim]) cell_coord[dim] = m_data.dims()[dim] - 1;
-        else {
-            uint64_t idx = static_cast<uint64_t>(std::floor((pos[dim] - config->domainLow[dim]) / config->cutoff)) + 1UL;
-            if (idx >= m_data.dims()[dim] - 1) idx = m_data.dims()[dim] - 2;
-            cell_coord[dim] = idx;
-        }
-    }
-
-    return cell_coord;
-}
-
-Vec3D<Cell> &LinkedCells::getCells() {
-    return m_data;
-}
-
-void LinkedCells::clearForces() {
-    for (uint64_t z = 1; z < m_data.dims().z()-1; z++) {
-        for (uint64_t y = 1; y < m_data.dims().y()-1; y++) {
-            for (uint64_t x = 1; x < m_data.dims().x()-1; x++) {
-                Cell& cell = m_data(x, y, z);
-                cell.clearForces();
-            }
-        }
-    }
-}
-
-void LinkedCells::getCenterOfMassPositions(KW::vec_t<math::d3> &buffer) {
-    uint64_t idx = 0;
-    for (auto it = iterator(MOLECULE, DOMAIN); it->isValid(); ++(*it)) {
-        buffer[idx] = it->molecule().getCenterOfMass();
-        idx++;
-    }
-}
-
-void LinkedCells::init() {
-    constructSOABuffers();
-    m_boundary.setup();
-}
-
-LinkedCells::LCIterator::LCIterator(const math::ul3 &min, const math::ul3 &max, bool only_mol, Vec3D<Cell> &cells) :
-        m_cell_coord(min), m_cell_min(min), m_cell_max(max), m_only_molecule(only_mol),
-        m_site_idx(0), m_molecule_idx(0), m_visited_sites_cell(0), m_cells(cells) {
-    if (!cells(min).molecules().empty()) return;
-
-    // cell is empty, find the first cell in iteration direction that is not empty
-    findNextCell();
-}
-
-void LinkedCells::LCIterator::operator++() {
-    Cell& cell = m_cells(m_cell_coord);
-    auto& cell_molecules = cell.molecules();
-
-    // move to next site
-    m_visited_sites_cell++;
-    if (!m_only_molecule) {
-        if (m_site_idx < cell_molecules[m_molecule_idx].getSites().size() - 1) {
-            m_site_idx++;
-            return;
-        }
-    }
-
-    // move to next molecule
-    if (m_molecule_idx < cell_molecules.size() - 1) {
-        m_molecule_idx++;
-        m_site_idx = 0;
-        return;
-    }
-
-    // move to next cell
-    findNextCell();
-}
-
-bool LinkedCells::LCIterator::isValid() const {
-    // check if cell is invalid
-    if (m_cell_coord == m_cell_max + 1) return false;
-    return true;
-}
-
-math::d3 & LinkedCells::LCIterator::f() {
-    return m_cells(m_cell_coord).soa().f()[m_visited_sites_cell];
-}
-
-math::d3 & LinkedCells::LCIterator::r() {
-    return m_cells(m_cell_coord).soa().r()[m_visited_sites_cell];
-}
-
-math::d3 & LinkedCells::LCIterator::v() {
-    return m_cells(m_cell_coord).soa().v()[m_visited_sites_cell];
-}
-
-double LinkedCells::LCIterator::epsilon() {
-    return m_cells(m_cell_coord).soa().epsilon()[m_visited_sites_cell];
-}
-
-double LinkedCells::LCIterator::sigma() {
-    return m_cells(m_cell_coord).soa().sigma()[m_visited_sites_cell];
-}
-
-double LinkedCells::LCIterator::mass() {
-    return m_cells(m_cell_coord).soa().mass()[m_visited_sites_cell];
-}
-
-uint64_t LinkedCells::LCIterator::ID() {
-    return m_cells(m_cell_coord).soa().id()[m_visited_sites_cell];
-}
-
-Molecule& LinkedCells::LCIterator::molecule() {
-    return m_cells(m_cell_coord).molecules()[m_molecule_idx];
-}
-
-void LinkedCells::LCIterator::findNextCell() {
-    bool init = false;
-    for (uint64_t z = m_cell_coord.z(); z <= m_cell_max.z(); z++) {
-        for (uint64_t y = init ? m_cell_min.y() : m_cell_coord.y(); y <= m_cell_max.y(); y++) {
-            for (uint64_t x = init ? m_cell_min.x() : (m_cell_coord.x()+1); x <= m_cell_max.x(); x++) {
-                if (m_cells(x, y, z).molecules().empty()) continue;
-                // found non empty cell
-                m_cell_coord = {x, y, z};
-                m_molecule_idx = 0;
-                m_site_idx = 0;
-                m_visited_sites_cell = 0;
-                return;
-            }
-            init = true;
-        }
-    }
-    // if loop is not successful cell_coord = max+1 => isValid becomes false
-    m_cell_coord = m_cell_max + 1;
-}
 
 LinkedCells::LCCellIterator::LCCellIterator(const math::ul3 &min, const math::ul3 &max, Vec3D<Cell> &cells) :
         m_cell_coord(min), m_cell_min(min), m_cell_max(max), m_cells(cells) { }
@@ -326,19 +142,20 @@ Cell &LinkedCells::LCCellIterator::cell() {
     return m_cells(m_cell_coord);
 }
 
-LinkedCells::LCC08Iterator::LCC08Iterator(const math::ul3 &min, const math::ul3 &max, Vec3D<Cell> &cells) :
-        m_cell_coord(min), m_cell_min(min), m_cell_max(max), m_cells(cells), m_offset_idx(0), m_color(0), m_color_switched(false) { }
+LinkedCells::LCC08Iterator::LCC08Iterator(const math::ul3 &min, const math::ul3 &max, Vec3D<Cell> &cells, const math::d3& dom_size) :
+        m_cell_coord(min), m_cell_min(min), m_cell_max(max), m_cells(cells), m_offset_idx(0), m_color(0), m_color_switched(false), m_dom_size(dom_size), m_cell_dims(cells.dims()) { }
 
 void LinkedCells::LCC08Iterator::operator++() {
     m_color_switched = false;
     if (m_offset_idx < pair_offsets.size() - 1) { m_offset_idx++; return; }
     m_offset_idx = 0;
 
-    if (m_cell_coord.x() < m_cell_max.x()-2) { m_cell_coord.x() += 2; return; }
+    // -1 is intended -> allow for periodic bound cell shift, is handled during cell access
+    if (m_cell_coord.x() < m_cell_max.x()-1) { m_cell_coord.x() += 2; return; }
     m_cell_coord.x() = m_cell_min.x();
-    if (m_cell_coord.y() < m_cell_max.y()-2) { m_cell_coord.y() += 2; return; }
+    if (m_cell_coord.y() < m_cell_max.y()-1) { m_cell_coord.y() += 2; return; }
     m_cell_coord.y() = m_cell_min.y();
-    if (m_cell_coord.z() < m_cell_max.z()-2) { m_cell_coord.z() += 2; return; }
+    if (m_cell_coord.z() < m_cell_max.z()-1) { m_cell_coord.z() += 2; return; }
 
     m_color++;
     const math::i3 begin {m_color & 0b1, (m_color & 0b10) >> 1, (m_color & 0b100) >> 2};
@@ -357,10 +174,18 @@ Cell &LinkedCells::LCC08Iterator::cell0() {
 }
 
 Cell &LinkedCells::LCC08Iterator::cell1() {
-    const math::ul3 coord = m_cell_coord + pair_offsets[m_offset_idx].second;
+    math::ul3 coord = m_cell_coord + pair_offsets[m_offset_idx].second;
+    const math::ul3 required_shift_dims = coord > m_cell_max;
+    if (required_shift_dims != 0) coord -= required_shift_dims * m_cell_dims;
     return m_cells(coord);
 }
 
 bool LinkedCells::LCC08Iterator::colorSwitched() {
     return m_color_switched;
+}
+
+math::d3 LinkedCells::LCC08Iterator::getCell1Shift() {
+    const math::ul3 coord = m_cell_coord + pair_offsets[m_offset_idx].second;
+    const math::ul3 required_shift_dims = coord > m_cell_max;
+    return m_dom_size * required_shift_dims;
 }

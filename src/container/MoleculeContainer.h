@@ -10,7 +10,9 @@
 
 #include "Vec3D.h"
 #include "Cell.h"
+#include "SOA.h"
 #include "molecule/Molecule.h"
+#include "util/Kokkos_Wrapper.h"
 
 class MoleculeContainer {
 public:
@@ -18,38 +20,46 @@ public:
     virtual ~MoleculeContainer() = default;
 
     virtual void init() = 0;
-    virtual void addMolecule(const Molecule& molecule) = 0;
+    void addMolecule(const Molecule& molecule);
     virtual void updateContainer() = 0;
 
     uint64_t getNumMolecules() { return p_molecule_count; }
 
-    virtual void getCenterOfMassPositions(KW::vec_t<math::d3>& buffer) = 0;
-    virtual void writeSOA2AOS() = 0;
+    void getCenterOfMassPositions(KW::vec_t<math::d3>& buffer);
+
+    void writeSOA2AOS();
+    void constructSOAs();
+
+    KW::vec_t<math::d3> getCOM() { return p_com; }
+    SOA& getSOA() {return p_soa; }
 
     enum IteratorType {
         MOLECULE,
         SITE
     };
 
-    enum IteratorRegion {
-        DOMAIN,
-        DOMAIN_HALO
-    };
-
     class Iterator {
     public:
-        virtual ~Iterator() = default;
-        virtual void operator++() = 0;
-        virtual bool isValid() const = 0;
+        Iterator(bool only_mol, std::vector<Molecule>& molecules, SOA& soa);
+        ~Iterator() = default;
+        void operator++();
+        bool isValid() const;
 
-        virtual math::d3& f() = 0;
-        virtual math::d3& r() = 0;
-        virtual math::d3& v() = 0;
-        virtual double epsilon() = 0;
-        virtual double sigma() = 0;
-        virtual double mass() = 0;
-        virtual uint64_t ID() = 0;
-        virtual Molecule& molecule() = 0;
+        math::d3& f();
+        math::d3& r();
+        math::d3& v();
+        double epsilon();
+        double sigma();
+        double mass();
+        uint64_t ID();
+        Molecule& molecule();
+    private:
+        const bool m_only_molecule;
+        uint64_t m_site_idx;
+        uint64_t m_molecule_idx;
+        uint64_t m_visited_sites;
+        std::vector<Molecule>& m_molecules;
+        SOA& m_soa;
     };
 
     class CellIterator {
@@ -70,26 +80,35 @@ public:
 
         virtual Cell& cell0() = 0;
         virtual Cell& cell1() = 0;
+        virtual math::d3 getCell1Shift() { return {0, 0, 0}; }
     };
 
     /**
      * Only to be used for IO functionality on CPU side
      * */
-    virtual std::unique_ptr<Iterator> iterator(const IteratorType type, const IteratorRegion region) = 0;
+    Iterator iterator(IteratorType type);
     /**
      * Only to be used on CPU side
      * */
-    virtual std::unique_ptr<CellIterator> iteratorCell(const IteratorRegion region) = 0;
+    virtual std::unique_ptr<CellIterator> iteratorCell() = 0;
     /**
      * Only to be used on CPU side
      * */
     virtual std::unique_ptr<CellPairIterator> iteratorC08() = 0;
-private:
-    virtual void constructSOAs() = 0;
-    virtual void clearForces() = 0;
 protected:
-    /// total number of molecules
+    /**
+     * Updates p_COM buffer to current values by only accessing SOA data
+     * */
+    void updateCOM();
+
+    /// total number of indices
     uint64_t p_molecule_count;
+    /// container for all AoS indices
+    std::vector<Molecule> p_molecules;
+    /// soa for all indices
+    SOA p_soa;
+    /// center of mass positions for all indices (has size of all sites)
+    KW::vec_t<math::d3> p_com;
 };
 
 

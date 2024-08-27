@@ -12,7 +12,7 @@ class CheckpointIO {
 public:
     /// writes a single checkpoint file
     static void writeCheckpoint(uint64_t simstep);
-    /// loads the checkpoint defined by configuration and stores all molecules in the molecule container
+    /// loads the checkpoint defined by configuration and stores all indices in the molecule container
     static void loadCheckpoint();
 };
 

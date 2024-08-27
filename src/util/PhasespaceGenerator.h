@@ -11,7 +11,7 @@
 class PhasespaceGenerator {
 public:
     /**
-     * Generates the phase space defined by the current configuration and places a lattice molecules in the molecule container.
+     * Generates the phase space defined by the current configuration and places a lattice indices in the molecule container.
      * */
     static void generate();
 private:

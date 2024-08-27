@@ -13,7 +13,6 @@
 #include "IO/Configuration.h"
 #include "potentials/ForceFunctor.h"
 #include "Simulation.h"
-#include "boundary/LCBoundary.h"
 #include "IO/VTKWriter.h"
 #include "sensors/Sensor.h"
 #include "sensors/TemperatureSensor.h"

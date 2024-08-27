@@ -17,84 +17,18 @@ void Cell::setBounds(const math::d3 &low, const math::d3 &high) {
     m_high = high;
 }
 
-void Cell::addMolecule(const Molecule &molecule) {
-    m_data.push_back(molecule);
-    m_data.back().setCell(*this);
-}
-
-void Cell::constructSOA() {
-    // Allocate memory
-    uint64_t num_sites = 0;
-    for (Molecule& molecule : m_data) num_sites += molecule.getSites().size();
-    m_soa.resize(num_sites);
-
-    // write to soa
-    uint64_t idx = 0;
-    for (Molecule& molecule : m_data) {
-        for (Site& site : molecule.getSites()) {
-            m_soa.epsilon()[idx] = site.getEpsilon();
-            m_soa.sigma()[idx] = site.getSigma();
-            m_soa.mass()[idx] = site.getMass();
-            m_soa.id()[idx] = molecule.ID();
-            m_soa.r()[idx] = site.r_arr();
-            m_soa.f()[idx] = site.f_arr();
-            m_soa.v()[idx] = site.v_arr();
-            idx++;
-        }
-    }
-    m_valid_soa = true;
-}
-
-void Cell::writeSOA2AOS() {
-    if (!m_valid_soa) return; // can skip if soa is not valid
-
-    // the order should not have changed from writing to SOA
-    uint64_t idx = 0;
-    for (Molecule& molecule : m_data) {
-        for (Site& site : molecule.getSites()) {
-            site.r_arr() = m_soa.r()[idx];
-            site.f_arr() = m_soa.f()[idx];
-            site.v_arr() = m_soa.v()[idx];
-            idx++;
-        }
-    }
-}
-
 bool Cell::insideBounds(const math::d3 &point) {
     return math::pointInBox(point, m_low, m_high);
 }
 
-void Cell::invalidateSOA() {
-    m_valid_soa = false;
+void Cell::createIndexBuffers(const uint64_t size) {
+    m_data = KW::vec_t<uint64_t>("Cell Index Buffer", size);
 }
 
-std::vector<Molecule>::iterator Cell::findBy(uint64_t id) {
-    for (auto it = m_data.begin(); it != m_data.end(); ++it) {
-        if (it->ID() == id) return m_data.begin() + std::distance(m_data.begin(), it);
-    }
-    return m_data.end();
+void Cell::addIndex(uint64_t idx) {
+    m_data[m_num_indices++] = idx;
 }
 
-std::vector<Molecule>::iterator Cell::removeMolecule(uint64_t id) {
-    auto it = findBy(id);
-    if (it == m_data.end()) throw std::runtime_error("Molecule was not in this cell!");
-
-    it->setCell(Cell::INVALID);
-    return m_data.erase(it);
-}
-
-void Cell::clearForces() {
-    if (m_valid_soa) {
-        const auto size = m_soa.size();
-        for (uint64_t idx = 0; idx < size; idx++) {
-            m_soa.f()[idx] = {0, 0, 0};
-        }
-    }
-    else {
-        for (Molecule& molecule : m_data) {
-            for (Site& site : molecule.getSites()) {
-                site.f_arr() = {0, 0, 0};
-            }
-        }
-    }
+void Cell::resetIndices() {
+    m_num_indices = 0;
 }

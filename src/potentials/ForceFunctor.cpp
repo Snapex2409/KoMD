@@ -6,7 +6,7 @@
 #include "ForceFunctor.h"
 #include "Registry.h"
 
-ForceFunctor::ForceFunctor() : p_run_cells(true), p_run_pairs(true) {}
+ForceFunctor::ForceFunctor() : p_run_cells(true), p_run_pairs(true), p_soa(Registry::instance->moleculeContainer()->getSOA()) {}
 
 void ForceFunctor::operator()() {
     auto container = Registry::instance->moleculeContainer();
@@ -14,7 +14,7 @@ void ForceFunctor::operator()() {
     // single cells
     if (p_run_cells) {
         // compute forces
-        for (auto it = container->iteratorCell(MoleculeContainer::DOMAIN); it->isValid(); ++(*it)) {
+        for (auto it = container->iteratorCell(); it->isValid(); ++(*it)) {
             Cell& cell = it->cell();
             handleCell(cell);
         }
@@ -29,7 +29,8 @@ void ForceFunctor::operator()() {
 
             Cell& cell0 = it->cell0();
             Cell& cell1 = it->cell1();
-            handleCellPair(cell0, cell1);
+            const math::d3 cell1_shift = it->getCell1Shift();
+            handleCellPair(cell0, cell1, cell1_shift);
         }
     }
     Kokkos::fence("Potential - Cell Pairs End");

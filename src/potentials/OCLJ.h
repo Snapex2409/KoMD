@@ -39,7 +39,7 @@ public:
     };
 protected:
     void handleCell(Cell &cell) override;
-    void handleCellPair(Cell&, Cell&) override { };
+    void handleCellPair(Cell&, Cell&, const math::d3&) override { };
 
 private:
     /// cutoff radius squared

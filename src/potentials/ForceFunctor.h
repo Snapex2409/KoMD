@@ -6,6 +6,8 @@
 #define KOMD_FORCEFUNCTOR_H
 
 class Cell;
+class SOA;
+#include "math/Array.h"
 
 /**
  * General force function interface
@@ -29,12 +31,14 @@ protected:
     /**
      * Handles a cell pair
      * */
-    virtual void handleCellPair(Cell& cell0, Cell& cell1) = 0;
+    virtual void handleCellPair(Cell& cell0, Cell& cell1, const math::d3& cell1_shift) = 0;
 
     /// Flag if handle Cells should be called
     bool p_run_cells;
     /// Flag if handle Cell Pairs should be called
     bool p_run_pairs;
+    /// Reference to MoleculeContainer::soa
+    SOA& p_soa;
 };
 
 

@@ -16,20 +16,19 @@
 #include <iostream>
 #include <string>
 
-void VTKWriter::write(const std::string &filename, int iteration, bool writeHalo) {
+void VTKWriter::write(const std::string &filename, int iteration) {
     auto container = Registry::instance->moleculeContainer();
 
     uint64_t sites = 0;
-    const auto region = writeHalo ? MoleculeContainer::DOMAIN_HALO : MoleculeContainer::DOMAIN;
-    for (auto it = container->iterator(MoleculeContainer::MOLECULE, region); it->isValid(); ++(*it)) {
-        Molecule& molecule = it->molecule();
+    for (auto it = container->iterator(MoleculeContainer::MOLECULE); it.isValid(); ++it) {
+        Molecule& molecule = it.molecule();
         sites += molecule.getSites().size();
     }
 
     initializeOutput(sites);
 
-    for (auto it = container->iterator(MoleculeContainer::MOLECULE, region); it->isValid(); ++(*it)) {
-        Molecule& molecule = it->molecule();
+    for (auto it = container->iterator(MoleculeContainer::MOLECULE); it.isValid(); ++it) {
+        Molecule& molecule = it.molecule();
         plotMolecule(molecule);
     }
 

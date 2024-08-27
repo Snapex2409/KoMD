@@ -32,6 +32,8 @@ public:
         KW::vec_t<double> sig;
         /// shallow copy of SOA::epsilon
         KW::vec_t<double> eps;
+        /// shallow copy of Cell::indices
+        KW::vec_t<uint64_t> indices;
 
         /// ScatterView for Potential_Sensor::p_data_u
         KW::vec_scatter_t<double> data_u_scatter;
@@ -56,21 +58,17 @@ public:
     struct LJ12_6_PotPair {
         KOKKOS_FUNCTION void operator()(int idx_0, int idx_1) const;
         /// shallow copy of SOA::id
-        KW::vec_t<uint64_t> id0;
-        /// shallow copy of SOA::id
-        KW::vec_t<uint64_t> id1;
+        KW::vec_t<uint64_t> id;
         /// shallow copy of SOA::r
-        KW::vec_t<math::d3> r0;
-        /// shallow copy of SOA::r
-        KW::vec_t<math::d3> r1;
+        KW::vec_t<math::d3> r;
         /// shallow copy of SOA::sigma
-        KW::vec_t<double> sig0;
-        /// shallow copy of SOA::sigma
-        KW::vec_t<double> sig1;
+        KW::vec_t<double> sig;
         /// shallow copy of SOA::epsilon
-        KW::vec_t<double> eps0;
-        /// shallow copy of SOA::epsilon
-        KW::vec_t<double> eps1;
+        KW::vec_t<double> eps;
+        /// shallow copy of Cell::indices
+        KW::vec_t<uint64_t> indices0;
+        /// shallow copy of Cell::indices
+        KW::vec_t<uint64_t> indices1;
 
         /// ScatterView for Potential_Sensor::p_data_u
         KW::vec_scatter_t<double> data_u_scatter;
@@ -89,10 +87,12 @@ public:
         const double max_sigma;
         /// number of discretization bins
         const uint64_t bins;
+        /// idx_1 position shift
+        const math::d3 shift;
     };
 protected:
     void handleCell(Cell &cell) override;
-    void handleCellPair(Cell &cell0, Cell &cell1) override;
+    void handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell1_shift) override;
 private:
     /// cutoff radius squared
     double m_cutoff2;

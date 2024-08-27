@@ -17,11 +17,10 @@ OCLJ::OCLJ() : m_cutoff2(std::pow(Registry::instance->configuration()->cutoff, 2
 }
 
 void OCLJ::handleCell(Cell &cell) {
-    SOA& soa = cell.soa();
     Kokkos::parallel_for("OCLJ - Cell", Kokkos::MDRangePolicy<Kokkos::Rank<3>>(
             {0,0,0},
-            {static_cast<long>(soa.size()), static_cast<long>(soa.size()), 8}),
-            OCLJ_Force(soa.f(), soa.id(), soa.r(), m_container->getCoM(), soa.sigma(), soa.epsilon(),
+            {static_cast<long>(cell.getNumIndices()), static_cast<long>(cell.getNumIndices()), 8}),
+            OCLJ_Force(p_soa.f(), p_soa.id(), p_soa.r(), m_container->getCOM(), p_soa.sigma(), p_soa.epsilon(),
                        m_cutoff2, m_domain_size, m_low_bound));
 }
 
