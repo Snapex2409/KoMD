@@ -2,8 +2,10 @@
 // Created by alex on 8/8/24.
 //
 
+#include <fstream>
 #include "LJ12_6_Sensor.h"
 #include "Registry.h"
+#include "IO/Logging.h"
 
 LJ12_6_Sensor::LJ12_6_Sensor() :
 Potential_Sensor("LJ12_6", Registry::instance->configuration()->sensor_lj_bins),
@@ -16,6 +18,7 @@ void LJ12_6_Sensor::measure() {
     m_total_pot_scatter.reset();
     Potential_Sensor::measure();
     Kokkos::Experimental::contribute(m_total_pot, m_total_pot_scatter);
+    m_pot_hist.push_back(m_total_pot[0]);
 }
 
 void LJ12_6_Sensor::handleCell(Cell &cell) {
@@ -30,6 +33,23 @@ void LJ12_6_Sensor::handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cel
                          LJ12_6_PotPair(p_soa.id(), p_soa.r(), p_soa.sigma(), p_soa.epsilon(), cell0.indices(), cell1.indices(),
                                         p_data_u_scatter, p_data_f_scatter, p_count_u_scatter, p_count_f_scatter,
                                         m_total_pot_scatter, m_cutoff2, p_max_sigma, p_bins, cell0_shift, cell1_shift));
+}
+
+void LJ12_6_Sensor::write(uint64_t simstep) {
+    Potential_Sensor::write(simstep);
+
+    std::stringstream file_name;
+    file_name << "pot_history_" << name() << "_" << simstep << ".txt";
+    std::ofstream file(file_name.str());
+    if (!file.is_open()) {
+        Log::io->error() << "Could not write file: " << file_name.str() << std::endl;
+        return;
+    }
+
+    for (double pot : m_pot_hist) {
+        file << pot << " ";
+    }
+    file.close();
 }
 
 void LJ12_6_Sensor::LJ12_6_Pot::operator()(int idx_0, int idx_1) const {

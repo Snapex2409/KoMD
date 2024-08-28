@@ -8,6 +8,7 @@
 
 #include "Potential_Sensor.h"
 #include "util/Kokkos_Wrapper.h"
+#include <vector>
 
 /**
  * Measures potential of LJ126
@@ -17,6 +18,7 @@ public:
     LJ12_6_Sensor();
     virtual ~LJ12_6_Sensor() = default;
     void measure() override;
+    void write(uint64_t simstep) override;
 
     /// @returns current total potential value
     double getCurrentPotential() { return m_total_pot[0]; }
@@ -102,6 +104,8 @@ private:
     KW::vec_t<double> m_total_pot;
     /// scatter view for total potential buffer
     KW::vec_scatter_t<double> m_total_pot_scatter;
+    /// history of global potential values
+    std::vector<double> m_pot_hist;
 };
 
 
