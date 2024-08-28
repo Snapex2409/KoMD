@@ -87,12 +87,14 @@ public:
         const double max_sigma;
         /// number of discretization bins
         const uint64_t bins;
+        /// idx_0 position shift
+        const math::d3 shift0;
         /// idx_1 position shift
-        const math::d3 shift;
+        const math::d3 shift1;
     };
 protected:
     void handleCell(Cell &cell) override;
-    void handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell1_shift) override;
+    void handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell0_shift, const math::d3& cell1_shift) override;
 private:
     /// cutoff radius squared
     double m_cutoff2;

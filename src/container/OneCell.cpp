@@ -20,6 +20,7 @@ void OneCell::init() {
     for (uint64_t idx = 0; idx < num_sites; idx++) m_data.addIndex(idx);
 
     p_com = KW::vec_t<math::d3>("Center of Masses", p_soa.size());
+    updateCOM();
 }
 
 void OneCell::updateContainer() {

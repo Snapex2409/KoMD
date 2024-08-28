@@ -15,9 +15,9 @@ void LJ12_6::handleCell(Cell &cell) {
                          LJ12_6_Force(p_soa.f(), p_soa.id(), p_soa.r(), p_soa.sigma(), p_soa.epsilon(), cell.indices(), m_cutoff2));
 }
 
-void LJ12_6::handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell1_shift) {
+void LJ12_6::handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell0_shift, const math::d3& cell1_shift) {
     Kokkos::parallel_for("LJ12-6 - Cell Pair", Kokkos::MDRangePolicy({0, 0}, {cell0.getNumIndices(), cell1.getNumIndices()}),
-                         LJ12_6_ForcePair(p_soa.f(), p_soa.id(), p_soa.r(), p_soa.sigma(), p_soa.epsilon(), cell0.indices(), cell1.indices(), m_cutoff2, cell1_shift));
+                         LJ12_6_ForcePair(p_soa.f(), p_soa.id(), p_soa.r(), p_soa.sigma(), p_soa.epsilon(), cell0.indices(), cell1.indices(), m_cutoff2, cell0_shift, cell1_shift));
 }
 
 void LJ12_6::LJ12_6_Force::operator()(int idx_0, int idx_1) const {
@@ -51,7 +51,7 @@ void LJ12_6::LJ12_6_ForcePair::operator()(int idx_0, int idx_1) const {
     
     if (id[s_idx_0] == id[s_idx_1]) return;
 
-    const math::d3 dr = r[s_idx_0] - (r[s_idx_1] + shift);
+    const math::d3 dr = (r[s_idx_0] + shift0) - (r[s_idx_1] + shift1);
     const double dr2 = dr.dot(dr);
     if (dr2 > cutoff2) return;
     const double invdr2 = 1. / dr2;

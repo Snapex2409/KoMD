@@ -45,6 +45,7 @@ public:
         Cell& cell0() override;
         Cell& cell1() override;
         bool colorSwitched() override;
+        math::d3 getCell0Shift() override;
         math::d3 getCell1Shift() override;
     private:
         math::ul3 m_cell_coord;

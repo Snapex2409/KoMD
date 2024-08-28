@@ -18,7 +18,7 @@ void Limit::handleCell(Cell &cell) {
                          Limit_Force(p_soa.f(), p_soa.sigma(), p_soa.epsilon(), cell.indices(), m_limit_factor));
 }
 
-void Limit::handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell1_shift) { }
+void Limit::handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell0_shift, const math::d3& cell1_shift) { }
 
 void Limit::Limit_Force::operator()(int idx) const {
     const uint64_t s_idx = indices[idx];

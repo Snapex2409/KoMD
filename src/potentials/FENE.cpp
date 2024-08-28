@@ -17,7 +17,7 @@ void FENE::handleCell(Cell &cell) {
                          FENE_Force(p_soa.f(), p_soa.id(), p_soa.r(), p_soa.sigma(), p_soa.epsilon(), cell.indices(), m_stiffness_factor));
 }
 
-void FENE::handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell1_shift) { }
+void FENE::handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell0_shift, const math::d3& cell1_shift) { }
 
 void FENE::FENE_Force::operator()(int idx_0, int idx_1) const {
     if (idx_1 <= idx_0) return; // only compute pair once

@@ -29,8 +29,9 @@ void ForceFunctor::operator()() {
 
             Cell& cell0 = it->cell0();
             Cell& cell1 = it->cell1();
+            const math::d3 cell0_shift = it->getCell0Shift();
             const math::d3 cell1_shift = it->getCell1Shift();
-            handleCellPair(cell0, cell1, cell1_shift);
+            handleCellPair(cell0, cell1, cell0_shift, cell1_shift);
         }
     }
     Kokkos::fence("Potential - Cell Pairs End");

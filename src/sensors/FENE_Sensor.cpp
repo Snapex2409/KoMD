@@ -21,7 +21,7 @@ void FENE_Sensor::handleCell(Cell &cell) {
                                   m_stiffness_factor, p_max_sigma, p_bins));
 }
 
-void FENE_Sensor::handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell1_shift) { }
+void FENE_Sensor::handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell0_shift, const math::d3& cell1_shift) { }
 
 void FENE_Sensor::FENE_Pot::operator()(int idx_0, int idx_1) const {
     if (idx_1 <= idx_0) return; // only compute pair once

@@ -48,7 +48,7 @@ public:
     };
 protected:
     void handleCell(Cell &cell) override;
-    void handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell1_shift) override;
+    void handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell0_shift, const math::d3& cell1_shift) override;
 private:
     /// stiffness of FENE pot
     double m_stiffness_factor;

@@ -45,6 +45,7 @@ void LinkedCells::init() {
     for (auto c_it = iteratorCell(); c_it->isValid(); ++(*c_it)) c_it->cell().createIndexBuffers(num_sites);
 
     // write indices
+    p_com = KW::vec_t<math::d3>("Center of Masses", p_soa.size());
     updateCOM();
     writeIndices();
 }
@@ -169,7 +170,9 @@ bool LinkedCells::LCC08Iterator::isValid() const {
 }
 
 Cell &LinkedCells::LCC08Iterator::cell0() {
-    const math::ul3 coord = m_cell_coord + pair_offsets[m_offset_idx].first;
+    math::ul3 coord = m_cell_coord + pair_offsets[m_offset_idx].first;
+    const math::ul3 required_shift_dims = coord > m_cell_max;
+    if (required_shift_dims != 0) coord -= required_shift_dims * m_cell_dims;
     return m_cells(coord);
 }
 
@@ -182,6 +185,12 @@ Cell &LinkedCells::LCC08Iterator::cell1() {
 
 bool LinkedCells::LCC08Iterator::colorSwitched() {
     return m_color_switched;
+}
+
+math::d3 LinkedCells::LCC08Iterator::getCell0Shift() {
+    const math::ul3 coord = m_cell_coord + pair_offsets[m_offset_idx].first;
+    const math::ul3 required_shift_dims = coord > m_cell_max;
+    return m_dom_size * required_shift_dims;
 }
 
 math::d3 LinkedCells::LCC08Iterator::getCell1Shift() {

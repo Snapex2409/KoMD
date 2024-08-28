@@ -31,7 +31,7 @@ protected:
     /**
      * Handles a cell pair
      * */
-    virtual void handleCellPair(Cell& cell0, Cell& cell1, const math::d3& cell1_shift) = 0;
+    virtual void handleCellPair(Cell& cell0, Cell& cell1, const math::d3& cell0_shift, const math::d3& cell1_shift) = 0;
 
     /// Flag if handle Cells should be called
     bool p_run_cells;

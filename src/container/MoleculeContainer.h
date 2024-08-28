@@ -80,6 +80,7 @@ public:
 
         virtual Cell& cell0() = 0;
         virtual Cell& cell1() = 0;
+        virtual math::d3 getCell0Shift() { return {0, 0, 0}; }
         virtual math::d3 getCell1Shift() { return {0, 0, 0}; }
     };
 

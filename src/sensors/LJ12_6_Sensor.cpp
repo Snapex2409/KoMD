@@ -25,11 +25,11 @@ void LJ12_6_Sensor::handleCell(Cell &cell) {
                                     m_total_pot_scatter, m_cutoff2, p_max_sigma, p_bins));
 }
 
-void LJ12_6_Sensor::handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell1_shift) {
+void LJ12_6_Sensor::handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell0_shift, const math::d3& cell1_shift) {
     Kokkos::parallel_for("Sensor - LJ12-6 - Cell Pair", Kokkos::MDRangePolicy({0, 0}, {cell0.getNumIndices(), cell1.getNumIndices()}),
                          LJ12_6_PotPair(p_soa.id(), p_soa.r(), p_soa.sigma(), p_soa.epsilon(), cell0.indices(), cell1.indices(),
                                         p_data_u_scatter, p_data_f_scatter, p_count_u_scatter, p_count_f_scatter,
-                                        m_total_pot_scatter, m_cutoff2, p_max_sigma, p_bins, cell1_shift));
+                                        m_total_pot_scatter, m_cutoff2, p_max_sigma, p_bins, cell0_shift, cell1_shift));
 }
 
 void LJ12_6_Sensor::LJ12_6_Pot::operator()(int idx_0, int idx_1) const {
@@ -80,7 +80,7 @@ void LJ12_6_Sensor::LJ12_6_PotPair::operator()(int idx_0, int idx_1) const {
     const uint64_t s_idx_1 = indices1[idx_1];
     if (id[s_idx_0] == id[s_idx_1]) return;
 
-    const math::d3 dr = r[s_idx_0] - (r[s_idx_1] + shift);
+    const math::d3 dr = (r[s_idx_0] + shift0) - (r[s_idx_1] + shift1);
     const double dr2 = dr.dot(dr);
     if (dr2 > cutoff2) return;
     const double invdr2 = 1. / dr2;
