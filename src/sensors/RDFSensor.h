@@ -31,6 +31,8 @@ public:
         const double delta_r;
         /// number of total bins
         const uint64_t bins;
+        /// domain size
+        const math::d3 domain_size;
     };
 private:
     /**

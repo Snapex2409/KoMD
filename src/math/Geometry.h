@@ -24,6 +24,22 @@ namespace math {
                high_0.y() >= low_1.y() && high_1.y() >= low_0.y() &&
                high_0.z() >= low_1.z() && high_1.z() >= low_0.z();
     }
+
+    /**
+     * Cantor mapping function from N² to N
+     * */
+    template<typename T>
+    KOKKOS_INLINE_FUNCTION T cantor2(T x, T y) {
+        return (x + y) * (x + y + 1) / 2 + y;
+    }
+
+    /**
+     * Cantor mapping function for N³ to N
+     * */
+    template<typename T>
+     KOKKOS_INLINE_FUNCTION T cantor3(const Array<T, 3>& coord) {
+         return cantor2(cantor2(coord.x(), coord.y()), coord.z());
+     }
 }
 
 #endif //KOMD_GEOMETRY_H

@@ -5,6 +5,7 @@
 #include "LinkedCells.h"
 #include "molecule/Molecule.h"
 #include "Registry.h"
+#include "math/Geometry.h"
 
 LinkedCells::LinkedCells() : MoleculeContainer(), m_data() {
     auto config = Registry::instance->configuration();
@@ -148,7 +149,24 @@ LinkedCells::LCC08Iterator::LCC08Iterator(const math::ul3 &min, const math::ul3 
 
 void LinkedCells::LCC08Iterator::operator++() {
     m_color_switched = false;
-    if (m_offset_idx < pair_offsets.size() - 1) { m_offset_idx++; return; }
+    if (m_offset_idx < pair_offsets.size() - 1) {
+        m_offset_idx++;
+        // check if the 2 cells are halo -> if so, then skip this pair
+        math::ul3 coord0 = m_cell_coord + pair_offsets[m_offset_idx].first;
+        const math::ul3 required_shift_dims0 = coord0 > m_cell_max;
+        math::ul3 coord1 = m_cell_coord + pair_offsets[m_offset_idx].second;
+        const math::ul3 required_shift_dims1 = coord1 > m_cell_max;
+        // both require shift -> both are halo
+        if (required_shift_dims0 != 0 && required_shift_dims1 != 0) return this->operator++();
+        // get target coord
+        if (required_shift_dims0 != 0) coord0 -= required_shift_dims0 * m_cell_dims;
+        if (required_shift_dims1 != 0) coord1 -= required_shift_dims1 * m_cell_dims;
+        // check if pair was handled already
+        auto pair = std::make_pair(math::cantor3(coord0), math::cantor3(coord1));
+        if (m_visited_pairs.contains(pair)) return this->operator++();
+        m_visited_pairs.insert(pair);
+        return;
+    }
     m_offset_idx = 0;
 
     // -1 is intended -> allow for periodic bound cell shift, is handled during cell access

@@ -22,12 +22,14 @@ m_bins(), m_bins_scatter(), m_samples(0) {
 }
 
 void RDFSensor::measure() {
+    auto config = Registry::instance->configuration();
     auto container = Registry::instance->moleculeContainer();
     const auto count = container->getNumMolecules();
     container->getCenterOfMassPositions(m_com);
+    const math::d3 dom_size = config->domainHigh - config->domainLow;
 
     if constexpr (!KW::enabled_cuda) m_bins_scatter.reset();
-    Kokkos::parallel_for("RDF", Kokkos::MDRangePolicy({0, 0}, {count, count}), RDF_Kernel(m_com, m_bins_scatter, m_max_r, m_delta_r, static_cast<uint64_t>(m_max_r / m_delta_r)));
+    Kokkos::parallel_for("RDF", Kokkos::MDRangePolicy({0, 0}, {count, count}), RDF_Kernel(m_com, m_bins_scatter, m_max_r, m_delta_r, static_cast<uint64_t>(m_max_r / m_delta_r), dom_size));
     Kokkos::fence("RDF - fence");
     Kokkos::Experimental::contribute(m_bins, m_bins_scatter);
 
@@ -53,7 +55,7 @@ void RDFSensor::write(uint64_t simstep) {
         const double n_bin = m_bins[idx] / m_samples;
         const double v_bin = 4.0 / 3.0 * M_PI * (std::pow(r+dr_half, 3) - std::pow(r-dr_half, 3));
         const double g_r = (n_bin * v_total) / (v_bin * n_total);
-        file << r << "\t" << g_r << "\t" << n_bin << "\t" << v_bin << "\t" << n_total << "\t" << v_total << "\n";
+        file << r << "\t" << g_r << "\t" << n_bin << "\t" << v_bin << "\t" << n_total << "\t" << v_total << "\t" << (n_bin * v_total) << "\t" << (v_bin * n_total) << "\n";
         r += m_delta_r;
     }
     file.close();
@@ -64,7 +66,9 @@ void RDFSensor::RDF_Kernel::operator()(int idx_0, int idx_1) const {
     auto bin_access = bins_scatter.access();
     const math::d3 r0 = positions[idx_0];
     const math::d3 r1 = positions[idx_1];
-    const double r = (r0 - r1).L2();
+    const math::d3 delta = r0 - r1;
+    const math::d3 dr = delta - domain_size * math::round(delta / domain_size);
+    const double r = dr.L2();
     if (r > max_r) return;
 
     const uint64_t bin = getBin(r, delta_r, bins);

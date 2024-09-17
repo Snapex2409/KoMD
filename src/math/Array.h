@@ -384,6 +384,21 @@ namespace math {
     using d3 = Array<double, 3>;
     using f3 = Array<float, 3>;
 
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION i3 round(const f3 &vec) {
+        i3 result {0, 0, 0};
+        result[0] = Kokkos::round(vec[0]);
+        result[1] = Kokkos::round(vec[1]);
+        result[2] = Kokkos::round(vec[2]);
+        return result;
+    }
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION l3 round(const d3& vec) {
+        l3 result {0, 0, 0};
+        result[0] = Kokkos::round(vec[0]);
+        result[1] = Kokkos::round(vec[1]);
+        result[2] = Kokkos::round(vec[2]);
+        return result;
+    }
+
     [[maybe_unused]] KOKKOS_INLINE_FUNCTION i3 ceil(const f3 &vec) {
         i3 result {0, 0, 0};
         result[0] = Kokkos::ceil(vec[0]);
