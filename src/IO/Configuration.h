@@ -15,11 +15,14 @@ struct Configuration {
     double delta_t = Defaults::delta_t;
     uint64_t timesteps = Defaults::timesteps;
     double cutoff = Defaults::cutoff;
+    double cell_size = Defaults::cell_size;
     double density = Defaults::density;
     double max_epsilon = std::numeric_limits<double>::min();
     double max_sigma = std::numeric_limits<double>::min();
     double stiffness_factor = Defaults::stiffness_factor;
     double limit_factor = Defaults::limit_factor;
+
+    int pair_steps = Defaults::pair_steps;
 
     math::d3 domainLow = Defaults::domainLow;
     math::d3 domainHigh = Defaults::domainHigh;

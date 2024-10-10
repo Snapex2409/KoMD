@@ -22,6 +22,7 @@ namespace Defaults {
     static constexpr math::d3 domainLow {0, 0, 0};      // in Armstrong
     static constexpr math::d3 domainHigh {10, 10, 10};  // in Armstrong
     static constexpr double cutoff = sigma * 2.5;       // in Armstrong
+    static constexpr double cell_size = cutoff * 3.0 / 2.5;       // in Armstrong
     static constexpr bool enable_sensor_lj = false;
     static constexpr bool enable_sensor_fene = false;
     static constexpr bool enable_sensor_rdf = false;
@@ -29,6 +30,7 @@ namespace Defaults {
     static constexpr bool storeCheckpoint = false;
     static constexpr uint64_t timesteps = 1;            // unit-less
     static constexpr uint64_t write_freq = 10;          // unit-less
+    static constexpr int pair_steps = 4;                // unit-less
 
     static constexpr uint64_t sensor_lj_bins = 100;
     static constexpr uint64_t sensor_fene_bins = 100;

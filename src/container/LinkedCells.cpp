@@ -62,7 +62,7 @@ void LinkedCells::init() {
 
 void LinkedCells::updateContainer() {
     resetIndices();
-    p_pair_list.reset();
+
     updateCOM();
 
     // apply periodic boundary kernel
@@ -74,32 +74,7 @@ void LinkedCells::updateContainer() {
     updateCOM();
     writeIndices();
 
-    // populate pair list
-    for (auto it = iteratorC08(); it->isValid(); ++(*it)) {
-        Cell& cell0 = it->cell0();
-        Cell& cell1 = it->cell1();
-        const math::d3 shift0 = it->getCell0Shift();
-        const math::d3 shift1 = it->getCell1Shift();
-        for (int idx0 = 0; idx0 < cell0.getNumIndices(); idx0++) {
-            for (int idx1 = 0; idx1 < cell1.getNumIndices(); idx1++) {
-                p_pair_list.addPair(cell0.indices()[idx0], cell1.indices()[idx1], shift0, shift1);
-            }
-        }
-    }
-
-    for (auto it = iteratorCell(); it->isValid(); ++(*it)) {
-        Cell& cell = it->cell();
-        const auto check_low = cell.low() < m_low;
-        const auto check_high = cell.high() > m_high;
-        const auto is_halo = check_low - check_high; // will be 1 if is halo low, 0 if domain, -1 if is halo high
-        if (is_halo == 0) continue;
-
-        for (int idx0 = 0; idx0 < cell.getNumIndices(); idx0++) {
-            for (int idx1 = idx0 + 1; idx1 < cell.getNumIndices(); idx1++) {
-                p_pair_list.addPair(cell.indices()[idx0], cell.indices()[idx1]);
-            }
-        }
-    }
+    updatePairList();
 }
 
 void LinkedCells::writeIndices() {
@@ -147,6 +122,66 @@ void LinkedCells::resetIndices() {
         Cell& cell = c_it->cell();
         cell.resetIndices();
     }
+}
+
+void LinkedCells::updatePairList() {
+    if (p_pair_list.requiresUpdate()) {
+        p_pair_list.reset();
+
+
+        // check how much memory will be required
+        uint64_t num_pairs = 0;
+        for (auto it = iteratorC08(); it->isValid(); ++(*it)) {
+            Cell& cell0 = it->cell0();
+            Cell& cell1 = it->cell1();
+            num_pairs += cell0.getNumIndices() * cell1.getNumIndices();
+        }
+
+        for (auto it = iteratorCell(); it->isValid(); ++(*it)) {
+            Cell& cell = it->cell();
+            const auto check_low = cell.low() < m_low;
+            const auto check_high = cell.high() > m_high;
+            const auto is_halo = check_low - check_high; // will be 1 if is halo low, 0 if domain, -1 if is halo high
+            if (is_halo == 0) continue;
+
+            const auto n = cell.getNumIndices();
+            num_pairs += n * (n-1) / 2;
+        }
+        p_pair_list.resize(num_pairs);
+
+
+        // populate pair list in parallel
+        for (auto it = iteratorC08(); it->isValid(); ++(*it)) {
+            if (it->colorSwitched()) Kokkos::fence("Pair List Update - C08");
+
+            Cell& cell0 = it->cell0();
+            Cell& cell1 = it->cell1();
+            const math::d3 shift0 = it->getCell0Shift();
+            const math::d3 shift1 = it->getCell1Shift();
+            for (int idx0 = 0; idx0 < cell0.getNumIndices(); idx0++) {
+                for (int idx1 = 0; idx1 < cell1.getNumIndices(); idx1++) {
+                    p_pair_list.addPair(cell0.indices()[idx0], cell1.indices()[idx1], shift0, shift1);
+                }
+            }
+        }
+        Kokkos::fence("Pair List Update - C08 End");
+
+        for (auto it = iteratorCell(); it->isValid(); ++(*it)) {
+            Cell& cell = it->cell();
+            const auto check_low = cell.low() < m_low;
+            const auto check_high = cell.high() > m_high;
+            const auto is_halo = check_low - check_high; // will be 1 if is halo low, 0 if domain, -1 if is halo high
+            if (is_halo == 0) continue;
+
+            for (int idx0 = 0; idx0 < cell.getNumIndices(); idx0++) {
+                for (int idx1 = idx0 + 1; idx1 < cell.getNumIndices(); idx1++) {
+                    p_pair_list.addPair(cell.indices()[idx0], cell.indices()[idx1]);
+                }
+            }
+        }
+    }
+
+    p_pair_list.step();
 }
 
 void LinkedCells::FReset_Kernel::operator()(int idx) const {

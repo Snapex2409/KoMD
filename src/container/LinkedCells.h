@@ -108,6 +108,42 @@ public:
         const math::d3 high;
         const math::d3 domain_size;
     };
+
+    struct PairListPair_Kernel {
+        KOKKOS_FUNCTION void operator()(int idx0, int idx1) const {
+            uint64_t updated_pos = Kokkos::atomic_add_fetch(num_pairs, 1);
+            const uint64_t local_pos = updated_pos - 1;
+
+            pairs(local_pos, 0) = indices0(idx0);
+            pairs(local_pos, 1) = indices1(idx1);
+            offsets(local_pos, 0) = shift0;
+            offsets(local_pos, 1) = shift1;
+        }
+        const math::d3 shift0;
+        const math::d3 shift1;
+        KW::vec_t<uint64_t> indices0;
+        KW::vec_t<uint64_t> indices1;
+        KW::nvec_t<int, 2> pairs;
+        KW::nvec_t<math::d3, 2> offsets;
+        uint64_t* num_pairs;
+    };
+
+    struct PairListSingle_Kernel {
+        KOKKOS_FUNCTION void operator()(int idx0, int idx1) const {
+            if (idx1 <= idx0) return;
+            uint64_t updated_pos = Kokkos::atomic_add_fetch(num_pairs, 1);
+            const uint64_t local_pos = updated_pos - 1;
+
+            pairs(local_pos, 0) = indices(idx0);
+            pairs(local_pos, 1) = indices(idx1);
+            offsets(local_pos, 0) = {0, 0, 0};
+            offsets(local_pos, 1) = {0, 0, 0};
+        }
+        KW::vec_t<uint64_t> indices;
+        KW::nvec_t<int, 2> pairs;
+        KW::nvec_t<math::d3, 2> offsets;
+        uint64_t* num_pairs;
+    };
 private:
     /**
      * Writes all soa indices into cell buffers
@@ -118,6 +154,11 @@ private:
      * Resets all cell index buffers (does not reallocate memory, only sets counters to 0)
      * */
     void resetIndices();
+
+    /**
+     * Updates Pair List based on newly created Indices
+     * */
+    void updatePairList();
 
     /// 3d cell buffer
     Vec3D<Cell> m_data;

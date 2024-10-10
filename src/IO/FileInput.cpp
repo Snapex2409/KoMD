@@ -28,9 +28,11 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "temperature") file >> config->temperature;
             if (var == "delta_t") file >> config->delta_t;
             if (var == "cutoff") file >> config->cutoff;
+            if (var == "cell_size") file >> config->cell_size;
             if (var == "density") file >> config->density;
             if (var == "stiffness") file >> config->stiffness_factor;
             if (var == "limit") file >> config->limit_factor;
+            if (var == "pair_steps") file >> config->pair_steps;
             if (var == "domain_low") file >> config->domainLow.x() >> config->domainLow.y() >> config->domainLow.z();
             if (var == "domain_high") file >> config->domainHigh.x() >> config->domainHigh.y() >> config->domainHigh.z();
             if (var == "timesteps") file >> config->timesteps;
@@ -81,6 +83,10 @@ bool FileInput::readFile(const std::string &filename) {
             Log::io->error() << "phasespace gen region uses unknown component" << std::endl;
             return false;
         }
+    }
+    if (config->cell_size < config->cutoff) {
+        Log::io->error() << "cell size must be larger or equal to cutoff radius" << std::endl;
+        return false;
     }
     return true;
 }
