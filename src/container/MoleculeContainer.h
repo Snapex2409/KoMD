@@ -13,6 +13,7 @@
 #include "SOA.h"
 #include "molecule/Molecule.h"
 #include "util/Kokkos_Wrapper.h"
+#include "PairList.h"
 
 class MoleculeContainer {
 public:
@@ -32,6 +33,7 @@ public:
 
     KW::vec_t<math::d3> getCOM() { return p_com; }
     SOA& getSOA() {return p_soa; }
+    PairList& getPairList() { return p_pair_list; }
 
     enum IteratorType {
         MOLECULE,
@@ -110,6 +112,8 @@ protected:
     SOA p_soa;
     /// center of mass positions for all indices (has size of all sites)
     KW::vec_t<math::d3> p_com;
+    /// Pair List for Kokkos force computation
+    PairList p_pair_list;
 };
 
 

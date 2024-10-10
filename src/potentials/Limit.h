@@ -26,14 +26,11 @@ public:
         KW::vec_t<double> sig;
         /// shallow copy of SOA::epsilon
         KW::vec_t<double> eps;
-        /// shallow copy of Cell::indices
-        KW::vec_t<uint64_t> indices;
         /// threshold
         const double limit_factor;
     };
 protected:
-    void handleCell(Cell &cell) override;
-    void handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell0_shift, const math::d3& cell1_shift) override;
+    void handlePairList(PairList &pairList) override;
 
 private:
     /// threshold

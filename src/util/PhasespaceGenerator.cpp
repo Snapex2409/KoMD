@@ -41,6 +41,19 @@ void PhasespaceGenerator::generate() {
     static std::default_random_engine rng(43); // NOLINT(*-msc51-cpp) I know... that's the point
     std::uniform_real_distribution<double> uniform(0, M_PI * 2);
 
+/*    for (int idx = 0; idx < num_molecules; idx++) {
+        std::uniform_real_distribution<double> uniform_x(config->domainLow.x(), config->domainHigh.x());
+        std::uniform_real_distribution<double> uniform_y(config->domainLow.y(), config->domainHigh.y());
+        std::uniform_real_distribution<double> uniform_z(config->domainLow.z(), config->domainHigh.z());
+        const math::d3 v = getMaxwellBoltzmannVelocity(config->temperature, 1.0);
+        const math::d3 center_pos {uniform_x(rng), uniform_y(rng), uniform_z(rng)};
+        Molecule molecule;
+        molecule.setCID(0);
+        molecule.addSite(1.0 * Constants::conv_J_Ei, 1.0, 1.0, center_pos, v);
+        container->addMolecule(molecule);
+    }
+    return;*/
+
     for (auto [begin, end, cid] : ps_regions) {
         for (double z = begin.z() + 0.5; z < end.z(); z += spacing.z()) {
             for (double y = begin.y() + 0.5; y < end.y(); y += spacing.y()) {

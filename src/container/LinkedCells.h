@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <memory>
+#include <set>
 
 #include "Vec3D.h"
 #include "Cell.h"
@@ -48,6 +49,8 @@ public:
         math::d3 getCell0Shift() override;
         math::d3 getCell1Shift() override;
     private:
+        void checkState();
+
         math::ul3 m_cell_coord;
         math::ul3 m_cell_min;
         const math::ul3 m_cell_max;
@@ -57,8 +60,6 @@ public:
         bool m_color_switched;
         const math::d3 m_dom_size;
         const math::ul3 m_cell_dims;
-
-        std::set<std::pair<int, int>> m_visited_pairs;
 
         static constexpr math::ul3 c_o   {0, 0, 0};
         static constexpr math::ul3 c_x   {1, 0, 0};

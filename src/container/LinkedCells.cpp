@@ -2,6 +2,7 @@
 // Created by alex on 8/20/24.
 //
 
+#include <iostream>
 #include "LinkedCells.h"
 #include "molecule/Molecule.h"
 #include "Registry.h"
@@ -9,27 +10,32 @@
 
 LinkedCells::LinkedCells() : MoleculeContainer(), m_data() {
     auto config = Registry::instance->configuration();
+    const int num_halo_cells = 2;
 
     // create cell structure
     m_low = config->domainLow;
     m_high = config->domainHigh;
     m_dom_size = m_high - m_low;
-    math::ul3 num_cells_domain = math::ufloor(m_dom_size / config->cutoff);
-    m_data.init(num_cells_domain);
+    const math::ul3 num_cells_domain = math::ufloor(m_dom_size / config->cutoff);
+    const math::ul3 num_cells = num_cells_domain + num_halo_cells;
+    m_data.init(num_cells);
     m_cutoff = config->cutoff;
 
     // set up cell bounds
     math::d3 low, high;
-    low.z() = m_low.z();
-    for (uint64_t cz = 0; cz < num_cells_domain.z(); cz++) {
-        high.z() = (cz == num_cells_domain.z() - 1) ? m_high.z() : (low.z() + m_cutoff);
-        low.y() = m_low.y();
-        for (uint64_t cy = 0; cy < num_cells_domain.y(); cy++) {
-            high.y() = (cy == num_cells_domain.y() - 1) ? m_high.y() : (low.y() + m_cutoff);
-            low.x() = m_low.x();
-            for (uint64_t cx = 0; cx < num_cells_domain.x(); cx++) {
-                high.x() = (cx == num_cells_domain.x() - 1) ? m_high.x() : (low.x() + m_cutoff);
+    const double halo_size = m_cutoff;
+    low.z() = m_low.z() - halo_size;
+    for (uint64_t cz = 0; cz < num_cells.z(); cz++) {
+        high.z() = (cz == num_cells.z() - 2) ? m_high.z() : (low.z() + m_cutoff);
+        low.y() = m_low.y() - halo_size;
+        for (uint64_t cy = 0; cy < num_cells.y(); cy++) {
+            high.y() = (cy == num_cells.y() - 2) ? m_high.y() : (low.y() + m_cutoff);
+            low.x() = m_low.x() - halo_size;
+            for (uint64_t cx = 0; cx < num_cells.x(); cx++) {
+                high.x() = (cx == num_cells.x() - 2) ? m_high.x() : (low.x() + m_cutoff);
                 m_data(cx, cy, cz).setBounds(low, high);
+                m_data(cx, cy, cz).setCoords({cx, cy, cz});
+
                 low.x() = high.x();
             }
             low.y() = high.y();
@@ -49,10 +55,14 @@ void LinkedCells::init() {
     p_com = KW::vec_t<math::d3>("Center of Masses", p_soa.size());
     updateCOM();
     writeIndices();
+
+    // init pair list buffers
+    p_pair_list.init(num_sites);
 }
 
 void LinkedCells::updateContainer() {
     resetIndices();
+    p_pair_list.reset();
     updateCOM();
 
     // apply periodic boundary kernel
@@ -63,9 +73,38 @@ void LinkedCells::updateContainer() {
 
     updateCOM();
     writeIndices();
+
+    // populate pair list
+    for (auto it = iteratorC08(); it->isValid(); ++(*it)) {
+        Cell& cell0 = it->cell0();
+        Cell& cell1 = it->cell1();
+        const math::d3 shift0 = it->getCell0Shift();
+        const math::d3 shift1 = it->getCell1Shift();
+        for (int idx0 = 0; idx0 < cell0.getNumIndices(); idx0++) {
+            for (int idx1 = 0; idx1 < cell1.getNumIndices(); idx1++) {
+                p_pair_list.addPair(cell0.indices()[idx0], cell1.indices()[idx1], shift0, shift1);
+            }
+        }
+    }
+
+    for (auto it = iteratorCell(); it->isValid(); ++(*it)) {
+        Cell& cell = it->cell();
+        const auto check_low = cell.low() < m_low;
+        const auto check_high = cell.high() > m_high;
+        const auto is_halo = check_low - check_high; // will be 1 if is halo low, 0 if domain, -1 if is halo high
+        if (is_halo == 0) continue;
+
+        for (int idx0 = 0; idx0 < cell.getNumIndices(); idx0++) {
+            for (int idx1 = idx0 + 1; idx1 < cell.getNumIndices(); idx1++) {
+                p_pair_list.addPair(cell.indices()[idx0], cell.indices()[idx1]);
+            }
+        }
+    }
 }
 
 void LinkedCells::writeIndices() {
+    const auto num_cells_domain = m_data.dims() - 2;
+
     uint64_t s_idx = 0;
     for (uint64_t m_idx = 0; m_idx < p_molecule_count; m_idx++) {
         Molecule& molecule = p_molecules[m_idx];
@@ -74,12 +113,31 @@ void LinkedCells::writeIndices() {
         math::ul3 cell_coord;
         for (int dim = 0; dim < 3; dim++) {
             double fBin = (com_pos[dim] - m_low[dim]) / m_cutoff;
-            cell_coord[dim] = static_cast<uint64_t>(std::clamp((int64_t) fBin, 0L, (int64_t) m_data.dims()[dim]-1));
+            cell_coord[dim] = static_cast<uint64_t>(std::clamp((int64_t) fBin, 0L, (int64_t) num_cells_domain[dim] - 1));
         }
+        // offset cell coord by 1 as we have one layer of halo
+        cell_coord += 1;
 
         for (auto& _ : molecule.getSites()) {
             m_data(cell_coord).addIndex(s_idx);
             s_idx++;
+        }
+    }
+
+    // all domain cells are populated
+    // now we generate halo indices
+    for (auto c_it = iteratorCell(); c_it->isValid(); ++(*c_it)) {
+        Cell& cell = c_it->cell();
+        const auto check_low = cell.low() < m_low;
+        const auto check_high = cell.high() > m_high;
+        const auto is_halo = check_low - check_high; // will be 1 if is halo low, 0 if domain, -1 if is halo high
+
+        if (is_halo == 0) continue;
+
+        const auto src_coord = cell.coord() + is_halo * num_cells_domain;
+        Cell& src_cell = m_data(src_coord);
+        for (int idx = 0; idx < src_cell.getNumIndices(); idx++) {
+            cell.addIndex(src_cell.indices()[idx]);
         }
     }
 }
@@ -145,42 +203,36 @@ Cell &LinkedCells::LCCellIterator::cell() {
 }
 
 LinkedCells::LCC08Iterator::LCC08Iterator(const math::ul3 &min, const math::ul3 &max, Vec3D<Cell> &cells, const math::d3& dom_size) :
-        m_cell_coord(min), m_cell_min(min), m_cell_max(max), m_cells(cells), m_offset_idx(0), m_color(0), m_color_switched(false), m_dom_size(dom_size), m_cell_dims(cells.dims()) { }
+        m_cell_coord(min), m_cell_min(min), m_cell_max(max), m_cells(cells), m_offset_idx(0), m_color(0), m_color_switched(false), m_dom_size(dom_size), m_cell_dims(cells.dims()) {
+    checkState();
+}
 
 void LinkedCells::LCC08Iterator::operator++() {
     m_color_switched = false;
     if (m_offset_idx < pair_offsets.size() - 1) {
         m_offset_idx++;
-        // check if the 2 cells are halo -> if so, then skip this pair
-        math::ul3 coord0 = m_cell_coord + pair_offsets[m_offset_idx].first;
-        const math::ul3 required_shift_dims0 = coord0 > m_cell_max;
-        math::ul3 coord1 = m_cell_coord + pair_offsets[m_offset_idx].second;
-        const math::ul3 required_shift_dims1 = coord1 > m_cell_max;
-        // both require shift -> both are halo
-        if (required_shift_dims0 != 0 && required_shift_dims1 != 0) return this->operator++();
-        // get target coord
-        if (required_shift_dims0 != 0) coord0 -= required_shift_dims0 * m_cell_dims;
-        if (required_shift_dims1 != 0) coord1 -= required_shift_dims1 * m_cell_dims;
-        // check if pair was handled already
-        auto pair = std::make_pair(math::cantor3(coord0), math::cantor3(coord1));
-        if (m_visited_pairs.contains(pair)) return this->operator++();
-        m_visited_pairs.insert(pair);
-        return;
+        return checkState();
     }
     m_offset_idx = 0;
 
-    // -1 is intended -> allow for periodic bound cell shift, is handled during cell access
-    if (m_cell_coord.x() < m_cell_max.x()-1) { m_cell_coord.x() += 2; return; }
+    if (m_cell_coord.x() < m_cell_max.x()-2) { m_cell_coord.x() += 2; return checkState(); }
     m_cell_coord.x() = m_cell_min.x();
-    if (m_cell_coord.y() < m_cell_max.y()-1) { m_cell_coord.y() += 2; return; }
+    if (m_cell_coord.y() < m_cell_max.y()-2) { m_cell_coord.y() += 2; return checkState(); }
     m_cell_coord.y() = m_cell_min.y();
-    if (m_cell_coord.z() < m_cell_max.z()-1) { m_cell_coord.z() += 2; return; }
+    if (m_cell_coord.z() < m_cell_max.z()-2) { m_cell_coord.z() += 2; return checkState(); }
 
     m_color++;
     const math::i3 begin {m_color & 0b1, (m_color & 0b10) >> 1, (m_color & 0b100) >> 2};
     m_cell_min = begin;
     m_cell_coord = begin;
     m_color_switched = true;
+    return checkState();
+}
+
+
+void LinkedCells::LCC08Iterator::checkState() {
+    if (!isValid()) return;
+    if (getCell0Shift() != 0 && getCell1Shift() != 0) return this->operator++();
 }
 
 bool LinkedCells::LCC08Iterator::isValid() const {
@@ -188,16 +240,12 @@ bool LinkedCells::LCC08Iterator::isValid() const {
 }
 
 Cell &LinkedCells::LCC08Iterator::cell0() {
-    math::ul3 coord = m_cell_coord + pair_offsets[m_offset_idx].first;
-    const math::ul3 required_shift_dims = coord > m_cell_max;
-    if (required_shift_dims != 0) coord -= required_shift_dims * m_cell_dims;
+    const math::ul3 coord = m_cell_coord + pair_offsets[m_offset_idx].first;
     return m_cells(coord);
 }
 
 Cell &LinkedCells::LCC08Iterator::cell1() {
-    math::ul3 coord = m_cell_coord + pair_offsets[m_offset_idx].second;
-    const math::ul3 required_shift_dims = coord > m_cell_max;
-    if (required_shift_dims != 0) coord -= required_shift_dims * m_cell_dims;
+    const math::ul3 coord = m_cell_coord + pair_offsets[m_offset_idx].second;
     return m_cells(coord);
 }
 
@@ -207,12 +255,10 @@ bool LinkedCells::LCC08Iterator::colorSwitched() {
 
 math::d3 LinkedCells::LCC08Iterator::getCell0Shift() {
     const math::ul3 coord = m_cell_coord + pair_offsets[m_offset_idx].first;
-    const math::ul3 required_shift_dims = coord > m_cell_max;
-    return m_dom_size * required_shift_dims;
+    return m_dom_size * (coord >= m_cell_max) - m_dom_size * (coord <= math::ul3{0, 0, 0});
 }
 
 math::d3 LinkedCells::LCC08Iterator::getCell1Shift() {
     const math::ul3 coord = m_cell_coord + pair_offsets[m_offset_idx].second;
-    const math::ul3 required_shift_dims = coord > m_cell_max;
-    return m_dom_size * required_shift_dims;
+    return m_dom_size * (coord >= m_cell_max) - m_dom_size * (coord <= math::ul3{0, 0, 0});
 }

@@ -44,6 +44,11 @@ void Simulation::run() {
         for (auto& potential : potentials) (*potential)();
         for (auto& integrator : integrators) integrator->integrate1();
 
+        SOA& soa = container->getSOA();
+        for (int idx = 0; idx < soa.size(); idx++) {
+            //std::cout << soa.f()[idx].x() << " " << soa.f()[idx].y() << " " << soa.f()[idx].z() << std::endl;
+        }
+
         for (auto& sensor : sensors) sensor->measure();
 
         auto& logger = Log::simulation->info();

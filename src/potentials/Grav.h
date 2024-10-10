@@ -2,23 +2,23 @@
 // Created by alex on 8/4/24.
 //
 
-#ifndef KOMD_LJ12_6_H
-#define KOMD_LJ12_6_H
+#ifndef KOMD_GRAV_H
+#define KOMD_GRAV_H
 
 #include <cstdint>
 #include "ForceFunctor.h"
 #include "util/Kokkos_Wrapper.h"
 
 /**
- * Computes LJ126 between all sites of !different! indices.
+ * Computes gravity between all sites of !different! indices.
  * */
-class LJ12_6 : public ForceFunctor {
+class Grav : public ForceFunctor {
 public:
-    LJ12_6();
-    ~LJ12_6() override = default;
+    Grav();
+    ~Grav() override = default;
 
     /// Kernel for device
-    struct LJ12_6_Force {
+    struct Grav_Force {
         KOKKOS_FUNCTION void operator()(int idx) const;
         /// shallow copy of PairList::pairs
         KW::nvec_t<int, 2> pairs;
@@ -30,21 +30,13 @@ public:
         KW::vec_t<uint64_t> id;
         /// shallow copy of SOA::r
         KW::vec_t<math::d3> r;
-        /// shallow copy of SOA::sigma
-        KW::vec_t<double> sig;
-        /// shallow copy of SOA::epsilon
-        KW::vec_t<double> eps;
-        /// cutoff radius squared
-        const double cutoff2;
+        /// shallow copy of SOA::mass
+        KW::vec_t<double> m;
     };
 
 protected:
     void handlePairList(PairList &pairList) override;
-
-private:
-    /// cutoff radius squared
-    double m_cutoff2;
 };
 
 
-#endif //KOMD_LJ12_6_H
+#endif //KOMD_GRAV_H

@@ -5,8 +5,8 @@
 #include "IO/FileInput.h"
 #include "IO/CheckpointIO.h"
 #include "potentials/LJ12_6.h"
-#include "potentials/OCLJ.h"
 #include "potentials/FENE.h"
+//#include "potentials/Grav.h"
 #include "util/PhasespaceGenerator.h"
 #include "potentials/Limit.h"
 #include "sensors/LJ12_6_Sensor.h"
@@ -14,7 +14,6 @@
 #include "sensors/RDFSensor.h"
 #include "thermostats/VelocityScaling.h"
 #include "container/LinkedCells.h"
-#include "container/OneCell.h"
 
 #include "Kokkos_Core.hpp"
 
@@ -31,13 +30,14 @@ int main(int argc, char** argv) {
     }
 
     if(!FileInput::readFile(argv[1])) quit(0);
-    if (Registry::instance->configuration()->enable_one_cell) Registry::instance->moleculeContainer_ptr() = std::make_shared<OneCell>();
+    if (Registry::instance->configuration()->enable_one_cell) throw std::runtime_error("not supported anymore");
     else Registry::instance->moleculeContainer_ptr() = std::make_shared<LinkedCells>();
     Registry::instance->simulation_ptr() = std::make_shared<Simulation>();
-    if (Registry::instance->configuration()->enable_one_cell) Registry::instance->forceFunctors().push_back(std::make_unique<OCLJ>());
+    if (Registry::instance->configuration()->enable_one_cell) throw std::runtime_error("not supported anymore");
     else Registry::instance->forceFunctors().push_back(std::make_unique<LJ12_6>());
     Registry::instance->forceFunctors().push_back(std::make_unique<FENE>());
     Registry::instance->forceFunctors().push_back(std::make_unique<Limit>());
+    //Registry::instance->forceFunctors().push_back(std::make_unique<Grav>());
     Registry::instance->integrators().push_back(std::make_unique<Integrator>());
 
     CheckpointIO::loadCheckpoint();

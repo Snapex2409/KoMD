@@ -10,25 +10,20 @@
 
 FENE_Sensor::FENE_Sensor() :
 Potential_Sensor("FENE", Registry::instance->configuration()->sensor_fene_bins),
-m_stiffness_factor(Registry::instance->configuration()->stiffness_factor) {
-    p_run_pairs = false;
-}
+m_stiffness_factor(Registry::instance->configuration()->stiffness_factor) { }
 
-void FENE_Sensor::handleCell(Cell &cell) {
-    Kokkos::parallel_for("Sensor - FENE - Cell", Kokkos::MDRangePolicy({0, 0}, {cell.getNumIndices(), cell.getNumIndices()}),
-                         FENE_Pot(p_soa.id(), p_soa.r(), p_soa.sigma(), p_soa.epsilon(), cell.indices(),
-                                  p_data_u_scatter, p_data_f_scatter, p_count_u_scatter, p_count_f_scatter,
+void FENE_Sensor::handlePairList(PairList &pairList) {
+    Kokkos::parallel_for("FENE", pairList.size(),
+                         FENE_Pot(pairList.getPairs(), pairList.getOffsets(), p_soa.id(), p_soa.r(), p_soa.sigma(), p_soa.epsilon(), p_data_u_scatter, p_data_f_scatter, p_count_u_scatter, p_count_f_scatter,
                                   m_stiffness_factor, p_max_sigma, p_bins));
 }
 
-void FENE_Sensor::handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell0_shift, const math::d3& cell1_shift) { }
-
-void FENE_Sensor::FENE_Pot::operator()(int idx_0, int idx_1) const {
-    if (idx_1 <= idx_0) return; // only compute pair once
-    const uint64_t s_idx_0 = indices[idx_0];
-    const uint64_t s_idx_1 = indices[idx_1];
+void FENE_Sensor::FENE_Pot::operator()(int idx) const {
+    const uint64_t s_idx_0 = pairs(idx, 0);
+    const uint64_t s_idx_1 = pairs(idx, 1);
     
     if (id[s_idx_0] != id[s_idx_1]) return;
+    if (pair_offsets(idx, 0) != 0 || pair_offsets(idx, 1) != 0) return;
 
     auto data_f_access = data_f_scatter.access();
     auto data_u_access = data_u_scatter.access();

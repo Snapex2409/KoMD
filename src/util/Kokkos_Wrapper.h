@@ -67,6 +67,9 @@ namespace KW {
     template<typename T>
     using vec_t = Kokkos::View<T*, memory_space>;
 
+    template<typename T, int N>
+    using nvec_t = Kokkos::View<T*[N], memory_space>;
+
     template<typename T>
     using vec_scatter_t = Kokkos::Experimental::ScatterView<T*,
             exec_space::array_layout,

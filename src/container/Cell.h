@@ -11,8 +11,9 @@
 class Cell {
 public:
     Cell() = default;
-    Cell(const math::d3& low, const math::d3& high);
+    Cell(const math::d3& low, const math::d3& high, const math::ul3& coord);
     void setBounds(const math::d3& low, const math::d3& high);
+    void setCoords(const math::ul3& coord);
 
     /**
      * Checks if the point is within the bounds of this cell
@@ -21,6 +22,7 @@ public:
 
     [[nodiscard]] const math::d3& low() const { return m_low; }
     [[nodiscard]] const math::d3& high() const { return m_high; }
+    [[nodiscard]] const math::ul3& coord() const { return m_coord; }
     [[nodiscard]] KW::vec_t<uint64_t>& indices() { return m_data; }
     void addIndex(uint64_t idx);
     [[nodiscard]] uint64_t getNumIndices() { return m_num_indices; }
@@ -37,6 +39,8 @@ private:
     math::d3 m_low;
     /// upper corner of cell
     math::d3 m_high;
+    /// coordinate of cell
+    math::ul3 m_coord;
     /// buffer of indices of indices inside active molecule container
     KW::vec_t<uint64_t> m_data;
     /// number of inserted indices

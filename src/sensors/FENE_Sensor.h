@@ -18,7 +18,11 @@ public:
 
     /// Kernel for device
     struct FENE_Pot {
-        KOKKOS_FUNCTION void operator()(int idx_0, int idx_1) const;
+        KOKKOS_FUNCTION void operator()(int idx) const;
+        /// shallow copy of PairList::pairs
+        KW::nvec_t<int, 2> pairs;
+        /// shallow copy of PairList::pair_offsets
+        KW::nvec_t<math::d3, 2> pair_offsets;
         /// shallow copy of SOA::id
         KW::vec_t<uint64_t> id;
         /// shallow copy of SOA::r
@@ -27,8 +31,6 @@ public:
         KW::vec_t<double> sig;
         /// shallow copy of SOA::epsilon
         KW::vec_t<double> eps;
-        /// shallow copy of Cell::indices
-        KW::vec_t<uint64_t> indices;
 
         /// ScatterView for Potential_Sensor::p_data_u
         KW::vec_scatter_t<double> data_u_scatter;
@@ -47,8 +49,7 @@ public:
         const uint64_t bins;
     };
 protected:
-    void handleCell(Cell &cell) override;
-    void handleCellPair(Cell &cell0, Cell &cell1, const math::d3& cell0_shift, const math::d3& cell1_shift) override;
+    void handlePairList(PairList &pairList) override;
 private:
     /// stiffness of FENE pot
     double m_stiffness_factor;
