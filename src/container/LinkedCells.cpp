@@ -16,10 +16,10 @@ LinkedCells::LinkedCells() : MoleculeContainer(), m_data() {
     m_low = config->domainLow;
     m_high = config->domainHigh;
     m_dom_size = m_high - m_low;
-    const math::ul3 num_cells_domain = math::ufloor(m_dom_size / config->cutoff);
+    const math::ul3 num_cells_domain = math::ufloor(m_dom_size / config->cell_size);
     const math::ul3 num_cells = num_cells_domain + num_halo_cells;
     m_data.init(num_cells);
-    m_cutoff = config->cutoff;
+    m_cutoff = config->cell_size;
 
     // set up cell bounds
     math::d3 low, high;
@@ -142,7 +142,7 @@ void LinkedCells::updatePairList() {
             const auto check_low = cell.low() < m_low;
             const auto check_high = cell.high() > m_high;
             const auto is_halo = check_low - check_high; // will be 1 if is halo low, 0 if domain, -1 if is halo high
-            if (is_halo == 0) continue;
+            if (is_halo != 0) continue;
 
             const auto n = cell.getNumIndices();
             num_pairs += n * (n-1) / 2;
@@ -150,30 +150,96 @@ void LinkedCells::updatePairList() {
         p_pair_list.resize(num_pairs);
 
 
-        // populate pair list in parallel
-        KW::vec_t<uint64_t> global_pair_idx = KW::vec_t<uint64_t>("PLU global idx", 1);
-        global_pair_idx(0) = 0;
+        //============================
+        // populate pair list
+
+        // create cell pair kernels
+        std::vector<PairListPair_Kernel> pair_kernels;
+        PairListPair_Kernel pair_kernel;
+        pair_kernel.stored_cell_pairs = 0;
+
         for (auto it = iteratorC08(); it->isValid(); ++(*it)) {
             Cell& cell0 = it->cell0();
             Cell& cell1 = it->cell1();
             const math::d3 shift0 = it->getCell0Shift();
             const math::d3 shift1 = it->getCell1Shift();
-            Kokkos::parallel_for("PLU C08", Kokkos::MDRangePolicy<Kokkos::OpenMP, Kokkos::Rank<2>>({0,0}, {cell0.getNumIndices(), cell1.getNumIndices()}),
-                                 PairListPair_Kernel(shift0, shift1, cell0.indices(), cell1.indices(),
-                                                     p_pair_list.getPairs(), p_pair_list.getOffsets(), global_pair_idx));
+
+            if (pair_kernel.stored_cell_pairs == PairListPair_Kernel::MAX_PAIRS) {
+                pair_kernels.push_back(pair_kernel);
+                pair_kernel = PairListPair_Kernel();
+                pair_kernel.stored_cell_pairs = 0;
+            }
+
+            const int write_idx = pair_kernel.stored_cell_pairs;
+            // cell data
+            pair_kernel.cell_pairs[write_idx].indices0 = cell0.indices();
+            pair_kernel.cell_pairs[write_idx].indices1 = cell1.indices();
+            pair_kernel.cell_pairs[write_idx].shift0 = shift0;
+            pair_kernel.cell_pairs[write_idx].shift1 = shift1;
+
+            // meta data
+            pair_kernel.pair_counts[write_idx] = cell0.getNumIndices() * cell1.getNumIndices();
+            int count_acc = 0;
+            if (write_idx > 0) count_acc = pair_kernel.pair_counts_accumulated[write_idx-1] + pair_kernel.pair_counts[write_idx-1];
+            pair_kernel.pair_counts_accumulated[write_idx] = count_acc;
+            pair_kernel.pair_dims[write_idx][0] = cell0.getNumIndices();
+            pair_kernel.pair_dims[write_idx][1] = cell1.getNumIndices();
+            pair_kernel.stored_cell_pairs++;
         }
+        if (pair_kernel.stored_cell_pairs != 0) pair_kernels.push_back(pair_kernel);
+
+        // create single cell kernels
+        std::vector<PairListSingle_Kernel> single_kernels;
+        PairListSingle_Kernel single_kernel;
+        single_kernel.stored_cells = 0;
 
         for (auto it = iteratorCell(); it->isValid(); ++(*it)) {
             Cell& cell = it->cell();
             const auto check_low = cell.low() < m_low;
             const auto check_high = cell.high() > m_high;
             const auto is_halo = check_low - check_high; // will be 1 if is halo low, 0 if domain, -1 if is halo high
-            if (is_halo == 0) continue;
+            if (is_halo != 0) continue;
 
-            Kokkos::parallel_for("PLU Single", Kokkos::MDRangePolicy<Kokkos::OpenMP, Kokkos::Rank<2>>({0, 0}, {cell.getNumIndices(), cell.getNumIndices()}),
-                                 PairListSingle_Kernel(cell.indices(), p_pair_list.getPairs(), p_pair_list.getOffsets(), global_pair_idx));
+            if (single_kernel.stored_cells == PairListSingle_Kernel::MAX_PAIRS) {
+                single_kernels.push_back(single_kernel);
+                single_kernel = PairListSingle_Kernel();
+                single_kernel.stored_cells = 0;
+            }
+
+            const int write_idx = single_kernel.stored_cells;
+            // cell data
+            single_kernel.cells[write_idx].indices = cell.indices();
+
+            // meta data
+            const int n = cell.getNumIndices();
+            single_kernel.counts[write_idx] = n * (n-1) / 2;
+            int count_acc = 0;
+            if (write_idx > 0) count_acc = single_kernel.counts_accumulated[write_idx-1] + single_kernel.counts[write_idx-1];
+            single_kernel.counts_accumulated[write_idx] = count_acc;
+            single_kernel.stored_cells++;
         }
-        Kokkos::fence("Pair List Update - End");
+        if (single_kernel.stored_cells != 0) single_kernels.push_back(single_kernel);
+
+        // set up globals and offsets
+        KW::vec_t<uint64_t> global_pair_idx = KW::vec_t<uint64_t>("PLU global idx", 1);
+        global_pair_idx(0) = 0;
+        uint64_t write_offset = 0;
+        PairList_Globals globals { p_pair_list.getPairs(), p_pair_list.getOffsets(), global_pair_idx };
+        for (auto& kernel : pair_kernels) {
+            kernel.globals = globals;
+            kernel.write_offset = write_offset;
+            write_offset += kernel.pair_counts_accumulated[kernel.stored_cell_pairs-1] + kernel.pair_counts[kernel.stored_cell_pairs-1];
+        }
+        for (auto& kernel : single_kernels) {
+            kernel.globals = globals;
+            kernel.write_offset = write_offset;
+            write_offset += kernel.counts_accumulated[kernel.stored_cells-1] + kernel.counts[kernel.stored_cells-1];
+        }
+
+        // run kernels
+        for (auto& kernel : pair_kernels) Kokkos::parallel_for("PLU - Pair", kernel.pair_counts_accumulated[kernel.stored_cell_pairs-1] + kernel.pair_counts[kernel.stored_cell_pairs-1], kernel);
+        for (auto& kernel : single_kernels) Kokkos::parallel_for("PLU - Single", kernel.counts_accumulated[kernel.stored_cells-1] + kernel.counts[kernel.stored_cells-1], kernel);
+        Kokkos::fence("PLU - End");
     }
 
     p_pair_list.step();

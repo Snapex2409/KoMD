@@ -77,6 +77,40 @@ namespace KW {
             Kokkos::Experimental::ScatterSum,
             duplication,
             contribution>;
+
+    /**
+     * Specialized N-D array template. Is specialized for Kokkos usage.
+     * */
+    template<typename T, int N>
+    class Array {
+    public:
+        /**
+         * Constructs Array filled with init value
+         * */
+        KOKKOS_INLINE_FUNCTION explicit Array(T init) : m_data() {
+            for (uint64_t idx = 0; idx < N; idx++) m_data[idx] = init;
+        }
+
+        /**
+         * Constructs Array filled with 0
+         * */
+        KOKKOS_INLINE_FUNCTION explicit Array() : m_data() {}
+
+        /// Access to raw pointer
+        T* data() { return m_data; }
+
+        KOKKOS_FUNCTION T& operator[](uint64_t idx) {
+            return m_data[idx];
+        }
+
+        KOKKOS_FUNCTION T operator[](uint64_t idx) const {
+            return m_data[idx];
+        }
+
+    private:
+        /// storage of data
+        T m_data[N];
+    };
 };
 
 #endif //KOMD_KOKKOS_WRAPPER_H

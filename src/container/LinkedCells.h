@@ -109,40 +109,91 @@ public:
         const math::d3 domain_size;
     };
 
-    struct PairListPair_Kernel {
-        KOKKOS_FUNCTION void operator()(int idx0, int idx1) const {
-            uint64_t updated_pos = Kokkos::atomic_add_fetch(&num_pairs(0), 1);
-            const uint64_t local_pos = updated_pos - 1;
-
-            pairs(local_pos, 0) = indices0(idx0);
-            pairs(local_pos, 1) = indices1(idx1);
-            offsets(local_pos, 0) = shift0;
-            offsets(local_pos, 1) = shift1;
-        }
-        const math::d3 shift0;
-        const math::d3 shift1;
-        KW::vec_t<uint64_t> indices0;
-        KW::vec_t<uint64_t> indices1;
+    struct PairList_Globals {
         KW::nvec_t<int, 2> pairs;
         KW::nvec_t<math::d3, 2> offsets;
         KW::vec_t<uint64_t> num_pairs;
     };
 
-    struct PairListSingle_Kernel {
-        KOKKOS_FUNCTION void operator()(int idx0, int idx1) const {
-            if (idx1 <= idx0) return;
-            uint64_t updated_pos = Kokkos::atomic_add_fetch(&num_pairs(0), 1);
-            const uint64_t local_pos = updated_pos - 1;
+    struct PairList_CellPairData {
+        math::d3 shift0;
+        math::d3 shift1;
+        KW::vec_t<uint64_t> indices0;
+        KW::vec_t<uint64_t> indices1;
+    };
 
-            pairs(local_pos, 0) = indices(idx0);
-            pairs(local_pos, 1) = indices(idx1);
-            offsets(local_pos, 0) = {0, 0, 0};
-            offsets(local_pos, 1) = {0, 0, 0};
-        }
+    struct PairList_CellData {
         KW::vec_t<uint64_t> indices;
-        KW::nvec_t<int, 2> pairs;
-        KW::nvec_t<math::d3, 2> offsets;
-        KW::vec_t<uint64_t> num_pairs;
+    };
+
+    struct PairListPair_Kernel {
+        KOKKOS_FUNCTION void operator()(int idx) const {
+            // this is a global index across multiple cell pairs -> need to find correct cell pair first
+            int pair_idx = -1;
+            for (int i = 0; i < stored_cell_pairs; i++) {
+                if (idx < pair_counts[i] + pair_counts_accumulated[i]) {
+                    pair_idx = i;
+                    break;
+                }
+            }
+            if (pair_idx == -1) return;
+
+            // we found our pair -> need to get x and y coords
+            const int local_idx = idx - pair_counts_accumulated[pair_idx];
+            const int i = local_idx % pair_dims[pair_idx][0];
+            const int j = local_idx / pair_dims[pair_idx][1];
+
+            // write back
+            const uint64_t local_pos = idx + write_offset;
+            globals.pairs(local_pos, 0) = cell_pairs[pair_idx].indices0(i);
+            globals.pairs(local_pos, 1) = cell_pairs[pair_idx].indices1(j);
+            globals.offsets(local_pos, 0) = cell_pairs[pair_idx].shift0;
+            globals.offsets(local_pos, 1) = cell_pairs[pair_idx].shift1;
+        }
+
+        PairList_Globals globals;
+        static constexpr int MAX_PAIRS = 256;
+        KW::Array<PairList_CellPairData, MAX_PAIRS> cell_pairs;
+        KW::Array<int, MAX_PAIRS> pair_counts;
+        KW::Array<int, MAX_PAIRS> pair_counts_accumulated;
+        KW::Array<KW::Array<int, 2>, MAX_PAIRS> pair_dims;
+        int stored_cell_pairs;
+        uint64_t write_offset;
+    };
+
+    struct PairListSingle_Kernel {
+        KOKKOS_FUNCTION void operator()(int idx) const {
+            // this is a global index across multiple cell pairs -> need to find correct cell pair first
+            int pair_idx = -1;
+            for (int i = 0; i < stored_cells; i++) {
+                if (idx < counts[i] + counts_accumulated[i]) {
+                    pair_idx = i;
+                    break;
+                }
+            }
+            if (pair_idx == -1) return;
+
+            // we found our pair -> need to get x and y coords
+            const int local_idx = idx - counts_accumulated[pair_idx];
+            int i = Kokkos::floor((-1 + Kokkos::sqrt(1 + 8 * local_idx)) / 2.0);
+            const int j = local_idx - i * (i+1) / 2;
+            i += 1;
+
+            // write back
+            const uint64_t local_pos = idx + write_offset;
+            globals.pairs(local_pos, 0) = cells[pair_idx].indices(i);
+            globals.pairs(local_pos, 1) = cells[pair_idx].indices(j);
+            globals.offsets(local_pos, 0) = {0, 0, 0};
+            globals.offsets(local_pos, 1) = {0, 0, 0};
+        }
+
+        PairList_Globals globals;
+        static constexpr int MAX_PAIRS = 64;
+        KW::Array<PairList_CellData, MAX_PAIRS> cells;
+        KW::Array<int, MAX_PAIRS> counts;
+        KW::Array<int, MAX_PAIRS> counts_accumulated;
+        int stored_cells;
+        uint64_t write_offset;
     };
 private:
     /**
