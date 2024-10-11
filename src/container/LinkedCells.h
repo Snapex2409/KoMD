@@ -111,7 +111,7 @@ public:
 
     struct PairListPair_Kernel {
         KOKKOS_FUNCTION void operator()(int idx0, int idx1) const {
-            uint64_t updated_pos = Kokkos::atomic_add_fetch(num_pairs, 1);
+            uint64_t updated_pos = Kokkos::atomic_add_fetch(&num_pairs(0), 1);
             const uint64_t local_pos = updated_pos - 1;
 
             pairs(local_pos, 0) = indices0(idx0);
@@ -125,13 +125,13 @@ public:
         KW::vec_t<uint64_t> indices1;
         KW::nvec_t<int, 2> pairs;
         KW::nvec_t<math::d3, 2> offsets;
-        uint64_t* num_pairs;
+        KW::vec_t<uint64_t> num_pairs;
     };
 
     struct PairListSingle_Kernel {
         KOKKOS_FUNCTION void operator()(int idx0, int idx1) const {
             if (idx1 <= idx0) return;
-            uint64_t updated_pos = Kokkos::atomic_add_fetch(num_pairs, 1);
+            uint64_t updated_pos = Kokkos::atomic_add_fetch(&num_pairs(0), 1);
             const uint64_t local_pos = updated_pos - 1;
 
             pairs(local_pos, 0) = indices(idx0);
@@ -142,7 +142,7 @@ public:
         KW::vec_t<uint64_t> indices;
         KW::nvec_t<int, 2> pairs;
         KW::nvec_t<math::d3, 2> offsets;
-        uint64_t* num_pairs;
+        KW::vec_t<uint64_t> num_pairs;
     };
 private:
     /**

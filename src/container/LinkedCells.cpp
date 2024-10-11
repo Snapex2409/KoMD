@@ -151,20 +151,17 @@ void LinkedCells::updatePairList() {
 
 
         // populate pair list in parallel
+        KW::vec_t<uint64_t> global_pair_idx = KW::vec_t<uint64_t>("PLU global idx", 1);
+        global_pair_idx(0) = 0;
         for (auto it = iteratorC08(); it->isValid(); ++(*it)) {
-            if (it->colorSwitched()) Kokkos::fence("Pair List Update - C08");
-
             Cell& cell0 = it->cell0();
             Cell& cell1 = it->cell1();
             const math::d3 shift0 = it->getCell0Shift();
             const math::d3 shift1 = it->getCell1Shift();
-            for (int idx0 = 0; idx0 < cell0.getNumIndices(); idx0++) {
-                for (int idx1 = 0; idx1 < cell1.getNumIndices(); idx1++) {
-                    p_pair_list.addPair(cell0.indices()[idx0], cell1.indices()[idx1], shift0, shift1);
-                }
-            }
+            Kokkos::parallel_for("PLU C08", Kokkos::MDRangePolicy<Kokkos::OpenMP, Kokkos::Rank<2>>({0,0}, {cell0.getNumIndices(), cell1.getNumIndices()}),
+                                 PairListPair_Kernel(shift0, shift1, cell0.indices(), cell1.indices(),
+                                                     p_pair_list.getPairs(), p_pair_list.getOffsets(), global_pair_idx));
         }
-        Kokkos::fence("Pair List Update - C08 End");
 
         for (auto it = iteratorCell(); it->isValid(); ++(*it)) {
             Cell& cell = it->cell();
@@ -173,12 +170,10 @@ void LinkedCells::updatePairList() {
             const auto is_halo = check_low - check_high; // will be 1 if is halo low, 0 if domain, -1 if is halo high
             if (is_halo == 0) continue;
 
-            for (int idx0 = 0; idx0 < cell.getNumIndices(); idx0++) {
-                for (int idx1 = idx0 + 1; idx1 < cell.getNumIndices(); idx1++) {
-                    p_pair_list.addPair(cell.indices()[idx0], cell.indices()[idx1]);
-                }
-            }
+            Kokkos::parallel_for("PLU Single", Kokkos::MDRangePolicy<Kokkos::OpenMP, Kokkos::Rank<2>>({0, 0}, {cell.getNumIndices(), cell.getNumIndices()}),
+                                 PairListSingle_Kernel(cell.indices(), p_pair_list.getPairs(), p_pair_list.getOffsets(), global_pair_idx));
         }
+        Kokkos::fence("Pair List Update - End");
     }
 
     p_pair_list.step();
