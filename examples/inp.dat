@@ -14,7 +14,7 @@ temperature 100
 delta_t 0.001
 cutoff 5.0
 cell_size 7.5
-timesteps 1000000
+timesteps 1000
 
 #=================================================
 # Phasespace
@@ -50,7 +50,7 @@ pair_steps 12
 #=================================================
 # IO
 #=================================================
-write_freq 10000000
+write_freq 1
 store_checkpoint 1
 
 
