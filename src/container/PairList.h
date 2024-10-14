@@ -16,6 +16,7 @@ public:
     /// clears buffers by setting size counter to 0
     void reset() { m_num_pairs = 0; }
 
+    /// reserves memory for num_target_pairs entries, all must be populated for correct execution
     void resize(uint64_t num_target_pairs);
 
     void step() { m_update_counter = (m_update_counter + 1) % m_update_freq; }

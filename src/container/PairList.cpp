@@ -22,6 +22,7 @@ void PairList::init(int num_sites) {
 void PairList::resize(uint64_t num_target_pairs) {
     Kokkos::resize(m_pairs, num_target_pairs);
     Kokkos::resize(m_pair_offsets, num_target_pairs);
+    m_num_pairs = num_target_pairs;
 }
 
 void PairList::addPair(int idx0, int idx1, const math::d3 &offset0, const math::d3 &offset1) {
