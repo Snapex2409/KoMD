@@ -43,6 +43,11 @@ struct Configuration {
     double sensor_rdf_max = Defaults::sensor_rdf_max;
     double sensor_rdf_dr = Defaults::sensor_rdf_dr;
 
+    bool ADR_enable = false;
+    math::d3 ADR_low = Defaults::ADR_low;
+    math::d3 ADR_high = Defaults::ADR_high;
+    math::d3 ADR_h_dim = Defaults::ADR_h_dim;
+
     bool enable_one_cell = false;
 };
 

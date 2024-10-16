@@ -52,6 +52,10 @@ bool FileInput::readFile(const std::string &filename) {
                 if (cid < 0) { Log::io->error() << "negative component id not allowed" << std::endl; return false; }
                 config->phasespace_gen_regions.emplace_back(begin, end, cid);
             }
+            if (var == "ADR_enable") file >> config->ADR_enable;
+            if (var == "ADR_low") file >> config->ADR_low.x() >> config->ADR_low.y() >> config->ADR_low.z();
+            if (var == "ADR_high") file >> config->ADR_high.x() >> config->ADR_high.y() >> config->ADR_high.z();
+            if (var == "ADR_h_dim") file >> config->ADR_h_dim.x() >> config->ADR_h_dim.y() >> config->ADR_h_dim.z();
             if (var == "checkpoint_file") {
                 std::string path; math::d3 offset;
                 file >> path >> offset.x() >> offset.y() >> offset.z();

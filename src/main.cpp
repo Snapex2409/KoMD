@@ -4,14 +4,20 @@
 #include "IO/Logging.h"
 #include "IO/FileInput.h"
 #include "IO/CheckpointIO.h"
+
 #include "potentials/LJ12_6.h"
 #include "potentials/FENE.h"
-//#include "potentials/Grav.h"
-#include "util/PhasespaceGenerator.h"
 #include "potentials/Limit.h"
+//#include "potentials/Grav.h"
+
+#include "plugins/ADR/AdResS.h"
+
+#include "util/PhasespaceGenerator.h"
+
 #include "sensors/LJ12_6_Sensor.h"
 #include "sensors/FENE_Sensor.h"
 #include "sensors/RDFSensor.h"
+
 #include "thermostats/VelocityScaling.h"
 #include "container/LinkedCells.h"
 
@@ -51,6 +57,9 @@ int main(int argc, char** argv) {
     if (Registry::instance->configuration()->enable_sensor_rdf) Registry::instance->sensors().push_back(std::make_shared<RDFSensor>());
     if (Registry::instance->configuration()->enable_sensor_disp) Registry::instance->displacement_sensor_ptr() = std::make_shared<DisplacementSensor>();
     if (Registry::instance->configuration()->enable_sensor_disp) Registry::instance->sensors().push_back(std::dynamic_pointer_cast<Sensor>(Registry::instance->displacement_sensor()));
+
+    // Plugins
+    if (Registry::instance->configuration()->ADR_enable) Registry::instance->plugins().push_back(std::make_unique<AdResS>());
 
     Registry::instance->thermostats().push_back(std::make_unique<VelocityScaling>());
 

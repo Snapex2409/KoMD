@@ -1,20 +1,18 @@
 //
-// Created by alex on 7/31/24.
+// Created by alex on 10/15/24.
 //
 
-#ifndef KOMD_INTEGRATOR_H
-#define KOMD_INTEGRATOR_H
+#ifndef ADR_INTEGRATOR_H
+#define ADR_INTEGRATOR_H
 
-#include "container/SOA.h"
-#include "util/Kokkos_Wrapper.h"
+#include "integrators/Integrator.h"
 
-/**
- * 2 Step Leapfrog integration
- * */
-class Integrator {
+class ADR_Integrator final : public Integrator{
 public:
+    ~ADR_Integrator() override = default;
+
     /// Kernel for device
-    struct Step0 {
+    struct ADR_Step0 {
         KOKKOS_FUNCTION void operator()(int idx) const;
         /// shallow copy of SOA::r
         KW::vec_t<math::d3> r;
@@ -31,7 +29,7 @@ public:
     };
 
     /// Kernel for device
-    struct Step1 {
+    struct ADR_Step1 {
         KOKKOS_FUNCTION void operator()(int idx) const;
         /// shallow copy of SOA::v
         KW::vec_t<math::d3> v;
@@ -43,26 +41,11 @@ public:
         const double dt_halve;
     };
 
-    /**
-     * Creates new Integrator
-     * */
-    explicit Integrator();
+    void integrate0() override;
 
-    virtual ~Integrator() = default;
-
-    /**
-     * First half step of integration
-     * */
-    virtual void integrate0();
-
-    /**
-     * Second half step of integration
-     * */
-    virtual void integrate1();
-protected:
-    /// delta_t
-    double p_delta_t;
+    void integrate1() override;
 };
 
 
-#endif //KOMD_INTEGRATOR_H
+
+#endif //ADR_INTEGRATOR_H

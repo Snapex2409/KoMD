@@ -37,6 +37,10 @@ namespace Defaults {
     static constexpr bool sensor_temp_opt = false;
     static constexpr double sensor_rdf_max = 5.0;
     static constexpr double sensor_rdf_dr = 0.1;
+
+    static constexpr math::d3 ADR_low {0, 0, 0};
+    static constexpr math::d3 ADR_high {0, 0, 0};
+    static constexpr math::d3 ADR_h_dim = {0, 0, 0};
 }
 
 #endif //KOMD_DEFAULTS_H

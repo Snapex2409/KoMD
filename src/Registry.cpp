@@ -85,3 +85,7 @@ std::shared_ptr<DisplacementSensor> &Registry::displacement_sensor_ptr() {
 std::vector<Component> &Registry::components() {
     return m_components;
 }
+
+std::vector<std::unique_ptr<Plugin>> & Registry::plugins() {
+    return m_plugins;
+}

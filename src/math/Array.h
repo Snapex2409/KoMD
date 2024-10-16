@@ -472,6 +472,9 @@ namespace math {
     [[maybe_unused]] KOKKOS_INLINE_FUNCTION d3 abs(const d3 &vec) {
         return {Kokkos::abs(vec.x()), Kokkos::abs(vec.y()), Kokkos::abs(vec.z())};
     }
+    [[maybe_unused]] KOKKOS_INLINE_FUNCTION d3 pow(const d3 &vec, double exp) {
+        return {Kokkos::pow(vec.x(), exp), Kokkos::pow(vec.y(), exp), Kokkos::pow(vec.z(), exp)};
+    }
 
 } // math
 
