@@ -16,6 +16,7 @@ public:
         normalize();
     }
     constexpr explicit SciValue(double value) : m_factor(value), m_exp(0) {
+        if (value == 0.0) return;
         normalize();
     }
 

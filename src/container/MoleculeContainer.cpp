@@ -27,8 +27,8 @@ void MoleculeContainer::writeSOA2AOS() {
             site.r_arr() = p_soa.r()[s_idx];
             site.f_arr() = p_soa.f()[s_idx];
             site.v_arr() = p_soa.v()[s_idx];
+            s_idx++;
         }
-        s_idx++;
     }
 }
 
@@ -45,8 +45,8 @@ void MoleculeContainer::constructSOAs() {
             p_soa.r()[s_idx] = site.r_arr();
             p_soa.f()[s_idx] = site.f_arr();
             p_soa.v()[s_idx] = site.v_arr();
+            s_idx++;
         }
-        s_idx++;
     }
 }
 

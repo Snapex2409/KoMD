@@ -23,22 +23,23 @@ void TemperatureSensor::measure() {
     auto container = Registry::instance->moleculeContainer();
     SOA& soa = container->getSOA();
 
-    KW::vec_t<double> mv2("MV2", 1);
-    KW::vec_scatter_t<double> mv2_scatter(mv2);
-    KW::vec_t<double> num_sites("Num_Sites", 1);
-    KW::vec_scatter_t<double> num_sites_scatter(num_sites);
-    mv2[0] = 0;
-    num_sites[0] = 0;
+    auto& r = soa.r();
+    auto& v = soa.v();
+    auto& m = soa.mass();
+    double num_sites = 0;
+    double mv2 = 0;
 
-    Kokkos::parallel_for("Temp Measurement", soa.size(), Temperature_Kernel(soa.r(), soa.v(), soa.mass(), p_low, p_high, mv2_scatter, num_sites_scatter));
-    Kokkos::fence("Temp fence");
-    Kokkos::Experimental::contribute(mv2, mv2_scatter);
-    Kokkos::Experimental::contribute(num_sites, num_sites_scatter);
+    for (int idx = 0; idx < soa.size(); ++idx) {
+        if (!math::pointInBox(r[idx], p_low, p_high)) continue;
+        const auto vel = v[idx];
+        mv2 += m[idx] * vel.dot(vel);
+        num_sites += 1;
+    }
 
     static const SciValue convDaInvkb = Constants::conv_Da_kg / Constants::kB;
     static const SciValue factor = Constants::conv_Aps_ms * Constants::conv_Aps_ms * convDaInvkb;
-    num_sites[0] *= 3; // for 3 dimensions
-    m_temperature = factor * (mv2[0] / num_sites[0]);
+    num_sites *= 3; // for 3 dimensions
+    m_temperature = factor * (mv2 / num_sites);
 }
 
 void TemperatureSensor::write(uint64_t simstep) { }
@@ -46,12 +47,12 @@ void TemperatureSensor::write(uint64_t simstep) { }
 double TemperatureSensor::getTemperature() { return m_temperature; }
 
 void TemperatureSensor::Temperature_Kernel::operator()(int idx) const {
-    if (!math::pointInBox(r[idx], low, high)) return;
+    /*if (!math::pointInBox(r[idx], low, high)) return;
     const auto vel = v[idx];
 
     auto mv2_access = mv2.access();
     auto num_sites_access = num_sites.access();
-
-    mv2_access(0) += m[idx] * vel.dot(vel);
-    num_sites_access(0) += 1;
+    const auto e_kin_contrib = m[idx] * vel.dot(vel);
+    if (e_kin_contrib != 0.0) mv2_access(0) += e_kin_contrib;
+    num_sites_access(0) += 1;*/
 }

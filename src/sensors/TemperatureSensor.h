@@ -48,9 +48,9 @@ public:
         /// upper corner of measuring region
         const math::d3 high;
         /// ScatterView to mv2 buffer
-        KW::vec_scatter_t<double> mv2;
+        KW::vec_t<double> mv2;
         /// ScatterView to num_sites buffer
-        KW::vec_scatter_t<double> num_sites;
+        KW::vec_t<double> num_sites;
     };
 
 protected:

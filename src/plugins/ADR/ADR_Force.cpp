@@ -30,6 +30,8 @@ void ADR_Force::Force_Kernel::handle_FENE(int idx, uint64_t s_idx_0, uint64_t s_
     if (res0 != res1) return;
     if (res0 == 0) return;
     if (pair_offsets(idx, 0) != 0 || pair_offsets(idx, 1) != 0) return;
+    const double w = weights(s_idx_0);
+    if (w == 0) return; // no FENE for CG
 
     const math::d3 dr = r[s_idx_1] - r[s_idx_0];
     const math::d3 invdr = math::d3{1, 1, 1} / dr;

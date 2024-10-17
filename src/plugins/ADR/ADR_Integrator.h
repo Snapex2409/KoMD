@@ -9,6 +9,8 @@
 
 class ADR_Integrator final : public Integrator{
 public:
+    explicit ADR_Integrator(double total_mass);
+
     ~ADR_Integrator() override = default;
 
     /// Kernel for device
@@ -26,6 +28,8 @@ public:
         const double dt_halve;
         /// delta_t
         const double dt;
+        /// CG replacement mass
+        const double total_mass;
     };
 
     /// Kernel for device
@@ -39,11 +43,15 @@ public:
         KW::vec_t<double> m;
         /// delta_t / 2
         const double dt_halve;
+        /// CG replacement mass
+        const double total_mass;
     };
 
     void integrate0() override;
 
     void integrate1() override;
+private:
+    const double m_total_mass;
 };
 
 

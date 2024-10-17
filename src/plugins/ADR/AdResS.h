@@ -17,9 +17,7 @@ public:
 
     void init() override;
 
-    void pre_main_loop() override;
-
-    void pre_container_update() override;
+    void begin_loop() override;
 
     void post_container_update() override;
 
@@ -33,10 +31,12 @@ public:
         KOKKOS_FUNCTION void operator()(int idx) const;
         KW::vec_t<math::d3> coms;
         KW::vec_t<double> weights;
+        KW::vec_t<math::d3> v;
 
         math::d3 fp_low;
         math::d3 fp_high;
         math::d3 h_dim;
+        const int site_count;
     };
 
     /// Kernel for device
@@ -68,8 +68,6 @@ private:
     double m_total_mass;
     /// total site count per molecule
     int m_site_count;
-    /// flag to check if main loop is running
-    bool m_is_first;
 };
 
 

@@ -11,7 +11,7 @@
 
 AdResS::AdResS() : Plugin("ADR"), m_fp_low(Registry::instance->configuration()->ADR_low),
                    m_fp_high(Registry::instance->configuration()->ADR_high),
-                   m_h_dim(Registry::instance->configuration()->ADR_h_dim), m_total_mass(0), m_site_count(1), m_is_first(true) { }
+                   m_h_dim(Registry::instance->configuration()->ADR_h_dim), m_total_mass(0), m_site_count(1) { }
 
 void AdResS::init() {
     // check components for validity
@@ -31,16 +31,10 @@ void AdResS::init() {
     Registry::instance->forceFunctors().push_back(std::make_unique<ADR_Force>(m_weights));
 
     Registry::instance->integrators().clear();
-    Registry::instance->integrators().push_back(std::make_unique<ADR_Integrator>());
+    Registry::instance->integrators().push_back(std::make_unique<ADR_Integrator>(m_total_mass));
 }
 
-void AdResS::pre_main_loop() {
-    m_is_first = false;
-}
-
-void AdResS::pre_container_update() {
-    if (m_is_first) return;
-
+void AdResS::begin_loop() {
     auto container = Registry::instance->moleculeContainer();
     const auto coms = container->getCOM();
     auto& soa = container->getSOA();
@@ -49,8 +43,10 @@ void AdResS::pre_container_update() {
 }
 
 void AdResS::post_container_update() {
-    const auto coms = Registry::instance->moleculeContainer()->getCOM();
-    Kokkos::parallel_for("ADR - weight calc", coms.size(), Weight_Kernel(coms, m_weights, m_fp_low, m_fp_high, m_h_dim));
+    auto container = Registry::instance->moleculeContainer();
+    const auto coms = container->getCOM();
+    auto& soa = container->getSOA();
+    Kokkos::parallel_for("ADR - weight calc", coms.size(), Weight_Kernel(coms, m_weights, soa.v(), m_fp_low, m_fp_high, m_h_dim, m_site_count));
     Kokkos::fence("ADR - weight fence");
 }
 
@@ -77,7 +73,16 @@ double AdResS::weight(const math::d3 &r, const math::d3 &fp_low, const math::d3 
 }
 
 void AdResS::Weight_Kernel::operator()(int idx) const {
-    weights(idx) = AdResS::weight(coms(idx), fp_low, fp_high, h_dim);
+    const auto new_weight = AdResS::weight(coms(idx), fp_low, fp_high, h_dim);
+    const auto old_weight = weights(idx);
+    weights(idx) = new_weight;
+
+    if (new_weight == 0 && old_weight > 0) {
+        const int offset = idx % site_count;
+        if (offset == 0) return;
+        const auto velocity = v(idx - offset);
+        v(idx) = velocity;
+    }
 }
 
 void AdResS::Force_Distribute_Kernel::operator()(int idx) const {
