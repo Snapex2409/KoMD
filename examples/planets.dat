@@ -12,7 +12,7 @@ timesteps 50000
 #=================================================
 # Phasespace
 #=================================================
-checkpoint_file ../examples/ckpt_planets.ps    0 0 0
+checkpoint_file ../examples/test/ckpt_planets.ps    0 0 0
 
 #=================================================
 # Domain

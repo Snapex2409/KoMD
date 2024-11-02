@@ -11,7 +11,8 @@
 
 AdResS::AdResS() : Plugin("ADR"), m_fp_low(Registry::instance->configuration()->ADR_low),
                    m_fp_high(Registry::instance->configuration()->ADR_high),
-                   m_h_dim(Registry::instance->configuration()->ADR_h_dim), m_total_mass(0), m_site_count(1) { }
+                   m_h_dim(Registry::instance->configuration()->ADR_h_dim), m_total_mass(0), m_site_count(1),
+                   m_limit_factor(Registry::instance->configuration()->limit_factor) { }
 
 void AdResS::init() {
     // check components for validity
@@ -46,13 +47,13 @@ void AdResS::post_container_update() {
     auto container = Registry::instance->moleculeContainer();
     const auto coms = container->getCOM();
     auto& soa = container->getSOA();
-    Kokkos::parallel_for("ADR - weight calc", coms.size(), Weight_Kernel(coms, m_weights, soa.v(), m_fp_low, m_fp_high, m_h_dim, m_site_count));
+    Kokkos::parallel_for("ADR - weight calc", coms.size(), Weight_Kernel(coms, m_weights, soa.v(), soa.mass(), m_fp_low, m_fp_high, m_h_dim, m_site_count));
     Kokkos::fence("ADR - weight fence");
 }
 
 void AdResS::post_forces() {
     auto& soa = Registry::instance->moleculeContainer()->getSOA();
-    Kokkos::parallel_for("ADR - force distribution", soa.size(), Force_Distribute_Kernel(soa.f(), soa.mass(), m_site_count, m_total_mass));
+    Kokkos::parallel_for("ADR - force distribution", soa.size(), Force_Distribute_Kernel(soa.f(), soa.mass(), soa.epsilon(), soa.sigma(), m_site_count, m_total_mass, m_limit_factor));
     Kokkos::fence("ADR - force distribution fence");
 }
 
@@ -72,16 +73,29 @@ double AdResS::weight(const math::d3 &r, const math::d3 &fp_low, const math::d3 
     return Kokkos::pow(Kokkos::cos(M_PI/(2*hDim) * dist), 2.0);
 }
 
+void AdResS::CG_Pos_Kernel::operator()(int idx) const {
+    if (m(idx) != 0) return;
+    r(idx) = com(idx);
+}
+
 void AdResS::Weight_Kernel::operator()(int idx) const {
     const auto new_weight = AdResS::weight(coms(idx), fp_low, fp_high, h_dim);
     const auto old_weight = weights(idx);
     weights(idx) = new_weight;
 
+    // need to stop oscillation to prevent molecule explosion on H to CG transition
     if (new_weight == 0 && old_weight > 0) {
-        const int offset = idx % site_count;
-        if (offset == 0) return;
-        const auto velocity = v(idx - offset);
-        v(idx) = velocity;
+        if (idx % site_count != 0) return; // we are the CG interaction-site
+
+        math::d3 mean_velocity = {0, 0, 0};
+        for (int offset = 1; offset < site_count; offset++) {
+            mean_velocity += v(idx + offset);
+        }
+        mean_velocity /= site_count - 1;
+
+        for (int offset = 0; offset < site_count; offset++) {
+            v(idx + offset) = mean_velocity;
+        }
     }
 }
 
@@ -89,14 +103,15 @@ void AdResS::Force_Distribute_Kernel::operator()(int idx) const {
     const double mass = m(idx);
     if (mass == 0) return;
 
+    // handle force redistribution
     const int offset = idx % site_count;
     const double frac = mass / total_mass;
 
     const auto force = f(idx - offset) * frac;
     f(idx) += force;
-}
 
-void AdResS::CG_Pos_Kernel::operator()(int idx) const {
-    if (m(idx) != 0) return;
-    r(idx) = com(idx);
+    // handle force limitation
+    const double fmax = limit_factor * eps[idx] / sig[idx];
+    const math::d3 total_force = f[idx];
+    f[idx] = math::max(math::min(total_force, fmax), -fmax);
 }

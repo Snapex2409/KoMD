@@ -141,7 +141,7 @@ public:
             // we found our pair -> need to get x and y coords
             const int local_idx = idx - pair_counts_accumulated[pair_idx];
             const int i = local_idx % pair_dims[pair_idx][0];
-            const int j = local_idx / pair_dims[pair_idx][1];
+            const int j = local_idx / pair_dims[pair_idx][0]; // needs to same dim, but this time we just divide...
 
             // write back
             const uint64_t local_pos = idx + write_offset;

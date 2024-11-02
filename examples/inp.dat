@@ -14,26 +14,20 @@ temperature 100
 delta_t 0.0005
 cutoff 5.0
 cell_size 7.5
-timesteps 10000
+timesteps 100000
 
 #=================================================
 # Phasespace
 #=================================================
-density 0.002
+density 0.02
 #                begin    end        cid
-# ps_gen_region    0 0 0     5 10 10    0
-# ps_gen_region    5 0 0    10 10 10    1
-# ps_gen_region    0 0 0    20 20 20    1
 ps_gen_region    0 0 0    30 15 15    0
-# checkpoint_file ./ckpt_1000.ps    0 0 0
-# checkpoint_file ../examples/ckpt_100000.ps    0 0 0
-# checkpoint_file ../examples/ckpt_test3.ps    0 0 0
-# checkpoint_file ../examples/test.ps    0 0 0
+# checkpoint_file ../examples/ADR/ckpt_20000.ps    0 0 0
 #=================================================
 # Potentials
 #=================================================
 stiffness 30
-limit 2.5e+6
+limit 0
 
 #=================================================
 # Domain
@@ -45,7 +39,7 @@ domain_high 30 15 15
 # Algorithm
 #=================================================
 enable_one_cell 0
-pair_steps 4
+pair_steps 1
 
 #=================================================
 # IO

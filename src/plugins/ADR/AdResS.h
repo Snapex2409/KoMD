@@ -32,6 +32,7 @@ public:
         KW::vec_t<math::d3> coms;
         KW::vec_t<double> weights;
         KW::vec_t<math::d3> v;
+        KW::vec_t<double> mass;
 
         math::d3 fp_low;
         math::d3 fp_high;
@@ -44,8 +45,11 @@ public:
         KOKKOS_FUNCTION void operator()(int idx) const;
         KW::vec_t<math::d3> f;
         KW::vec_t<double> m;
+        KW::vec_t<double> eps;
+        KW::vec_t<double> sig;
         const int site_count;
         const double total_mass;
+        const double limit_factor;
     };
 
     struct CG_Pos_Kernel {
@@ -68,6 +72,8 @@ private:
     double m_total_mass;
     /// total site count per molecule
     int m_site_count;
+    /// force limit
+    const double m_limit_factor;
 };
 
 
