@@ -16,6 +16,7 @@ void Simulation::run() {
     auto disp_sens = Registry::instance->displacement_sensor();
     auto container = Registry::instance->moleculeContainer();
     auto& potentials = Registry::instance->forceFunctors();
+    auto& potentials3b = Registry::instance->forceFunctors3b();
     auto vtkWriter = Registry::instance->vtkWriter();
     auto& thermostats = Registry::instance->thermostats();
     auto& plugins = Registry::instance->plugins();
@@ -30,6 +31,7 @@ void Simulation::run() {
     vtkWriter->write("VTK_Output", 0);
     //initial pass to compute forces
     for (auto& potential : potentials) (*potential)();
+    if (config->enable_3b) for (auto& potential : potentials3b) (*potential)();
     for (auto& plugin : plugins) plugin->post_forces();
     temp_sens->measure();
     Log::simulation->info() << "Initial temperature T=" << temp_sens->getTemperature() << std::endl;
@@ -52,6 +54,7 @@ void Simulation::run() {
         container->updateContainer();
         for (auto& plugin : plugins) plugin->post_container_update();
         for (auto& potential : potentials) (*potential)();
+        if (config->enable_3b) for (auto& potential : potentials3b) (*potential)();
         for (auto& plugin : plugins) plugin->post_forces();
         for (auto& integrator : integrators) integrator->integrate1();
         for (auto& sensor : sensors) sensor->measure();

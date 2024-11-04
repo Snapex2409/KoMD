@@ -59,7 +59,7 @@ void LinkedCells::init() {
     // init pair list buffers
     p_pair_list.init(num_sites);
     // init triple list buffers
-    p_triple_list.init(num_sites);
+    if(p_enable_3b) p_triple_list.init(num_sites);
 }
 
 void LinkedCells::updateContainer() {
@@ -77,7 +77,7 @@ void LinkedCells::updateContainer() {
     writeIndices();
 
     updatePairList();
-    updateTripleList();
+    if(p_enable_3b) updateTripleList();
 }
 
 void LinkedCells::writeIndices() {

@@ -8,6 +8,7 @@
 #include "potentials/LJ12_6.h"
 #include "potentials/FENE.h"
 #include "potentials/Limit.h"
+#include "potentials/ATM.h"
 //#include "potentials/Grav.h"
 
 #include "plugins/ADR/AdResS.h"
@@ -44,6 +45,7 @@ int main(int argc, char** argv) {
     Registry::instance->forceFunctors().push_back(std::make_unique<FENE>());
     Registry::instance->forceFunctors().push_back(std::make_unique<Limit>());
     //Registry::instance->forceFunctors().push_back(std::make_unique<Grav>());
+    if (Registry::instance->configuration()->enable_3b) Registry::instance->forceFunctors3b().push_back(std::make_unique<ATM>());
     Registry::instance->integrators().push_back(std::make_unique<Integrator>());
 
     CheckpointIO::loadCheckpoint();

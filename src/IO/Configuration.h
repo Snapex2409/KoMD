@@ -21,6 +21,7 @@ struct Configuration {
     double max_sigma = std::numeric_limits<double>::min();
     double stiffness_factor = Defaults::stiffness_factor;
     double limit_factor = Defaults::limit_factor;
+    double energy_3b = Defaults::energy_3b;
 
     int pair_steps = Defaults::pair_steps;
     int triple_steps = Defaults::triple_steps;
@@ -33,6 +34,7 @@ struct Configuration {
     std::vector<std::tuple<math::d3, math::d3, uint32_t>> phasespace_gen_regions;
 
     bool storeCheckpoint = Defaults::storeCheckpoint;
+    bool enable_3b = Defaults::enable_3b;
     bool enable_sensor_lj = Defaults::enable_sensor_lj;
     bool enable_sensor_fene = Defaults::enable_sensor_fene;
     bool enable_sensor_rdf = Defaults::enable_sensor_rdf;

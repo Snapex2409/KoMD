@@ -15,6 +15,7 @@ namespace Defaults {
     static constexpr double delta_t = 0.001;            // 1 ps, 0.001 = 1 fs
     static constexpr double stiffness_factor = 30;      // unit-less
     static constexpr double limit_factor = 20;          // unit-less
+    static constexpr double energy_3b = 1;              // idk yet - need to check TODO
     static constexpr double density = 0.1;              // unit-less, number density
     static constexpr math::d3 r {0, 0, 0};
     static constexpr math::d3 v {0, 0, 0};
@@ -23,6 +24,7 @@ namespace Defaults {
     static constexpr math::d3 domainHigh {10, 10, 10};  // in Armstrong
     static constexpr double cutoff = sigma * 2.5;       // in Armstrong
     static constexpr double cell_size = cutoff * 3.0 / 2.5;       // in Armstrong
+    static constexpr bool enable_3b = false;
     static constexpr bool enable_sensor_lj = false;
     static constexpr bool enable_sensor_fene = false;
     static constexpr bool enable_sensor_rdf = false;

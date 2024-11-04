@@ -32,12 +32,14 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "density") file >> config->density;
             if (var == "stiffness") file >> config->stiffness_factor;
             if (var == "limit") file >> config->limit_factor;
+            if (var == "energy_3b") file >> config->energy_3b;
             if (var == "pair_steps") file >> config->pair_steps;
             if (var == "triple_steps") file >> config->triple_steps;
             if (var == "domain_low") file >> config->domainLow.x() >> config->domainLow.y() >> config->domainLow.z();
             if (var == "domain_high") file >> config->domainHigh.x() >> config->domainHigh.y() >> config->domainHigh.z();
             if (var == "timesteps") file >> config->timesteps;
             if (var == "write_freq") file >> config->write_freq;
+            if (var == "enable_3b") file >> config->enable_3b;
             if (var == "enable_sensor_lj") file >> config->enable_sensor_lj;
             if (var == "enable_sensor_fene") file >> config->enable_sensor_fene;
             if (var == "enable_sensor_rdf") file >> config->enable_sensor_rdf;

@@ -137,6 +137,8 @@ protected:
     PairList p_pair_list;
     /// Triple List for Kokkos 3 body force computation
     TripleList p_triple_list;
+    /// enable three body computation
+    bool p_enable_3b;
 };
 
 

@@ -18,6 +18,10 @@ std::vector<std::unique_ptr<ForceFunctor>> &Registry::forceFunctors() {
     return m_forceFunctors;
 }
 
+std::vector<std::unique_ptr<ForceFunctor3B>> & Registry::forceFunctors3b() {
+    return m_forceFunctors3b;
+}
+
 std::vector<std::unique_ptr<Integrator>> &Registry::integrators() {
     return m_integrators;
 }

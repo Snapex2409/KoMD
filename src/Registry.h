@@ -12,6 +12,7 @@
 #include "integrators/Integrator.h"
 #include "IO/Configuration.h"
 #include "potentials/ForceFunctor.h"
+#include "potentials/ForceFunctor3B.h"
 #include "Simulation.h"
 #include "IO/VTKWriter.h"
 #include "sensors/Sensor.h"
@@ -29,6 +30,7 @@ public:
 
     std::shared_ptr<Configuration> configuration();
     std::vector<std::unique_ptr<ForceFunctor>>& forceFunctors();
+    std::vector<std::unique_ptr<ForceFunctor3B>>& forceFunctors3b();
     std::vector<std::unique_ptr<Integrator>>& integrators();
     std::vector<std::shared_ptr<Sensor>>& sensors();
     std::shared_ptr<MoleculeContainer> moleculeContainer();
@@ -51,6 +53,7 @@ public:
 private:
     std::shared_ptr<Configuration> m_configuration;
     std::vector<std::unique_ptr<ForceFunctor>> m_forceFunctors;
+    std::vector<std::unique_ptr<ForceFunctor3B>> m_forceFunctors3b;
     std::vector<std::unique_ptr<Integrator>> m_integrators;
     std::vector<std::shared_ptr<Sensor>> m_sensors;
     std::shared_ptr<MoleculeContainer> m_moleculeContainer;
