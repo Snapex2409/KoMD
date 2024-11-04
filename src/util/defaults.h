@@ -31,6 +31,7 @@ namespace Defaults {
     static constexpr uint64_t timesteps = 1;            // unit-less
     static constexpr uint64_t write_freq = 10;          // unit-less
     static constexpr int pair_steps = 4;                // unit-less
+    static constexpr int triple_steps = 8;              // unit-less
 
     static constexpr uint64_t sensor_lj_bins = 100;
     static constexpr uint64_t sensor_fene_bins = 100;

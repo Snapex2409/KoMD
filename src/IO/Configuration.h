@@ -23,6 +23,7 @@ struct Configuration {
     double limit_factor = Defaults::limit_factor;
 
     int pair_steps = Defaults::pair_steps;
+    int triple_steps = Defaults::triple_steps;
 
     math::d3 domainLow = Defaults::domainLow;
     math::d3 domainHigh = Defaults::domainHigh;

@@ -58,6 +58,8 @@ void LinkedCells::init() {
 
     // init pair list buffers
     p_pair_list.init(num_sites);
+    // init triple list buffers
+    p_triple_list.init(num_sites);
 }
 
 void LinkedCells::updateContainer() {
@@ -75,6 +77,7 @@ void LinkedCells::updateContainer() {
     writeIndices();
 
     updatePairList();
+    updateTripleList();
 }
 
 void LinkedCells::writeIndices() {
@@ -245,6 +248,141 @@ void LinkedCells::updatePairList() {
     p_pair_list.step();
 }
 
+void LinkedCells::updateTripleList() {
+    if (p_triple_list.requiresUpdate()) {
+        p_triple_list.reset();
+
+
+        // check how much memory will be required
+        uint64_t num_triplets = 0;
+        for (auto it = iteratorTripletC08(); it->isValid(); ++(*it)) {
+            Cell& cell0 = it->cell0();
+            Cell& cell1 = it->cell1();
+            Cell& cell2 = it->cell2();
+            num_triplets += cell0.getNumIndices() * cell1.getNumIndices() * cell2.getNumIndices();
+        }
+
+        unsigned long single_cell_max_n = 0;
+        for (auto it = iteratorCell(); it->isValid(); ++(*it)) {
+            Cell& cell = it->cell();
+            const auto check_low = cell.low() < m_low;
+            const auto check_high = cell.high() > m_high;
+            const auto is_halo = check_low - check_high; // will be 1 if is halo low, 0 if domain, -1 if is halo high
+            if (is_halo != 0) continue;
+
+            const auto n = cell.getNumIndices();
+            num_triplets += n * (n-1) * (n-2) / 6;
+            single_cell_max_n = std::max(single_cell_max_n, n);
+        }
+        p_triple_list.resize(num_triplets);
+
+
+        //============================
+        // populate triple list
+
+        // create cell triple kernels
+        std::vector<TripleListTriple_Kernel> triple_kernels;
+        TripleListTriple_Kernel triple_kernel;
+        triple_kernel.stored_cell_triplets = 0;
+
+        for (auto it = iteratorTripletC08(); it->isValid(); ++(*it)) {
+            Cell& cell0 = it->cell0();
+            Cell& cell1 = it->cell1();
+            Cell& cell2 = it->cell2();
+            const math::d3 shift0 = it->getCell0Shift();
+            const math::d3 shift1 = it->getCell1Shift();
+            const math::d3 shift2 = it->getCell2Shift();
+
+            if (triple_kernel.stored_cell_triplets == TripleListTriple_Kernel::MAX_TRIPLETS) {
+                triple_kernels.push_back(triple_kernel);
+                triple_kernel = TripleListTriple_Kernel();
+                triple_kernel.stored_cell_triplets = 0;
+            }
+
+            const int write_idx = triple_kernel.stored_cell_triplets;
+            // cell data
+            triple_kernel.cell_triplets[write_idx].indices0 = cell0.indices();
+            triple_kernel.cell_triplets[write_idx].indices1 = cell1.indices();
+            triple_kernel.cell_triplets[write_idx].indices2 = cell2.indices();
+            triple_kernel.cell_triplets[write_idx].shift0 = shift0;
+            triple_kernel.cell_triplets[write_idx].shift1 = shift1;
+            triple_kernel.cell_triplets[write_idx].shift2 = shift2;
+
+            // meta data
+            triple_kernel.triple_counts[write_idx] = cell0.getNumIndices() * cell1.getNumIndices() * cell2.getNumIndices();
+            int count_acc = 0;
+            if (write_idx > 0) count_acc = triple_kernel.triple_counts_accumulated[write_idx-1] + triple_kernel.triple_counts[write_idx-1];
+            triple_kernel.triple_counts_accumulated[write_idx] = count_acc;
+            triple_kernel.triple_dims[write_idx][0] = cell0.getNumIndices();
+            triple_kernel.triple_dims[write_idx][1] = cell1.getNumIndices();
+            triple_kernel.triple_dims[write_idx][2] = cell2.getNumIndices();
+            triple_kernel.stored_cell_triplets++;
+        }
+        if (triple_kernel.stored_cell_triplets != 0) triple_kernels.push_back(triple_kernel);
+
+        // create single cell kernels
+        std::vector<TripleListSingle_Kernel> single_kernels;
+        TripleListSingle_Kernel single_kernel;
+        single_kernel.stored_cells = 0;
+
+        for (auto it = iteratorCell(); it->isValid(); ++(*it)) {
+            Cell& cell = it->cell();
+            const auto check_low = cell.low() < m_low;
+            const auto check_high = cell.high() > m_high;
+            const auto is_halo = check_low - check_high; // will be 1 if is halo low, 0 if domain, -1 if is halo high
+            if (is_halo != 0) continue;
+
+            if (single_kernel.stored_cells == TripleListSingle_Kernel::MAX_TRIPLETS) {
+                single_kernels.push_back(single_kernel);
+                single_kernel = TripleListSingle_Kernel();
+                single_kernel.stored_cells = 0;
+            }
+
+            const int write_idx = single_kernel.stored_cells;
+            // cell data
+            single_kernel.cells[write_idx].indices = cell.indices();
+
+            // meta data
+            const int n = cell.getNumIndices();
+            single_kernel.counts[write_idx] = n * (n-1) * (n-2) / 6;
+            int count_acc = 0;
+            if (write_idx > 0) count_acc = single_kernel.counts_accumulated[write_idx-1] + single_kernel.counts[write_idx-1];
+            single_kernel.counts_accumulated[write_idx] = count_acc;
+            single_kernel.stored_cells++;
+        }
+        if (single_kernel.stored_cells != 0) single_kernels.push_back(single_kernel);
+
+        // set up globals and offsets
+        KW::vec_t<uint64_t> global_triple_idx = KW::vec_t<uint64_t>("TLU global idx", 1);
+        global_triple_idx(0) = 0;
+        uint64_t write_offset = 0;
+        TripleList_Globals globals { p_triple_list.getTriplets(), p_triple_list.getOffsets(), global_triple_idx };
+        for (auto& kernel : triple_kernels) {
+            kernel.globals = globals;
+            kernel.write_offset = write_offset;
+            write_offset += kernel.triple_counts_accumulated[kernel.stored_cell_triplets-1] + kernel.triple_counts[kernel.stored_cell_triplets-1];
+        }
+
+        KW::vec_t<int> tri_sums = KW::vec_t<int>("TLU tri sums", single_cell_max_n);
+        for (int i = 1; i < single_cell_max_n+1; i++) {
+            tri_sums[i-1] = i * (i+1) * (i+2) / 6;
+        }
+        for (auto& kernel : single_kernels) {
+            kernel.tri_sums = tri_sums;
+            kernel.globals = globals;
+            kernel.write_offset = write_offset;
+            write_offset += kernel.counts_accumulated[kernel.stored_cells-1] + kernel.counts[kernel.stored_cells-1];
+        }
+
+        // run kernels
+        for (auto& kernel : triple_kernels) Kokkos::parallel_for("TLU - Triple", kernel.triple_counts_accumulated[kernel.stored_cell_triplets-1] + kernel.triple_counts[kernel.stored_cell_triplets-1], kernel);
+        for (auto& kernel : single_kernels) Kokkos::parallel_for("TLU - Single", kernel.counts_accumulated[kernel.stored_cells-1] + kernel.counts[kernel.stored_cells-1], kernel);
+        Kokkos::fence("TLU - End");
+    }
+
+    p_triple_list.step();
+}
+
 void LinkedCells::FReset_Kernel::operator()(int idx) const {
     f[idx] = math::d3 {0, 0, 0};
 }
@@ -275,6 +413,10 @@ std::unique_ptr<MoleculeContainer::CellIterator> LinkedCells::iteratorCell() {
 
 std::unique_ptr<MoleculeContainer::CellPairIterator> LinkedCells::iteratorC08() {
     return std::make_unique<LCC08Iterator>(math::ul3{0,0,0}, m_data.dims() - 1, m_data, m_dom_size);
+}
+
+std::unique_ptr<MoleculeContainer::CellTripletIterator> LinkedCells::iteratorTripletC08() {
+    return std::make_unique<LCTripletC08Iterator>(math::ul3{0,0,0}, m_data.dims() - 1, m_data, m_dom_size);
 }
 
 
@@ -356,5 +498,75 @@ math::d3 LinkedCells::LCC08Iterator::getCell0Shift() {
 
 math::d3 LinkedCells::LCC08Iterator::getCell1Shift() {
     const math::ul3 coord = m_cell_coord + pair_offsets[m_offset_idx].second;
+    return m_dom_size * (coord >= m_cell_max) - m_dom_size * (coord <= math::ul3{0, 0, 0});
+}
+
+LinkedCells::LCTripletC08Iterator::LCTripletC08Iterator(const math::ul3 &min, const math::ul3 &max, Vec3D<Cell> &cells, const math::d3& dom_size) :
+        m_cell_coord(min), m_cell_min(min), m_cell_max(max), m_cells(cells), m_offset_idx(0), m_color(0), m_color_switched(false), m_dom_size(dom_size), m_cell_dims(cells.dims()) {
+    checkState();
+}
+
+void LinkedCells::LCTripletC08Iterator::operator++() {
+    m_color_switched = false;
+    if (m_offset_idx < triple_offsets.size() - 1) {
+        m_offset_idx++;
+        return checkState();
+    }
+    m_offset_idx = 0;
+
+    if (m_cell_coord.x() < m_cell_max.x()-2) { m_cell_coord.x() += 2; return checkState(); }
+    m_cell_coord.x() = m_cell_min.x();
+    if (m_cell_coord.y() < m_cell_max.y()-2) { m_cell_coord.y() += 2; return checkState(); }
+    m_cell_coord.y() = m_cell_min.y();
+    if (m_cell_coord.z() < m_cell_max.z()-2) { m_cell_coord.z() += 2; return checkState(); }
+
+    m_color++;
+    const math::i3 begin {m_color & 0b1, (m_color & 0b10) >> 1, (m_color & 0b100) >> 2};
+    m_cell_min = begin;
+    m_cell_coord = begin;
+    m_color_switched = true;
+    return checkState();
+}
+
+void LinkedCells::LCTripletC08Iterator::checkState() {
+    if (!isValid()) return;
+    if (getCell0Shift() != 0 && getCell1Shift() != 0 && getCell2Shift() != 0) return this->operator++();
+}
+
+bool LinkedCells::LCTripletC08Iterator::isValid() const {
+    return m_color < 8;
+}
+
+bool LinkedCells::LCTripletC08Iterator::colorSwitched() {
+    return m_color_switched;
+}
+
+Cell &LinkedCells::LCTripletC08Iterator::cell0() {
+    const math::ul3 coord = m_cell_coord + std::get<0>(triple_offsets[m_offset_idx]);
+    return m_cells(coord);
+}
+
+Cell &LinkedCells::LCTripletC08Iterator::cell1() {
+    const math::ul3 coord = m_cell_coord + std::get<1>(triple_offsets[m_offset_idx]);
+    return m_cells(coord);
+}
+
+Cell &LinkedCells::LCTripletC08Iterator::cell2() {
+    const math::ul3 coord = m_cell_coord + std::get<2>(triple_offsets[m_offset_idx]);
+    return m_cells(coord);
+}
+
+math::d3 LinkedCells::LCTripletC08Iterator::getCell0Shift() {
+    const math::ul3 coord = m_cell_coord + std::get<0>(triple_offsets[m_offset_idx]);
+    return m_dom_size * (coord >= m_cell_max) - m_dom_size * (coord <= math::ul3{0, 0, 0});
+}
+
+math::d3 LinkedCells::LCTripletC08Iterator::getCell1Shift() {
+    const math::ul3 coord = m_cell_coord + std::get<1>(triple_offsets[m_offset_idx]);
+    return m_dom_size * (coord >= m_cell_max) - m_dom_size * (coord <= math::ul3{0, 0, 0});
+}
+
+math::d3 LinkedCells::LCTripletC08Iterator::getCell2Shift() {
+    const math::ul3 coord = m_cell_coord + std::get<2>(triple_offsets[m_offset_idx]);
     return m_dom_size * (coord >= m_cell_max) - m_dom_size * (coord <= math::ul3{0, 0, 0});
 }

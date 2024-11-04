@@ -6,7 +6,7 @@
 #include "math/Geometry.h"
 #include "Registry.h"
 
-MoleculeContainer::MoleculeContainer() :  p_molecule_count(0), p_molecules(), p_soa(), p_pair_list() { }
+MoleculeContainer::MoleculeContainer() :  p_molecule_count(0), p_molecules(), p_soa(), p_pair_list(), p_triple_list() { }
 
 void MoleculeContainer::addMolecule(const Molecule &molecule) {
     auto config = Registry::instance->configuration();

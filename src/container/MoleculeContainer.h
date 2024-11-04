@@ -14,6 +14,7 @@
 #include "molecule/Molecule.h"
 #include "util/Kokkos_Wrapper.h"
 #include "PairList.h"
+#include "TripleList.h"
 
 class MoleculeContainer {
 public:
@@ -34,6 +35,7 @@ public:
     KW::vec_t<math::d3> getCOM() { return p_com; }
     SOA& getSOA() {return p_soa; }
     PairList& getPairList() { return p_pair_list; }
+    TripleList& getTripleList() { return p_triple_list; }
 
     enum IteratorType {
         MOLECULE,
@@ -86,6 +88,21 @@ public:
         virtual math::d3 getCell1Shift() { return {0, 0, 0}; }
     };
 
+    class CellTripletIterator {
+    public:
+        virtual ~CellTripletIterator() = default;
+        virtual void operator++() = 0;
+        virtual bool isValid() const = 0;
+        virtual bool colorSwitched() = 0;
+
+        virtual Cell& cell0() = 0;
+        virtual Cell& cell1() = 0;
+        virtual Cell& cell2() = 0;
+        virtual math::d3 getCell0Shift() { return {0, 0, 0}; }
+        virtual math::d3 getCell1Shift() { return {0, 0, 0}; }
+        virtual math::d3 getCell2Shift() { return {0, 0, 0}; }
+    };
+
     /**
      * Only to be used for IO functionality on CPU side
      * */
@@ -98,6 +115,10 @@ public:
      * Only to be used on CPU side
      * */
     virtual std::unique_ptr<CellPairIterator> iteratorC08() = 0;
+    /**
+     * Only to be used on CPU side
+     * */
+    virtual std::unique_ptr<CellTripletIterator> iteratorTripletC08() = 0;
 protected:
     /**
      * Updates p_COM buffer to current values by only accessing SOA data
@@ -114,6 +135,8 @@ protected:
     KW::vec_t<math::d3> p_com;
     /// Pair List for Kokkos force computation
     PairList p_pair_list;
+    /// Triple List for Kokkos 3 body force computation
+    TripleList p_triple_list;
 };
 
 
