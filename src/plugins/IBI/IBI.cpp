@@ -142,7 +142,7 @@ void IBI::addPotentialCorrection() {
     for (int idx = 0; idx < pot.size(); idx++) {
         const double update = alpha * T * Kokkos::log(update_function.getYValues()[idx] / reference_rdf.getYValues()[idx]);
         if (Kokkos::isfinite(update)) {
-            pot[idx] -= update;
+            pot[idx] += update;
             update_function.getYValues()[idx] = update;
         }
         else {

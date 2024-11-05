@@ -19,15 +19,15 @@ timesteps 100000
 #=================================================
 # Phasespace
 #=================================================
-density 0.02
+density 0.1
 #                begin    end        cid
-ps_gen_region    0 0 0    15 15 15    0
-# checkpoint_file ../examples/ADR/ckpt_20000.ps    0 0 0
+# ps_gen_region    0 0 0    15 15 15    0
+checkpoint_file ../examples/IBI/ckpt_100k_2b_equil.ps    0 0 0
 #=================================================
 # Potentials
 #=================================================
 stiffness 30
-limit 0
+limit 1e+9
 energy_3b 0
 
 #=================================================
@@ -40,7 +40,7 @@ domain_high 15 15 15
 # Algorithm
 #=================================================
 # enable_one_cell 0
-pair_steps 1
+pair_steps 8
 enable_3b 0
 
 #=================================================
@@ -75,8 +75,8 @@ ADR_h_dim 5 0 0
 IBI_enable 1
 IBI_bins 100
 IBI_alpha 0.2
-IBI_steps_equil 1e+2
-IBI_steps_measure 1e+1
+IBI_steps_equil 1e+4
+IBI_steps_measure 1e+3
 IBI_conv_threshold 0.99
 IBI_conv_mode integral
 IBI_conv_stop worse

@@ -49,7 +49,7 @@ void RDF_Profiler::getRDF(KW::vec_t<double> &buffer) const {
         const auto  rmin3 = rmin * rmin * rmin;
         const auto  rmax3 = rmax * rmax * rmax;
         const auto  binvol = (4.0 / 3.0) * M_PI * (rmax3 - rmin3);
-        const auto  den = 0.5 * N * (N - 1.0) * binvol / V;
+        const auto  den = N * (N - 1.0) * binvol / V;
         buffer[bin] /= m_samples;
         buffer[bin] /= den;
     }

@@ -19,19 +19,6 @@ void FunctionPL::setYValues(const KW::vec_t<double>& y) {
     for (int idx = 0; idx < y_values.size(); ++idx) y_values[idx] = y[idx];
 }
 
-double FunctionPL::evaluateAt(double x, double def_low, double def_high, const KW::vec_t<double>& x_values, const KW::vec_t<double>& y_values) {
-    if (x > x_values[x_values.size() - 1]) return def_high;
-    if (x < x_values[0]) return def_low;
-
-    //find between which 2 values
-    const auto idx_upper = findUpperNode(x, x_values);
-    const auto idx_lower = idx_upper -1;
-
-    //interpolate
-    const auto fx = linearInterpolation(idx_lower, idx_upper, x, x_values, y_values);
-    return fx;
-}
-
 void FunctionPL::derivative(FunctionPL& target) const {
     target.setXValues(x_values);
 
@@ -42,27 +29,8 @@ void FunctionPL::derivative(FunctionPL& target) const {
     target.y_values[size - 1] = (y_values[size - 1] - y_values[size - 2]) / (x_values[size - 1] - x_values[size - 2]);
     // central finite diff for rest
     for (int idx = 1; idx < size - 1; idx++) {
-        target.y_values[idx] = (y_values[idx + 1] - y_values[idx - 1]) / (2 * (x_values[idx + 1] - x_values[idx - 1]));
+        target.y_values[idx] = (y_values[idx + 1] - y_values[idx - 1]) / ((x_values[idx + 1] - x_values[idx - 1]));
     }
-}
-
-double FunctionPL::linearInterpolation(int a, int b, double x, const KW::vec_t<double>& x_values, const KW::vec_t<double>& y_values) {
-    const auto ya = y_values[a];
-    const auto yb = y_values[b];
-    const auto xa = x_values[a];
-    const auto xb = x_values[b];
-
-    return ya + (yb - ya) / (xb - xa) * (x - xa);
-}
-
-int FunctionPL::findUpperNode(double x, const KW::vec_t<double>& x_values) {
-    int i = 0;
-    const auto i_max = x_values.size();
-    while(x > x_values[i]) {
-        i++;
-        if(i == i_max) break;
-    }
-    return i;
 }
 
 void FunctionPL::read(const std::string &path) {
