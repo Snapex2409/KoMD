@@ -63,8 +63,8 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "IBI_enable") file >> config->IBI_enable;
             if (var == "IBI_bins") file >> config->IBI_bins;
             if (var == "IBI_alpha") file >> config->IBI_alpha;
-            if (var == "IBI_steps_equil") {double tmp; file >> tmp; config->IBI_steps_equil; }
-            if (var == "IBI_steps_measure") {double tmp; file >> tmp; config->IBI_steps_measure; }
+            if (var == "IBI_steps_equil") {double tmp; file >> tmp; config->IBI_steps_equil = tmp; }
+            if (var == "IBI_steps_measure") {double tmp; file >> tmp; config->IBI_steps_measure = tmp; }
             if (var == "IBI_conv_threshold") file >> config->IBI_conv_threshold;
             if (var == "IBI_conv_mode") file >> config->IBI_conv_mode;
             if (var == "IBI_conv_stop") file >> config->IBI_conv_stop;
