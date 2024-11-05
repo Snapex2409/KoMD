@@ -44,6 +44,15 @@ namespace Defaults {
     static constexpr math::d3 ADR_low {0, 0, 0};
     static constexpr math::d3 ADR_high {0, 0, 0};
     static constexpr math::d3 ADR_h_dim = {0, 0, 0};
+
+    static constexpr uint64_t IBI_bins = 100;
+    static constexpr double IBI_alpha = 0.2;
+    static constexpr int IBI_steps_equil = 1e+6;
+    static constexpr int IBI_steps_measure = 1e+5;
+    static constexpr double IBI_conv_threshold = 0.99;
+    static constexpr std::string IBI_conv_mode = "integral";
+    static constexpr std::string IBI_conv_stop = "worse";
+    static constexpr int IBI_conv_window = 10;
 }
 
 #endif //KOMD_DEFAULTS_H

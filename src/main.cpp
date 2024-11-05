@@ -12,6 +12,7 @@
 //#include "potentials/Grav.h"
 
 #include "plugins/ADR/AdResS.h"
+#include "plugins/IBI/IBI.h"
 
 #include "util/PhasespaceGenerator.h"
 
@@ -41,11 +42,11 @@ int main(int argc, char** argv) {
     else Registry::instance->moleculeContainer_ptr() = std::make_shared<LinkedCells>();
     Registry::instance->simulation_ptr() = std::make_shared<Simulation>();
     if (Registry::instance->configuration()->enable_one_cell) throw std::runtime_error("not supported anymore");
-    else Registry::instance->forceFunctors().push_back(std::make_unique<LJ12_6>());
-    Registry::instance->forceFunctors().push_back(std::make_unique<FENE>());
-    Registry::instance->forceFunctors().push_back(std::make_unique<Limit>());
+    else Registry::instance->forceFunctors().push_back(std::make_shared<LJ12_6>());
+    Registry::instance->forceFunctors().push_back(std::make_shared<FENE>());
+    Registry::instance->forceFunctors().push_back(std::make_shared<Limit>());
     //Registry::instance->forceFunctors().push_back(std::make_unique<Grav>());
-    if (Registry::instance->configuration()->enable_3b) Registry::instance->forceFunctors3b().push_back(std::make_unique<ATM>());
+    if (Registry::instance->configuration()->enable_3b) Registry::instance->forceFunctors3b().push_back(std::make_shared<ATM>());
     Registry::instance->integrators().push_back(std::make_unique<Integrator>());
 
     CheckpointIO::loadCheckpoint();
@@ -62,6 +63,7 @@ int main(int argc, char** argv) {
 
     // Plugins
     if (Registry::instance->configuration()->ADR_enable) Registry::instance->plugins().push_back(std::make_unique<AdResS>());
+    if (Registry::instance->configuration()->IBI_enable) Registry::instance->plugins().push_back(std::make_unique<IBI>());
 
     Registry::instance->thermostats().push_back(std::make_unique<VelocityScaling>());
 

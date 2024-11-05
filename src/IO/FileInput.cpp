@@ -59,6 +59,17 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "ADR_low") file >> config->ADR_low.x() >> config->ADR_low.y() >> config->ADR_low.z();
             if (var == "ADR_high") file >> config->ADR_high.x() >> config->ADR_high.y() >> config->ADR_high.z();
             if (var == "ADR_h_dim") file >> config->ADR_h_dim.x() >> config->ADR_h_dim.y() >> config->ADR_h_dim.z();
+
+            if (var == "IBI_enable") file >> config->IBI_enable;
+            if (var == "IBI_bins") file >> config->IBI_bins;
+            if (var == "IBI_alpha") file >> config->IBI_alpha;
+            if (var == "IBI_steps_equil") {double tmp; file >> tmp; config->IBI_steps_equil; }
+            if (var == "IBI_steps_measure") {double tmp; file >> tmp; config->IBI_steps_measure; }
+            if (var == "IBI_conv_threshold") file >> config->IBI_conv_threshold;
+            if (var == "IBI_conv_mode") file >> config->IBI_conv_mode;
+            if (var == "IBI_conv_stop") file >> config->IBI_conv_stop;
+            if (var == "IBI_conv_window") file >> config->IBI_conv_window;
+
             if (var == "checkpoint_file") {
                 std::string path; math::d3 offset;
                 file >> path >> offset.x() >> offset.y() >> offset.z();

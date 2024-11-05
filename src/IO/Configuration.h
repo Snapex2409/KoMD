@@ -51,6 +51,16 @@ struct Configuration {
     math::d3 ADR_high = Defaults::ADR_high;
     math::d3 ADR_h_dim = Defaults::ADR_h_dim;
 
+    bool IBI_enable = false;
+    uint64_t IBI_bins = Defaults::IBI_bins;
+    double IBI_alpha = Defaults::IBI_alpha;
+    int IBI_steps_equil = Defaults::IBI_steps_equil;
+    int IBI_steps_measure = Defaults::IBI_steps_measure;
+    double IBI_conv_threshold = Defaults::IBI_conv_threshold;
+    std::string IBI_conv_mode = Defaults::IBI_conv_mode;
+    std::string IBI_conv_stop = Defaults::IBI_conv_stop;
+    int IBI_conv_window = Defaults::IBI_conv_window;
+
     bool enable_one_cell = false;
 };
 

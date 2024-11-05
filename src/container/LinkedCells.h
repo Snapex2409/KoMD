@@ -337,7 +337,7 @@ public:
 
             // we found our pair -> need to get x, y and z coords
             int k_idx = -1;
-            for (int pos = 0; pos < tri_sums.size(); pos++) {
+            for (uint64_t pos = 0; pos < tri_sums.size(); pos++) {
                 if (tri_sums[pos] > idx) {
                     k_idx = pos;
                     break;

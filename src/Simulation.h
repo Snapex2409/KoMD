@@ -18,6 +18,17 @@ public:
      * Runs the simulation
      * */
     void run();
+
+    /**
+     * Stop the simulation at the end of this timestep.
+     * */
+    void stop();
+
+private:
+    /// maximum time step
+    uint64_t m_max_step = 0;
+    /// current time step
+    uint64_t m_simstep = 0;
 };
 
 

@@ -45,9 +45,8 @@ void Simulation::run() {
     // main loop
     for (auto& plugin : plugins) plugin->pre_main_loop();
     double t = 0;
-    uint64_t simstep = 0;
-    const uint64_t max_step = config->timesteps;
-    while (simstep < max_step) {
+    m_max_step = config->timesteps;
+    while (m_simstep < m_max_step) {
         for (auto& plugin : plugins) plugin->begin_loop();
         for (auto& integrator : integrators) integrator->integrate0();
         for (auto& plugin : plugins) plugin->pre_container_update();
@@ -60,22 +59,26 @@ void Simulation::run() {
         for (auto& sensor : sensors) sensor->measure();
 
         auto& logger = Log::simulation->info();
-        logger << "Simstep=" << simstep << " t=" << t << " T=" << temp_sens->getTemperature();
+        logger << "Simstep=" << m_simstep << " t=" << t << " T=" << temp_sens->getTemperature();
         if (config->enable_sensor_lj) logger << " u=" << pot_sens->getCurrentPotential();
         if (config->enable_sensor_disp) logger << " lambda=" << disp_sens->getDisplacement();
         logger << std::endl;
 
         t += dt;
-        simstep++;
+        m_simstep++;
 
-        if (simstep % write_freq == 0) vtkWriter->write("VTK_Output", simstep);
-        for (auto& sensor : sensors) sensor->write(simstep);
+        if (m_simstep % write_freq == 0) vtkWriter->write("VTK_Output", m_simstep);
+        for (auto& sensor : sensors) sensor->write(m_simstep);
         for (auto& thermostat : thermostats) thermostat->apply();
         for (auto& plugin : plugins) plugin->end_loop();
     }
     for (auto& plugin : plugins) plugin->post_main_loop();
 
-    for (auto& sensor : sensors) sensor->write(simstep);
-    if (config->storeCheckpoint) CheckpointIO::writeCheckpoint(simstep);
+    for (auto& sensor : sensors) sensor->write(m_simstep);
+    if (config->storeCheckpoint) CheckpointIO::writeCheckpoint(m_simstep);
     for (auto& plugin : plugins) plugin->finalize();
+}
+
+void Simulation::stop() {
+    m_max_step = m_simstep;
 }
