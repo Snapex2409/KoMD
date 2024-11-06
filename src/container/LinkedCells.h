@@ -336,19 +336,20 @@ public:
             if (triple_idx == -1) return;
 
             // we found our pair -> need to get x, y and z coords
+            const int local_idx = idx - counts_accumulated[triple_idx];
             int k_idx = -1;
             for (uint64_t pos = 0; pos < tri_sums.size(); pos++) {
-                if (tri_sums[pos] > idx) {
+                if (tri_sums[pos] > local_idx) {
                     k_idx = pos;
                     break;
                 }
             }
 
             const int k = k_idx+2;
-            int local_idx = idx;
-            if (k_idx > 0) local_idx -= tri_sums[k_idx-1];
-            int j = Kokkos::floor((-1 + Kokkos::sqrt(1 + 8 * local_idx)) / 2.0);
-            const int i = local_idx - j * (j+1) / 2;
+            int tmp_idx = local_idx;
+            if (k_idx > 0) tmp_idx -= tri_sums[k_idx-1];
+            int j = Kokkos::floor((-1 + Kokkos::sqrt(1 + 8 * tmp_idx)) / 2.0);
+            const int i = tmp_idx - j * (j+1) / 2;
             j += 1;
 
             // write back

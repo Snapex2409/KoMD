@@ -42,7 +42,7 @@ domain_high 15 15 15
 # enable_one_cell 0
 pair_steps 8
 enable_3b 1
-triple_steps 1
+triple_steps 4
 
 #=================================================
 # IO

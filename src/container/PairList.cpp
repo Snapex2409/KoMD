@@ -20,8 +20,10 @@ void PairList::init(int num_sites) {
 }
 
 void PairList::resize(uint64_t num_target_pairs) {
-    Kokkos::resize(m_pairs, num_target_pairs);
-    Kokkos::resize(m_pair_offsets, num_target_pairs);
+    if (num_target_pairs > m_pairs.size()/2) {
+        Kokkos::resize(m_pairs, num_target_pairs);
+        Kokkos::resize(m_pair_offsets, num_target_pairs);
+    }
     m_num_pairs = num_target_pairs;
 }
 

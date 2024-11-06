@@ -20,8 +20,11 @@ void TripleList::init(int num_sites) {
 }
 
 void TripleList::resize(uint64_t num_target_triplets) {
-    Kokkos::resize(m_triplets, num_target_triplets);
-    Kokkos::resize(m_triplets_offsets, num_target_triplets);
+    if (num_target_triplets > m_triplets.size()/3) {
+        Kokkos::resize(m_triplets, num_target_triplets);
+        Kokkos::resize(m_triplets_offsets, num_target_triplets);
+    }
+
     m_num_triplets = num_target_triplets;
 }
 
