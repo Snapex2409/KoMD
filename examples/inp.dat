@@ -28,7 +28,7 @@ checkpoint_file ../examples/IBI/ckpt_100k_2b_equil.ps    0 0 0
 #=================================================
 stiffness 30
 limit 1e+9
-energy_3b 0
+energy_3b 10
 
 #=================================================
 # Domain
@@ -41,7 +41,8 @@ domain_high 15 15 15
 #=================================================
 # enable_one_cell 0
 pair_steps 8
-enable_3b 0
+enable_3b 1
+triple_steps 1
 
 #=================================================
 # IO
@@ -72,7 +73,7 @@ ADR_low 12.5 -5 -5
 ADR_high 17.5 20 20
 ADR_h_dim 5 0 0
 # IBI
-IBI_enable 1
+IBI_enable 0
 IBI_bins 100
 IBI_alpha 0.2
 IBI_steps_equil 1e+4
