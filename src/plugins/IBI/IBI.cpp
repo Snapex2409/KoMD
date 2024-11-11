@@ -48,7 +48,7 @@ void IBI::post_forces() {
                 initializePotentialValues();
 
                 // replace force function to IBI implementation
-                force_functor = std::make_shared<IBI_ForceFunctor>();
+                force_functor = std::make_shared<IBI_ForceFunctor<IBI_Default>>();
                 Registry::instance->forceFunctors().clear();
                 Registry::instance->forceFunctors3b().clear();
                 Registry::instance->forceFunctors().push_back(force_functor);

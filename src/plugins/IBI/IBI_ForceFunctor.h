@@ -8,7 +8,13 @@
 #include "IBI_Math.h"
 #include "potentials/ForceFunctor.h"
 #include "util/Kokkos_Wrapper.h"
+#include <type_traits>
 
+struct IBI_Reload {};
+struct IBI_Default {};
+
+template<typename T, bool reload = std::is_same_v<IBI_Reload, T>>
+requires(std::is_same_v<T, IBI_Reload> or std::is_same_v<T, IBI_Default>)
 class IBI_ForceFunctor : public ForceFunctor {
 public:
     IBI_ForceFunctor();
@@ -38,6 +44,10 @@ public:
         double force_def_high;
         /// cutoff radius squared
         const double cutoff2;
+        /// exclusion zone for reload: low
+        math::d3 exclusion_low;
+        /// exclusion zone for reload: high
+        math::d3 exclusion_high;
     };
 
 protected:
@@ -50,6 +60,10 @@ private:
     FunctionPL m_force;
     /// is either PMF or updated version
     FunctionPL m_potential;
+    /// exclusion zone for reload: low
+    math::d3 m_exclusion_low;
+    /// exclusion zone for reload: high
+    math::d3 m_exclusion_high;
 };
 
 

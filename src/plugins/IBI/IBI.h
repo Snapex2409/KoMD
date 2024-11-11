@@ -41,7 +41,7 @@ private:
     /// measuring tool
     RDF_Profiler profiler;
     /// pair handler to comp forces
-    std::shared_ptr<IBI_ForceFunctor> force_functor;
+    std::shared_ptr<IBI_ForceFunctor<IBI_Default>> force_functor;
     /// alpha for step size
     double alpha = 0.0;
     /// Target simulation temperature

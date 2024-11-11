@@ -61,6 +61,12 @@ struct Configuration {
     std::string IBI_conv_stop = Defaults::IBI_conv_stop;
     int IBI_conv_window = Defaults::IBI_conv_window;
 
+    bool IBI_reload_enable = false;
+    std::string IBI_reload_fpath = "";
+    std::string IBI_reload_ppath = "";
+    math::d3 IBI_exclusion_low = Defaults::IBI_exclusion_low;
+    math::d3 IBI_exclusion_high = Defaults::IBI_exclusion_high;
+
     bool enable_one_cell = false;
 };
 

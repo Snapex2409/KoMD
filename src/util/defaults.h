@@ -53,6 +53,8 @@ namespace Defaults {
     static constexpr std::string IBI_conv_mode = "integral";
     static constexpr std::string IBI_conv_stop = "worse";
     static constexpr int IBI_conv_window = 10;
+    static constexpr math::d3 IBI_exclusion_low {0, 0, 0};
+    static constexpr math::d3 IBI_exclusion_high {0, 0, 0};
 }
 
 #endif //KOMD_DEFAULTS_H

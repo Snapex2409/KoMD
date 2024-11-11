@@ -49,8 +49,8 @@ void FunctionPL::read(const std::string &path) {
     }
     file.close();
 
-    Kokkos::resize(x_values, x_tmp.size());
-    Kokkos::resize(y_values, y_tmp.size());
+    if (x_values.size() != x_tmp.size()) Kokkos::resize(x_values, x_tmp.size());
+    if (y_values.size() != y_tmp.size()) Kokkos::resize(y_values, y_tmp.size());
 
     for (int idx = 0; idx < x_tmp.size(); idx++) {
         x_values[idx] = x_tmp[idx];
