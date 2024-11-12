@@ -35,6 +35,7 @@ struct Configuration {
 
     bool storeCheckpoint = Defaults::storeCheckpoint;
     bool enable_3b = Defaults::enable_3b;
+    bool enable_3b_direct = Defaults::enable_3b_direct;
     bool enable_sensor_lj = Defaults::enable_sensor_lj;
     bool enable_sensor_fene = Defaults::enable_sensor_fene;
     bool enable_sensor_rdf = Defaults::enable_sensor_rdf;

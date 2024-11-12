@@ -139,6 +139,8 @@ protected:
     TripleList p_triple_list;
     /// enable three body computation
     bool p_enable_3b;
+    /// enable direct three body computation
+    bool p_enable_3b_direct;
 };
 
 

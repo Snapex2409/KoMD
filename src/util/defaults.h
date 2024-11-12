@@ -25,6 +25,7 @@ namespace Defaults {
     static constexpr double cutoff = sigma * 2.5;       // in Armstrong
     static constexpr double cell_size = cutoff * 3.0 / 2.5;       // in Armstrong
     static constexpr bool enable_3b = false;
+    static constexpr bool enable_3b_direct = true;
     static constexpr bool enable_sensor_lj = false;
     static constexpr bool enable_sensor_fene = false;
     static constexpr bool enable_sensor_rdf = false;

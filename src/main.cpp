@@ -9,6 +9,7 @@
 #include "potentials/FENE.h"
 #include "potentials/Limit.h"
 #include "potentials/ATM.h"
+#include "potentials/ATM_NOLIST.h"
 //#include "potentials/Grav.h"
 
 #include "plugins/ADR/AdResS.h"
@@ -46,7 +47,10 @@ int main(int argc, char** argv) {
     Registry::instance->forceFunctors().push_back(std::make_shared<FENE>());
     Registry::instance->forceFunctors().push_back(std::make_shared<Limit>());
     //Registry::instance->forceFunctors().push_back(std::make_unique<Grav>());
-    if (Registry::instance->configuration()->enable_3b) Registry::instance->forceFunctors3b().push_back(std::make_shared<ATM>());
+    if (Registry::instance->configuration()->enable_3b) {
+        if (Registry::instance->configuration()->enable_3b_direct) Registry::instance->forceFunctors3b().push_back(std::make_shared<ATM_NOLIST>());
+        else Registry::instance->forceFunctors3b().push_back(std::make_shared<ATM>());
+    }
     Registry::instance->integrators().push_back(std::make_unique<Integrator>());
 
     CheckpointIO::loadCheckpoint();

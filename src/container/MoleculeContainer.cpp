@@ -7,7 +7,8 @@
 #include "Registry.h"
 
 MoleculeContainer::MoleculeContainer() :  p_molecule_count(0), p_molecules(), p_soa(), p_pair_list(), p_triple_list(),
-p_enable_3b(Registry::instance->configuration()->enable_3b) { }
+p_enable_3b(Registry::instance->configuration()->enable_3b),
+p_enable_3b_direct(Registry::instance->configuration()->enable_3b_direct) { }
 
 void MoleculeContainer::addMolecule(const Molecule &molecule) {
     auto config = Registry::instance->configuration();

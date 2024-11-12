@@ -40,6 +40,7 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "timesteps") file >> config->timesteps;
             if (var == "write_freq") file >> config->write_freq;
             if (var == "enable_3b") file >> config->enable_3b;
+            if (var == "enable_3b_direct") file >> config->enable_3b_direct;
             if (var == "enable_sensor_lj") file >> config->enable_sensor_lj;
             if (var == "enable_sensor_fene") file >> config->enable_sensor_fene;
             if (var == "enable_sensor_rdf") file >> config->enable_sensor_rdf;
