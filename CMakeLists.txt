@@ -18,14 +18,22 @@ include(kokkos)
 #include(OpenMP)
 
 file(GLOB_RECURSE files src/*.cpp)
+if(NOT ENABLE_VTK)
+    list(FILTER files EXCLUDE REGEX ".*/IO/vtk/.*")
+endif ()
 
 add_library(KoMD_lib STATIC ${files})
 target_include_directories(KoMD_lib PUBLIC src)
 target_link_libraries(KoMD_lib
         ${KOKKOS_LIB}           # for Kokkos
-        #Kokkos::Kokkos
-        ${VTK_LIB}              # for VTK/xerces
 )
+
+if(ENABLE_VTK)
+    target_link_libraries(KoMD_lib
+            ${VTK_LIB}              # for VTK/xerces
+    )
+    target_compile_definitions(KoMD_lib PUBLIC -DUSE_VTK)
+endif ()
 
 add_executable(KoMD "src/main.cpp")
 target_include_directories(KoMD PUBLIC src)

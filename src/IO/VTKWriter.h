@@ -8,7 +8,9 @@
 #include <string>
 #include "molecule/Molecule.h"
 
+#if defined(USE_VTK)
 class VTKFile_t;
+#endif
 
 /**
  * This class implements the functionality to generate vtk output from
@@ -40,7 +42,9 @@ private:
      */
     void writeFile(const std::string &filename, int iteration);
 
+#if defined(USE_VTK)
     VTKFile_t *vtkFile;
+#endif
 };
 
 

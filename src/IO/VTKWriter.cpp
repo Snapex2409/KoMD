@@ -7,9 +7,11 @@
 
 
 #include "VTKWriter.h"
+#if defined(USE_VTK)
 #include "Logging.h"
 #include "Registry.h"
 #include "vtk/vtk-punstructured.h"
+#endif
 
 #include <fstream>
 #include <iomanip>
@@ -17,6 +19,7 @@
 #include <string>
 
 void VTKWriter::write(const std::string &filename, int iteration) {
+#if defined(USE_VTK)
     auto container = Registry::instance->moleculeContainer();
 
     uint64_t sites = 0;
@@ -33,10 +36,11 @@ void VTKWriter::write(const std::string &filename, int iteration) {
     }
 
     writeFile(filename, iteration);
+#endif
 }
 
 void VTKWriter::initializeOutput(int numParticles) {
-
+#if defined(USE_VTK)
     vtkFile = new VTKFile_t("UnstructuredGrid");
 
     // per point, we add type, position, velocity and force
@@ -67,18 +71,22 @@ void VTKWriter::initializeOutput(int numParticles) {
     PieceUnstructuredGrid_t piece(pointData, cellData, points, cells, numParticles, 0);
     UnstructuredGrid_t unstructuredGrid(piece);
     vtkFile->UnstructuredGrid(unstructuredGrid);
+#endif
 }
 
 void VTKWriter::writeFile(const std::string &filename, int iteration) {
+#if defined(USE_VTK)
     std::stringstream strstr;
     strstr << filename << "_" << std::setfill('0') << std::setw(4) << iteration << ".vtu";
 
     std::ofstream file(strstr.str().c_str());
     VTKFile(file, *vtkFile);
     delete vtkFile;
+#endif
 }
 
 void VTKWriter::plotMolecule(Molecule &m) {
+#if defined(USE_VTK)
     if (!vtkFile->UnstructuredGrid().present()) {
         Log::io->error() << "No UnstructuredGrid present" << std::endl;
     }
@@ -115,5 +123,6 @@ void VTKWriter::plotMolecule(Molecule &m) {
         pointsIterator->push_back(site.r_arr().y());
         pointsIterator->push_back(site.r_arr().z());
     }
+#endif
 }
 
