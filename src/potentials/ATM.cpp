@@ -10,7 +10,7 @@
 
 ATM::ATM() : m_cutoff2(std::pow(Registry::instance->configuration()->cutoff, 2)),
 m_nu(Registry::instance->configuration()->energy_3b) {
-    m_nu = m_nu * 1e-9 * Constants::conv_J_Ei; // convert external unit to internal
+    m_nu = m_nu * 1e+9 * Constants::conv_J_Ei; // convert external unit to internal
 }
 
 void ATM::handleTripleList(TripleList &tripleList) {

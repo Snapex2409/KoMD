@@ -15,7 +15,7 @@ namespace Defaults {
     static constexpr double delta_t = 0.001;            // 1 ps, 0.001 = 1 fs
     static constexpr double stiffness_factor = 30;      // unit-less
     static constexpr double limit_factor = 20;          // unit-less
-    static constexpr double energy_3b = 1;              // 1 Joule/nm**9 from outside (internall in u * A² / (ps² * A**9))
+    static constexpr double energy_3b = 1;              // 1 Joule*nm**9 from outside (internally in A**9 * u * A² / ps²)
     static constexpr double density = 0.1;              // unit-less, number density
     static constexpr math::d3 r {0, 0, 0};
     static constexpr math::d3 v {0, 0, 0};

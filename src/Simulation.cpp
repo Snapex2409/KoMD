@@ -68,7 +68,7 @@ void Simulation::run() {
         m_simstep++;
 
         if (m_simstep % write_freq == 0) vtkWriter->write("VTK_Output", m_simstep);
-        for (auto& sensor : sensors) sensor->write(m_simstep);
+        if (m_simstep % write_freq == 0) for (auto& sensor : sensors) sensor->write(m_simstep);
         for (auto& thermostat : thermostats) thermostat->apply();
         for (auto& plugin : plugins) plugin->end_loop();
     }

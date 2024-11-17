@@ -71,6 +71,12 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "IBI_conv_stop") file >> config->IBI_conv_stop;
             if (var == "IBI_conv_window") file >> config->IBI_conv_window;
 
+            if (var == "IBI_reload") file >> config->IBI_reload_enable;
+            if (var == "IBI_reload_fpath") file >> config->IBI_reload_fpath;
+            if (var == "IBI_reload_ppath") file >> config->IBI_reload_ppath;
+            if (var == "IBI_exclusion_low") file >> config->IBI_exclusion_low.x() >> config->IBI_exclusion_low.y() >> config->IBI_exclusion_low.z();
+            if (var == "IBI_exclusion_high") file >> config->IBI_exclusion_high.x() >> config->IBI_exclusion_high.y() >> config->IBI_exclusion_high.z();
+
             if (var == "checkpoint_file") {
                 std::string path; math::d3 offset;
                 file >> path >> offset.x() >> offset.y() >> offset.z();

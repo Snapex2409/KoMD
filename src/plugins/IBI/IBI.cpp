@@ -52,6 +52,7 @@ void IBI::post_forces() {
                 Registry::instance->forceFunctors().clear();
                 Registry::instance->forceFunctors3b().clear();
                 Registry::instance->forceFunctors().push_back(force_functor);
+                Registry::instance->moleculeContainer()->disable3B();
 
                 force_functor->getPotentialFunction().setXValues(reference_potential.getXValues());
                 force_functor->getPotentialFunction().setYValues(reference_potential.getYValues());

@@ -14,6 +14,7 @@
 
 #include "plugins/ADR/AdResS.h"
 #include "plugins/IBI/IBI.h"
+#include "plugins/IBI/IBI_ReloadForce.h"
 
 #include "util/PhasespaceGenerator.h"
 
@@ -68,6 +69,7 @@ int main(int argc, char** argv) {
     // Plugins
     if (Registry::instance->configuration()->ADR_enable) Registry::instance->plugins().push_back(std::make_unique<AdResS>());
     if (Registry::instance->configuration()->IBI_enable) Registry::instance->plugins().push_back(std::make_unique<IBI>());
+    if (Registry::instance->configuration()->IBI_reload_enable) Registry::instance->plugins().push_back(std::make_unique<IBI_ReloadForce>());
 
     Registry::instance->thermostats().push_back(std::make_unique<VelocityScaling>());
 

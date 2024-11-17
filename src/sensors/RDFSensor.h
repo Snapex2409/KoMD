@@ -24,13 +24,13 @@ public:
         /// shallow copy of CoM positions
         KW::vec_t<math::d3> positions;
         /// shallow copy of rdf bins
-        KW::vec_scatter_t<double> bins_scatter;
+        KW::vec_t<double> bins;
         /// maximum measure distance
         const double max_r;
         /// bin size
         const double delta_r;
         /// number of total bins
-        const uint64_t bins;
+        const uint64_t num_bins;
         /// domain size
         const math::d3 domain_size;
     };
@@ -55,8 +55,6 @@ private:
     double m_rho_0;
     /// rdf buffer
     KW::vec_t<double> m_bins;
-    /// ScatterView for rdf buffer
-    KW::vec_scatter_t<double> m_bins_scatter;
     /// number of samples
     double m_samples;
     /// com buffer

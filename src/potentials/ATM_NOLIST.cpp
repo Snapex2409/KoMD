@@ -14,7 +14,7 @@ ATM_NOLIST::ATM_NOLIST() :
     m_cutoff2(std::pow(Registry::instance->configuration()->cutoff, 2)),
     m_low(Registry::instance->configuration()->domainLow),
     m_high(Registry::instance->configuration()->domainHigh) {
-    m_nu = m_nu * 1e-9 * Constants::conv_J_Ei; // convert external unit to internal
+    m_nu = m_nu * 1e+9 * Constants::conv_J_Ei; // convert external unit to internal
 }
 
 void ATM_NOLIST::handleTripleList(TripleList &) {

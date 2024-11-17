@@ -14,7 +14,7 @@ ExclusionATM::ExclusionATM() :
     m_nu(Registry::instance->configuration()->energy_3b),
     m_exclusion_low(Registry::instance->configuration()->IBI_exclusion_low),
     m_exclusion_high(Registry::instance->configuration()->IBI_exclusion_high) {
-    m_nu = m_nu * 1e-9 * Constants::conv_J_Ei; // convert external unit to internal
+    m_nu = m_nu * 1e+9 * Constants::conv_J_Ei; // convert external unit to internal
 }
 
 void ExclusionATM::handleTripleList(TripleList &tripleList) {

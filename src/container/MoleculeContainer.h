@@ -36,6 +36,8 @@ public:
     SOA& getSOA() {return p_soa; }
     PairList& getPairList() { return p_pair_list; }
     TripleList& getTripleList() { return p_triple_list; }
+    void enable3B() { p_enable_3b = true; }
+    void disable3B() { p_enable_3b = false; }
 
     enum IteratorType {
         MOLECULE,
