@@ -11,14 +11,14 @@ temperature 150
 delta_t 0.0005
 cutoff 8.525
 cell_size 10
-timesteps 500000
+timesteps 10000000
 
 #=================================================
 # Phasespace
 #=================================================
 density 0.01
 #                begin    end        cid
-ps_gen_region    0 0 0    20 20 20    0
+checkpoint_file ../examples/argon/ckpt_3b_eq.ps    0 0 0
 #=================================================
 # Potentials
 #=================================================
@@ -42,8 +42,22 @@ triple_steps 4
 #=================================================
 # IO
 #=================================================
-write_freq 10000
-store_checkpoint 1
+write_freq 100000
+store_checkpoint 0
+
+#=================================================
+# Plugins
+#=================================================
+# IBI
+IBI_enable 1
+IBI_bins 100
+IBI_alpha 0.2
+IBI_steps_equil 1e+5
+IBI_steps_measure 1e+4
+IBI_conv_threshold 0.99
+IBI_conv_mode integral
+IBI_conv_stop worse
+IBI_conv_window 10
 
 #=================================================
 # Components

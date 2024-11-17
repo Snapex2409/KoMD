@@ -35,9 +35,9 @@ domain_high 20 20 20
 # Algorithm
 #=================================================
 pair_steps 8
-enable_3b 1
-enable_3b_direct 0
-triple_steps 4
+enable_3b 0
+enable_3b_direct 1
+# triple_steps 4
 
 #=================================================
 # IO
