@@ -11,7 +11,7 @@ temperature 150
 delta_t 0.0005
 cutoff 8.525
 cell_size 10
-timesteps 10000000
+timesteps 20000000
 
 #=================================================
 # Phasespace
