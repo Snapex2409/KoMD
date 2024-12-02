@@ -24,6 +24,7 @@ namespace Defaults {
     static constexpr math::d3 domainHigh {10, 10, 10};  // in Armstrong
     static constexpr double cutoff = sigma * 2.5;       // in Armstrong
     static constexpr double cell_size = cutoff * 3.0 / 2.5;       // in Armstrong
+    static constexpr bool enable_3b_approx = false;
     static constexpr bool enable_3b = false;
     static constexpr bool enable_3b_direct = true;
     static constexpr bool enable_sensor_lj = false;

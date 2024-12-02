@@ -39,6 +39,7 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "domain_high") file >> config->domainHigh.x() >> config->domainHigh.y() >> config->domainHigh.z();
             if (var == "timesteps") file >> config->timesteps;
             if (var == "write_freq") file >> config->write_freq;
+            if (var == "enable_3b_approx") file >> config->enable_3b_approx;
             if (var == "enable_3b") file >> config->enable_3b;
             if (var == "enable_3b_direct") file >> config->enable_3b_direct;
             if (var == "enable_sensor_lj") file >> config->enable_sensor_lj;

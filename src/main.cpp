@@ -9,6 +9,7 @@
 #include "potentials/FENE.h"
 #include "potentials/Limit.h"
 #include "potentials/ATM.h"
+#include "potentials/ATM2B.h"
 #include "potentials/ATM_NOLIST.h"
 //#include "potentials/Grav.h"
 
@@ -43,8 +44,16 @@ int main(int argc, char** argv) {
     if (Registry::instance->configuration()->enable_one_cell) throw std::runtime_error("not supported anymore");
     else Registry::instance->moleculeContainer_ptr() = std::make_shared<LinkedCells>();
     Registry::instance->simulation_ptr() = std::make_shared<Simulation>();
+
+    //==========================================
+    // Force Functors
+    //==========================================
     if (Registry::instance->configuration()->enable_one_cell) throw std::runtime_error("not supported anymore");
-    else Registry::instance->forceFunctors().push_back(std::make_shared<LJ12_6>());
+    else
+    {
+        if (Registry::instance->configuration()->enable_3b_approx) Registry::instance->forceFunctors().push_back(std::make_shared<ATM2B>());
+        else Registry::instance->forceFunctors().push_back(std::make_shared<LJ12_6>());
+    }
     Registry::instance->forceFunctors().push_back(std::make_shared<FENE>());
     Registry::instance->forceFunctors().push_back(std::make_shared<Limit>());
     //Registry::instance->forceFunctors().push_back(std::make_unique<Grav>());
@@ -52,11 +61,15 @@ int main(int argc, char** argv) {
         if (Registry::instance->configuration()->enable_3b_direct) Registry::instance->forceFunctors3b().push_back(std::make_shared<ATM_NOLIST>());
         else Registry::instance->forceFunctors3b().push_back(std::make_shared<ATM>());
     }
+
     Registry::instance->integrators().push_back(std::make_unique<Integrator>());
 
     CheckpointIO::loadCheckpoint();
     PhasespaceGenerator::generate();
 
+    //==========================================
+    // Measurements
+    //==========================================
     Registry::instance->temperature_sensor_ptr() = std::make_shared<TemperatureSensor>();
     Registry::instance->sensors().push_back(std::dynamic_pointer_cast<Sensor>(Registry::instance->temperature_sensor()));
     if (Registry::instance->configuration()->enable_sensor_lj) Registry::instance->potential_sensor_ptr() = std::make_shared<LJ12_6_Sensor>();
@@ -66,7 +79,9 @@ int main(int argc, char** argv) {
     if (Registry::instance->configuration()->enable_sensor_disp) Registry::instance->displacement_sensor_ptr() = std::make_shared<DisplacementSensor>();
     if (Registry::instance->configuration()->enable_sensor_disp) Registry::instance->sensors().push_back(std::dynamic_pointer_cast<Sensor>(Registry::instance->displacement_sensor()));
 
+    //==========================================
     // Plugins
+    //==========================================
     if (Registry::instance->configuration()->ADR_enable) Registry::instance->plugins().push_back(std::make_unique<AdResS>());
     if (Registry::instance->configuration()->IBI_enable) Registry::instance->plugins().push_back(std::make_unique<IBI>());
     if (Registry::instance->configuration()->IBI_reload_enable) Registry::instance->plugins().push_back(std::make_unique<IBI_ReloadForce>());

@@ -34,6 +34,7 @@ struct Configuration {
     std::vector<std::tuple<math::d3, math::d3, uint32_t>> phasespace_gen_regions;
 
     bool storeCheckpoint = Defaults::storeCheckpoint;
+    bool enable_3b_approx = Defaults::enable_3b_approx;
     bool enable_3b = Defaults::enable_3b;
     bool enable_3b_direct = Defaults::enable_3b_direct;
     bool enable_sensor_lj = Defaults::enable_sensor_lj;
