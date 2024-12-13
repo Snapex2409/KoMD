@@ -40,6 +40,8 @@ public:
         const double potential_factor;
     };
 
+    double getPotentialFactor() const { return m_potential_factor; }
+
 protected:
     void handlePairList(PairList &pairList) override;
 
