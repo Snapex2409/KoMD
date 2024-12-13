@@ -50,10 +50,11 @@ void ATM::ATM_Force::operator()(int idx) const {
 
     const double dVdR01 = comp_force(nu, r0_1, r0_2, r1_2);
     const double dVdR02 = comp_force(nu, r0_2, r0_1, r1_2);
+    const double dVdR12 = comp_force(nu, r1_2, r0_1, r0_2);
 
     const math::d3 f0 = dr0_1 * dVdR01 + dr0_2 * dVdR02;
-    const math::d3 f1 = dr0_1 * (-dVdR01) + dr0_2 * dVdR02;
-    const math::d3 f2 = dr0_1 * (-dVdR01) + dr0_2 * (-dVdR02);
+    const math::d3 f1 = dr0_1 * (-dVdR01) + dr1_2 * dVdR12;
+    const math::d3 f2 = dr0_2 * (-dVdR02) + dr1_2 * (-dVdR12);
 
     if (shift0 == 0) Kokkos::atomic_add(&f[s_idx_0], f0);
     if (shift1 == 0) Kokkos::atomic_add(&f[s_idx_1], f1);
