@@ -23,9 +23,6 @@ public:
 
     void write(uint64_t simstep) override;
 
-    /// base device kernel type
-    struct PressureKernel{};
-
     /// momentum kernel
     struct MomentumKernel
     {
@@ -36,16 +33,7 @@ public:
         KW::vec_t<double> m;
     };
 
-    struct LJ12_6_Pressure : public PressureKernel {
-        LJ12_6_Pressure(
-            KW::nvec_t<int, 2> pairs,
-            KW::nvec_t<math::d3, 2> pair_offsets,
-            KW::vec_t<math::d3> f,
-            KW::vec_t<uint64_t> id,
-            KW::vec_t<math::d3> r,
-            KW::vec_t<double> sig,
-            KW::vec_t<double> eps,
-            double cutoff2);
+    struct LJ12_6_Pressure {
         KOKKOS_FUNCTION void operator()(int idx, double& acc_xx, double& acc_xy, double& acc_yy, double& acc_xz, double& acc_yz, double& acc_zz) const;
         /// shallow copy of PairList::pairs
         KW::nvec_t<int, 2> pairs;
@@ -65,17 +53,7 @@ public:
         const double cutoff2;
     };
 
-    struct ATM2B_Pressure : public PressureKernel {
-        ATM2B_Pressure(
-            KW::nvec_t<int, 2> pairs,
-            KW::nvec_t<math::d3, 2> pair_offsets,
-            KW::vec_t<math::d3> f,
-            KW::vec_t<uint64_t> id,
-            KW::vec_t<math::d3> r,
-            KW::vec_t<double> sig,
-            KW::vec_t<double> eps,
-            double cutoff2,
-            double potential_factor);
+    struct ATM2B_Pressure {
         KOKKOS_FUNCTION void operator()(int idx, double& acc_xx, double& acc_xy, double& acc_yy, double& acc_xz, double& acc_yz, double& acc_zz) const;
         /// shallow copy of PairList::pairs
         KW::nvec_t<int, 2> pairs;
@@ -97,15 +75,7 @@ public:
         const double potential_factor;
     };
 
-    struct ATM_Pressure : public PressureKernel {
-        ATM_Pressure(
-            KW::nvec_t<int, 3> triplets,
-            KW::nvec_t<math::d3, 3> triple_offsets,
-            KW::vec_t<math::d3> f,
-            KW::vec_t<math::d3> r,
-            double nu,
-            double cutoff2
-        );
+    struct ATM_Pressure {
         KOKKOS_FUNCTION void operator()(int idx, double& acc_xx, double& acc_xy, double& acc_yy, double& acc_xz, double& acc_yz, double& acc_zz) const;
         /// shallow copy of TripleList::triplets
         KW::nvec_t<int, 3> triplets;
@@ -126,8 +96,8 @@ private:
     void contributeMomentum();
     void contributePotentials();
 
-    std::unique_ptr<PressureKernel> mapFF2(std::shared_ptr<ForceFunctor> ff);
-    std::unique_ptr<PressureKernel> mapFF3(std::shared_ptr<ForceFunctor3B> ff);
+    void runFF2(std::shared_ptr<ForceFunctor> ff);
+    void runFF3(std::shared_ptr<ForceFunctor3B> ff);
 
     /// 3b nu param
     double m_nu;

@@ -44,9 +44,9 @@ void PressureSensor::write(uint64_t simstep)
     // force unit is u * A / ps²
     // pressure unit is u / (ps² * A)
     // output unit will be Pa = N/m² = kg * m/s² * m^-2 = kg / (s² * m)
-    constexpr SciValue convA_m {1.0, -10};
-    constexpr SciValue convps_s {1.0, -12};
-    constexpr SciValue factor = Constants::conv_Da_kg / (convps_s * convps_s * convA_m);
+    const SciValue convA_m {1.0, -10};
+    const SciValue convps_s {1.0, -12};
+    const SciValue factor = Constants::conv_Da_kg / (convps_s * convps_s * convA_m);
 
     int next_count = 1;
     int count = 0;
@@ -82,63 +82,57 @@ void PressureSensor::contributePotentials()
 {
     auto& potentials = Registry::instance->forceFunctors();
     auto& potentials3B = Registry::instance->forceFunctors3b();
-
-    auto& pairList = Registry::instance->moleculeContainer()->getPairList();
-    for (auto ff_ptr : potentials)
-    {
-        auto kernel = mapFF2(ff_ptr);
-        if (kernel == nullptr) continue;
-
-        std::array<double, NUM_PRESSURES> c{0};
-        Kokkos::parallel_reduce("Pressure Sensor - Potential 2B", pairList.size(),
-        kernel, c[0], c[1], c[2], c[3], c[4], c[5]);
-        Kokkos::fence("Pressure Sensor - Potential 2B");
-        for (int idx = 0; idx < NUM_PRESSURES; ++idx) m_pressures[idx] += c[idx];
-    }
-
-    auto& tripleList = Registry::instance->moleculeContainer()->getTripleList();
-    for (auto ff_ptr : potentials3B)
-    {
-        auto kernel = mapFF3(ff_ptr);
-        if (kernel == nullptr) continue;
-
-        std::array<double, NUM_PRESSURES> c{0};
-        Kokkos::parallel_reduce("Pressure Sensor - Potential 3B", tripleList.size(),
-        kernel, c[0], c[1], c[2], c[3], c[4], c[5]);
-        Kokkos::fence("Pressure Sensor - Potential 3B");
-        for (int idx = 0; idx < NUM_PRESSURES; ++idx) m_pressures[idx] += c[idx];
-    }
+    for (auto ff_ptr : potentials) runFF2(ff_ptr);
+    for (auto ff_ptr : potentials3B) runFF3(ff_ptr);
 }
 
-std::unique_ptr<PressureSensor::PressureKernel> PressureSensor::mapFF2(std::shared_ptr<ForceFunctor> ff)
+void PressureSensor::runFF2(std::shared_ptr<ForceFunctor> ff)
 {
-    if (auto ptr = std::dynamic_pointer_cast<Limit>(ff); ptr != nullptr) return std::unique_ptr<PressureKernel>(nullptr);
-    if (auto ptr = std::dynamic_pointer_cast<FENE>(ff); ptr != nullptr) return std::unique_ptr<PressureKernel>(nullptr);
+    if (auto ptr = std::dynamic_pointer_cast<Limit>(ff); ptr != nullptr) return;
+    if (auto ptr = std::dynamic_pointer_cast<FENE>(ff); ptr != nullptr) return;
 
     auto container = Registry::instance->moleculeContainer();
     auto& soa = container->getSOA();
     auto& pairList = container->getPairList();
     const double cutoff2 = std::pow(Registry::instance->configuration()->cutoff, 2);
 
+    std::array<double, NUM_PRESSURES> c{0};
     if (auto ptr = std::dynamic_pointer_cast<LJ12_6>(ff); ptr != nullptr)
-        return std::make_unique<LJ12_6_Pressure>(pairList.getPairs(), pairList.getOffsets(), soa.f(), soa.id(), soa.r(), soa.sigma(), soa.epsilon(), cutoff2);
+    {
+        Kokkos::parallel_reduce("Pressure Sensor - Potential 2B", pairList.size(),
+        LJ12_6_Pressure(pairList.getPairs(), pairList.getOffsets(), soa.f(), soa.id(), soa.r(), soa.sigma(), soa.epsilon(), cutoff2),
+        c[0], c[1], c[2], c[3], c[4], c[5]);
+    }
     if (auto ptr = std::dynamic_pointer_cast<ATM2B>(ff); ptr != nullptr)
-        return std::make_unique<ATM2B_Pressure>(pairList.getPairs(), pairList.getOffsets(), soa.f(), soa.id(), soa.r(), soa.sigma(), soa.epsilon(), cutoff2, ptr->getPotentialFactor());
+    {
+        Kokkos::parallel_reduce("Pressure Sensor - Potential 2B", pairList.size(),
+        ATM2B_Pressure(pairList.getPairs(), pairList.getOffsets(), soa.f(), soa.id(), soa.r(), soa.sigma(), soa.epsilon(), cutoff2, ptr->getPotentialFactor()),
+        c[0], c[1], c[2], c[3], c[4], c[5]);
+    }
 
-    return std::unique_ptr<PressureKernel>(nullptr);
+    Kokkos::fence("Pressure Sensor - Potential 2B");
+    for (int idx = 0; idx < NUM_PRESSURES; ++idx) m_pressures[idx] += c[idx];
 }
 
-std::unique_ptr<PressureSensor::PressureKernel> PressureSensor::mapFF3(std::shared_ptr<ForceFunctor3B> ff)
+void PressureSensor::runFF3(std::shared_ptr<ForceFunctor3B> ff)
 {
-    if (auto ptr = std::dynamic_pointer_cast<ATM_NOLIST>(ff); ptr != nullptr) return std::unique_ptr<PressureKernel>(nullptr);
+    if (auto ptr = std::dynamic_pointer_cast<ATM_NOLIST>(ff); ptr != nullptr) return;
 
     auto container = Registry::instance->moleculeContainer();
     auto& soa = container->getSOA();
     auto& tripleList = container->getTripleList();
     const double cutoff2 = std::pow(Registry::instance->configuration()->cutoff, 2);
 
-    if (auto ptr = std::dynamic_pointer_cast<ATM>(ff); ptr != nullptr) return std::make_unique<ATM_Pressure>(tripleList.getTriplets(), tripleList.getOffsets(), soa.f(), soa.r(), m_nu, cutoff2);
-    return std::unique_ptr<PressureKernel>(nullptr);
+    std::array<double, NUM_PRESSURES> c{0};
+    if (auto ptr = std::dynamic_pointer_cast<ATM>(ff); ptr != nullptr)
+    {
+        Kokkos::parallel_reduce("Pressure Sensor - Potential 3B", tripleList.size(),
+        ATM_Pressure(tripleList.getTriplets(), tripleList.getOffsets(), soa.f(), soa.r(), m_nu, cutoff2),
+        c[0], c[1], c[2], c[3], c[4], c[5]);
+    }
+
+    Kokkos::fence("Pressure Sensor - Potential 3B");
+    for (int idx = 0; idx < NUM_PRESSURES; ++idx) m_pressures[idx] += c[idx];
 }
 
 void PressureSensor::MomentumKernel::operator()(int idx, double& acc_xx, double& acc_xy, double& acc_yy, double& acc_xz, double& acc_yz, double& acc_zz) const
@@ -286,14 +280,3 @@ void PressureSensor::ATM_Pressure::operator()(int idx, double& acc_xx, double& a
         dr0_2.y() * f02.z() + dr0_2.z() * f02.y()
     );
 }
-
-PressureSensor::LJ12_6_Pressure::LJ12_6_Pressure(KW::nvec_t<int, 2> pairs, KW::nvec_t<math::d3, 2> pair_offsets,
-                                                 KW::vec_t<math::d3> f, KW::vec_t<uint64_t> id, KW::vec_t<math::d3> r, KW::vec_t<double> sig, KW::vec_t<double> eps,
-                                                 double cutoff2) : PressureKernel(), pairs(pairs), pair_offsets(pair_offsets), f(f), id(id), r(r), sig(sig), eps(eps), cutoff2(cutoff2) { }
-
-PressureSensor::ATM2B_Pressure::ATM2B_Pressure(KW::nvec_t<int, 2> pairs, KW::nvec_t<math::d3, 2> pair_offsets,
-                                               KW::vec_t<math::d3> f, KW::vec_t<uint64_t> id, KW::vec_t<math::d3> r, KW::vec_t<double> sig, KW::vec_t<double> eps,
-                                               double cutoff2, double potential_factor) : PressureKernel(), pairs(pairs), pair_offsets(pair_offsets), f(f), id(id), r(r), sig(sig), eps(eps), cutoff2(cutoff2), potential_factor(potential_factor) { }
-
-PressureSensor::ATM_Pressure::ATM_Pressure(KW::nvec_t<int, 3> triplets, KW::nvec_t<math::d3, 3> triple_offsets,
-                                           KW::vec_t<math::d3> f, KW::vec_t<math::d3> r, double nu, double cutoff2) : PressureKernel(), triplets(triplets), triple_offsets(triple_offsets), f(f), r(r), nu(nu), cutoff2(cutoff2) { }

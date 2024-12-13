@@ -31,6 +31,7 @@ namespace Defaults {
     static constexpr bool enable_sensor_fene = false;
     static constexpr bool enable_sensor_rdf = false;
     static constexpr bool enable_sensor_disp = false;
+    static constexpr bool enable_sensor_pres = false;
     static constexpr bool storeCheckpoint = false;
     static constexpr uint64_t timesteps = 1;            // unit-less
     static constexpr uint64_t write_freq = 10;          // unit-less

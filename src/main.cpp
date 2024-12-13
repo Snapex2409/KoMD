@@ -13,6 +13,8 @@
 #include "potentials/ATM_NOLIST.h"
 //#include "potentials/Grav.h"
 
+#include <sensors/PressureSensor.h>
+
 #include "plugins/ADR/AdResS.h"
 #include "plugins/IBI/IBI.h"
 #include "plugins/IBI/IBI_ReloadForce.h"
@@ -78,7 +80,7 @@ int main(int argc, char** argv) {
     if (Registry::instance->configuration()->enable_sensor_rdf) Registry::instance->sensors().push_back(std::make_shared<RDFSensor>());
     if (Registry::instance->configuration()->enable_sensor_disp) Registry::instance->displacement_sensor_ptr() = std::make_shared<DisplacementSensor>();
     if (Registry::instance->configuration()->enable_sensor_disp) Registry::instance->sensors().push_back(std::dynamic_pointer_cast<Sensor>(Registry::instance->displacement_sensor()));
-
+    if (Registry::instance->configuration()->enable_sensor_pres) Registry::instance->sensors().push_back(std::make_shared<PressureSensor>());
     //==========================================
     // Plugins
     //==========================================

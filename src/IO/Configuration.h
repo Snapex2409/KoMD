@@ -41,6 +41,7 @@ struct Configuration {
     bool enable_sensor_fene = Defaults::enable_sensor_fene;
     bool enable_sensor_rdf = Defaults::enable_sensor_rdf;
     bool enable_sensor_disp = Defaults::enable_sensor_disp;
+    bool enable_sensor_pres = Defaults::enable_sensor_pres;
 
     uint64_t sensor_lj_bins = Defaults::sensor_lj_bins;
     uint64_t sensor_fene_bins = Defaults::sensor_fene_bins;

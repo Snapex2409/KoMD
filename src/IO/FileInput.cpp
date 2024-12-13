@@ -46,6 +46,7 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "enable_sensor_fene") file >> config->enable_sensor_fene;
             if (var == "enable_sensor_rdf") file >> config->enable_sensor_rdf;
             if (var == "enable_sensor_disp") file >> config->enable_sensor_disp;
+            if (var == "enable_sensor_pres") file >> config->enable_sensor_pres;
             if (var == "sensor_lj_bins") file >> config->sensor_lj_bins;
             if (var == "sensor_fene_bins") file >> config->sensor_fene_bins;
             if (var == "sensor_rdf_max") file >> config->sensor_rdf_max;
