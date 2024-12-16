@@ -32,6 +32,7 @@ namespace Defaults {
     static constexpr bool enable_sensor_rdf = false;
     static constexpr bool enable_sensor_disp = false;
     static constexpr bool enable_sensor_pres = false;
+    static constexpr bool enable_sensor_visc = false;
     static constexpr bool storeCheckpoint = false;
     static constexpr uint64_t timesteps = 1;            // unit-less
     static constexpr uint64_t write_freq = 10;          // unit-less
@@ -43,6 +44,8 @@ namespace Defaults {
     static constexpr bool sensor_temp_opt = false;
     static constexpr double sensor_rdf_max = 5.0;
     static constexpr double sensor_rdf_dr = 0.1;
+    static constexpr int sensor_visc_window = 1000;
+    static constexpr bool sensor_visc_no_orig = false;
 
     static constexpr math::d3 ADR_low {0, 0, 0};
     static constexpr math::d3 ADR_high {0, 0, 0};

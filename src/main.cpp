@@ -24,6 +24,7 @@
 #include "sensors/LJ12_6_Sensor.h"
 #include "sensors/FENE_Sensor.h"
 #include "sensors/RDFSensor.h"
+#include "sensors/ViscositySensor.h"
 
 #include "thermostats/VelocityScaling.h"
 #include "container/LinkedCells.h"
@@ -81,6 +82,7 @@ int main(int argc, char** argv) {
     if (Registry::instance->configuration()->enable_sensor_disp) Registry::instance->displacement_sensor_ptr() = std::make_shared<DisplacementSensor>();
     if (Registry::instance->configuration()->enable_sensor_disp) Registry::instance->sensors().push_back(std::dynamic_pointer_cast<Sensor>(Registry::instance->displacement_sensor()));
     if (Registry::instance->configuration()->enable_sensor_pres) Registry::instance->sensors().push_back(std::make_shared<PressureSensor>());
+    if (Registry::instance->configuration()->enable_sensor_visc) Registry::instance->sensors().push_back(std::make_shared<ViscositySensor>());
     //==========================================
     // Plugins
     //==========================================

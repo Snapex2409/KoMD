@@ -24,6 +24,8 @@ public:
      * */
     void stop();
 
+    uint64_t simstep() const { return m_simstep; }
+
 private:
     /// maximum time step
     uint64_t m_max_step = 0;

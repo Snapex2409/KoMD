@@ -42,12 +42,15 @@ struct Configuration {
     bool enable_sensor_rdf = Defaults::enable_sensor_rdf;
     bool enable_sensor_disp = Defaults::enable_sensor_disp;
     bool enable_sensor_pres = Defaults::enable_sensor_pres;
+    bool enable_sensor_visc = Defaults::enable_sensor_visc;
 
     uint64_t sensor_lj_bins = Defaults::sensor_lj_bins;
     uint64_t sensor_fene_bins = Defaults::sensor_fene_bins;
     bool sensor_temp_opt = Defaults::sensor_temp_opt;
     double sensor_rdf_max = Defaults::sensor_rdf_max;
     double sensor_rdf_dr = Defaults::sensor_rdf_dr;
+    int sensor_visc_window = Defaults::sensor_visc_window;
+    bool sensor_visc_no_orig = Defaults::sensor_visc_no_orig;
 
     bool ADR_enable = false;
     math::d3 ADR_low = Defaults::ADR_low;

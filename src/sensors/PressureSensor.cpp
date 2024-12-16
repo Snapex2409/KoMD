@@ -63,6 +63,8 @@ void PressureSensor::write(uint64_t simstep)
         }
         else file << " ";
     }
+    file.flush();
+    file.close();
 }
 
 void PressureSensor::contributeMomentum()
