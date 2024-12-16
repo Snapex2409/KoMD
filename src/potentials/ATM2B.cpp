@@ -10,6 +10,7 @@ ATM2B::ATM2B() : m_cutoff2(std::pow(Registry::instance->configuration()->cutoff,
     auto config = Registry::instance->configuration();
     double nu = config->energy_3b;
     nu = nu * 1e+9 * Constants::conv_J_Ei; // convert external unit to internal
+    // yes this must be a number density, otherwise units do not work out
     const double rho = Registry::instance->moleculeContainer()->getNumMolecules() / (config->domainHigh - config->domainLow).product();
     // we assume we only have 1 component system
     const double eps = Registry::instance->components()[0].getSites()[0].getEpsilon() * Constants::conv_J_Ei;

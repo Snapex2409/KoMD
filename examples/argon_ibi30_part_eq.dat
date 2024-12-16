@@ -18,7 +18,7 @@ timesteps 50000
 #=================================================
 density 0.01
 #                begin    end        cid
-ps_gen_region    0 0 0    20 20 20    0
+checkpoint_file ../examples/argon/ckpt_3b_eq2.ps    0 0 0
 #=================================================
 # Potentials
 #=================================================
@@ -42,8 +42,19 @@ triple_steps 4
 #=================================================
 # IO
 #=================================================
-write_freq 10000
+write_freq 100000
 store_checkpoint 1
+
+#=================================================
+# Plugins
+#=================================================
+# IBI
+IBI_bins 100
+IBI_reload 1
+IBI_reload_fpath ../examples/argon/force_30.txt
+IBI_reload_ppath ../examples/argon/pot_30.txt
+IBI_exclusion_low 5 -20 -20
+IBI_exclusion_high 15 40 40
 
 #=================================================
 # Components

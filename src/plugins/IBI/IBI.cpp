@@ -257,8 +257,8 @@ bool IBI::Convergence::shouldStop() const {
     if (stopping_mode == ON_WORSE) {
         if (steps < 2) return false;
 
-        if (conv_values[steps-2] > threshold) return false;
-        if (conv_values[steps-1] <= threshold) return false;
+        if (conv_values[steps-2] < threshold) return false;
+        if (conv_values[steps-1] >= threshold) return false;
         return true;
     }
     else if (stopping_mode == WINDOW) {

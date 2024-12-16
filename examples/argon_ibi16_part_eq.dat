@@ -53,8 +53,8 @@ IBI_bins 100
 IBI_reload 1
 IBI_reload_fpath ../examples/argon/force_16.txt
 IBI_reload_ppath ../examples/argon/pot_16.txt
-IBI_exclusion_low 5 0 0
-IBI_exclusion_high 15 20 20
+IBI_exclusion_low 5 -20 -20
+IBI_exclusion_high 15 40 40
 
 #=================================================
 # Components
