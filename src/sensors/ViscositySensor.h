@@ -29,27 +29,21 @@ private:
     class TensorEvaluator
     {
     public:
-        TensorEvaluator(int window_size, bool origin_free, double dt, std::initializer_list<PressureSensor::PressureDim> eval_points);
+        TensorEvaluator(bool origin_free, double dt, std::initializer_list<PressureSensor::PressureDim> eval_points);
         void eval(const KW::vec_t<double>& tensor);
+        double correlate(int origin_begin, int origin_end, int origin_stride, int offset, int buffer_idx, double function_shift = 0.0) const;
         double integrate() const;
-        void reset() { m_ens_averages.clear(); m_ens_averages_times.clear(); }
-
+        double ens_avg_stress(int buffer_idx) const;
     private:
-        bool m_origin_free = false;
-        bool m_origin_init = false;
-        double m_origin = 0;
-
-        int m_window_size = 0;
-        int m_sample_counter = 0;
-
         int m_num_tensor_points = 0;
         std::array<bool, PressureSensor::PressureDim::NUM_PRESSURES> m_tensor_points {};
 
-        double m_averaging_buffer;
-        std::vector<double> m_ens_averages;
-        std::vector<double> m_ens_averages_times;
-        double m_zero_quantity = 0;
+        std::vector<std::vector<double>> m_stresses;
+        int m_num_evals = 0;
+
+        int m_correlation_stride = 1;
         double m_dt = 0;
+        bool m_origin_free = false;
     };
 
     TensorEvaluator m_bulk_evaluator;

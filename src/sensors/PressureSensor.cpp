@@ -41,18 +41,21 @@ void PressureSensor::write(uint64_t simstep)
         Log::io->error() << "Could not write file: " << file_name.str() << std::endl;
         return;
     }
+    // what we actually have stored atm is the stress tensor -> need to div by volume
+    // v * v * m = (m² * kg) / s²
     // force unit is u * A / ps²
     // pressure unit is u / (ps² * A)
     // output unit will be Pa = N/m² = kg * m/s² * m^-2 = kg / (s² * m)
     const SciValue convA_m {1.0, -10};
     const SciValue convps_s {1.0, -12};
     const SciValue factor = Constants::conv_Da_kg / (convps_s * convps_s * convA_m);
+    const double volume = (Registry::instance->configuration()->domainHigh - Registry::instance->configuration()->domainLow).product();
 
     int next_count = 1;
     int count = 0;
     for (int idx = 0; idx < NUM_PRESSURES; ++idx)
     {
-        file << m_pressures[idx] * factor;
+        file << m_pressures[idx] / volume * factor;
         count++;
 
         if (count == next_count)
@@ -248,9 +251,9 @@ void PressureSensor::ATM_Pressure::operator()(int idx, double& acc_xx, double& a
     const double r0_2 = Kokkos::sqrt(dr0_2_2);
     const double r1_2 = Kokkos::sqrt(dr1_2_2);
 
-    const double dVdR01 = ATM::ATM_Force::comp_force(nu, r0_1, r0_2, r1_2);
-    const double dVdR02 = ATM::ATM_Force::comp_force(nu, r0_2, r0_1, r1_2);
-    const double dVdR12 = ATM::ATM_Force::comp_force(nu, r1_2, r0_1, r0_2);
+    const double dVdR01 = - ATM::ATM_Force::comp_force(nu, r0_1, r0_2, r1_2);
+    const double dVdR02 = - ATM::ATM_Force::comp_force(nu, r0_2, r0_1, r1_2);
+    const double dVdR12 = - ATM::ATM_Force::comp_force(nu, r1_2, r0_1, r0_2);
     const math::d3 f01 = dr0_1 * dVdR01;
     const math::d3 f02 = dr0_2 * dVdR02;
     const math::d3 f12 = dr1_2 * dVdR12;

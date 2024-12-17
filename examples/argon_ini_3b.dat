@@ -11,14 +11,14 @@ temperature 150
 delta_t 0.0005
 cutoff 8.525
 cell_size 10
-timesteps 10000
+timesteps 100000
 
 #=================================================
 # Phasespace
 #=================================================
 density 0.01
 #                begin    end        cid
-checkpoint_file ../examples/argon/ckpt_ibi16_full_eq.ps    0 0 0
+ps_gen_region    0 0 0    20 20 20    0
 #=================================================
 # Potentials
 #=================================================
@@ -35,33 +35,15 @@ domain_high 20 20 20
 # Algorithm
 #=================================================
 pair_steps 8
-enable_3b 0
+enable_3b 1
 enable_3b_direct 0
 triple_steps 4
 
 #=================================================
 # IO
 #=================================================
-write_freq 100000
-store_checkpoint 0
-
-#=================================================
-# Plugins
-#=================================================
-# IBI
-IBI_bins 100
-IBI_reload 1
-IBI_reload_fpath ../examples/argon/force_16.txt
-IBI_reload_ppath ../examples/argon/pot_16.txt
-IBI_exclusion_low 0 0 0
-IBI_exclusion_high 0 0 0
-
-#=================================================
-# Measurements
-#=================================================
-enable_sensor_rdf 1
-sensor_rdf_max 10
-sensor_rdf_dr 0.1
+write_freq 10000
+store_checkpoint 1
 
 #=================================================
 # Components

@@ -15,13 +15,11 @@ using PSD = PressureSensor::PressureDim;
 
 ViscositySensor::ViscositySensor() : Sensor("Viscosity"), m_pressure_sensor(),
                                      m_sample_window_size(Registry::instance->configuration()->sensor_visc_window),
-m_bulk_evaluator(Registry::instance->configuration()->sensor_visc_window,
-                 Registry::instance->configuration()->sensor_visc_no_orig,
+m_bulk_evaluator(Registry::instance->configuration()->sensor_visc_no_orig,
                  Registry::instance->configuration()->delta_t,
                  {PSD::XX, PSD::YY, PSD::ZZ}),
-m_shear_evaluator(Registry::instance->configuration()->sensor_visc_window,
-                 Registry::instance->configuration()->sensor_visc_no_orig,
-                 Registry::instance->configuration()->delta_t,
+m_shear_evaluator(Registry::instance->configuration()->sensor_visc_no_orig,
+                  Registry::instance->configuration()->delta_t,
                  {PSD::XY, PSD::XZ, PSD::YZ}),
 m_dt(Registry::instance->configuration()->delta_t)
 {
@@ -43,10 +41,15 @@ void ViscositySensor::write(uint64_t simstep)
     // int-t:  kg² / (s^3 * m²)
     // rescale:kg / (s * m)
     // require: 2x conv to Pa 1x conv to s
+
+    // stress: (kg * m²) / s²
+    // square: (kg² * m^4) / s^4
+    // int-t:  (kg² * m^4) / s^3
+    // rescale:(kg * m²) / s
     const SciValue convA_m {1.0, -10};
     const SciValue convps_s {1.0, -12};
     const SciValue convIP_Pa = Constants::conv_Da_kg / (convps_s * convps_s * convA_m);
-    const SciValue factor = convIP_Pa * convIP_Pa / convps_s;
+    const SciValue factor = (Constants::conv_Da_kg * convA_m * convA_m) / (convps_s * Constants::kB * Registry::instance->configuration()->temperature);
 
     std::stringstream file_name;
     file_name << "viscosity_" << simstep << ".txt";
@@ -58,98 +61,81 @@ void ViscositySensor::write(uint64_t simstep)
 
     file << "b: " << m_bulk_evaluator.integrate() * factor << std::endl;
     file << "s: " << m_shear_evaluator.integrate() * factor << std::endl;
-    //m_bulk_evaluator.reset();
-    //m_shear_evaluator.reset();
     file.flush();
     file.close();
 }
 
-ViscositySensor::TensorEvaluator::TensorEvaluator(int window_size, bool origin_free, double dt,
-    std::initializer_list<PressureSensor::PressureDim> eval_points) : m_window_size(window_size), m_origin_free(origin_free), m_dt(dt)
+ViscositySensor::TensorEvaluator::TensorEvaluator(bool origin_free, double dt,
+    std::initializer_list<PressureSensor::PressureDim> eval_points) : m_num_evals(0), m_correlation_stride(1),
+    m_dt(dt), m_origin_free(origin_free)
 {
-    m_origin_init = false;
-    m_origin = 0;
+    m_stresses.resize(PressureSensor::PressureDim::NUM_PRESSURES);
 
     m_num_tensor_points = eval_points.size();
     for (const auto p : eval_points) m_tensor_points[p] = true;
-
-    m_averaging_buffer = 0;
-    m_zero_quantity = 0;
 }
 
 void ViscositySensor::TensorEvaluator::eval(const KW::vec_t<double>& tensor)
 {
-    m_sample_counter++;
-
-    double tmp = 0;
-    for (int pos = 0; pos < m_tensor_points.size(); pos++)
+    for (int idx = 0; idx < m_tensor_points.size(); ++idx)
     {
-        if (m_tensor_points[pos]) tmp += tensor[pos];
-    };
-    tmp /= m_num_tensor_points;
-
-    // init origin free
-    if (m_origin_free && !m_origin_init)
-    {
-        m_averaging_buffer += tmp;
-
-        if (m_sample_counter % m_window_size == 0)
-        {
-            m_origin = m_averaging_buffer / m_window_size;
-            m_origin_init = true;
-            m_averaging_buffer = 0;
-            m_zero_quantity = tmp - m_origin;
-            m_sample_counter = 0;
-        }
-        return;
+        if (m_tensor_points[idx]) m_stresses[idx].push_back(tensor[idx]);
     }
+    m_num_evals++;
+}
 
-    // init with origin
-    if (!m_origin_free && !m_origin_init)
+double ViscositySensor::TensorEvaluator::correlate(int origin_begin, int origin_end, int origin_stride, int offset,
+    int buffer_idx, double function_shift) const
+{
+    const int num_steps = (origin_end - origin_begin) / origin_stride;
+    double tmp = 0.0;
+    for (int origin = origin_begin; origin < origin_end; origin += origin_stride)
     {
-        m_origin_init = true;
-        m_averaging_buffer = 0;
-        m_zero_quantity = tmp;
-        m_sample_counter = 0;
-        return;
+        tmp += (m_stresses[buffer_idx][origin] - function_shift) * (m_stresses[buffer_idx][origin + offset] - function_shift);
     }
-
-    // handle main measurement origin free
-    if (m_origin_free)
-    {
-        m_averaging_buffer += (tmp - m_origin) * m_zero_quantity;
-
-        if (m_sample_counter % m_window_size == 0)
-        {
-            m_ens_averages.push_back(m_averaging_buffer / m_window_size);
-            m_ens_averages_times.push_back(Registry::instance->simulation()->simstep() * m_dt);
-            m_sample_counter = 0;
-            m_averaging_buffer = 0;
-        }
-    }
-    // handle main measurement with origin
-    else
-    {
-        m_averaging_buffer += tmp * m_zero_quantity;
-
-        if (m_sample_counter % m_window_size == 0)
-        {
-            m_ens_averages.push_back(m_averaging_buffer / m_window_size);
-            m_ens_averages_times.push_back(Registry::instance->simulation()->simstep() * m_dt);
-            m_sample_counter = 0;
-            m_averaging_buffer = 0;
-        }
-    }
+    tmp /= num_steps;
+    return tmp;
 }
 
 double ViscositySensor::TensorEvaluator::integrate() const
 {
-    // using TS here
-    double integral = 0;
-    const double delta_t = m_window_size * m_dt;
-    integral += m_ens_averages[0] + m_ens_averages[m_ens_averages.size()-1];
-    for (int idx = 1; idx < m_ens_averages.size()-1; idx++) integral += m_ens_averages[idx];
-    integral *= delta_t / 2.0;
+    std::vector<double> integrals;
 
-    return integral;
+    for (int pDim = 0; pDim < PressureSensor::PressureDim::NUM_PRESSURES; ++pDim)
+    {
+        if (!m_tensor_points[pDim]) continue;
+
+        double shift = 0;
+        if (m_origin_free) shift = ens_avg_stress(pDim);
+
+        // first compute function values for all integration nodes
+        std::vector<double> correlations(m_num_evals, 0.0);
+        for (int idx = 0; idx < m_num_evals; idx++)
+        {
+            correlations[idx] = correlate(0, m_num_evals - idx, m_correlation_stride, idx, pDim, shift);
+        }
+
+        // using TS here
+        double integral = 0;
+        integral += correlations[0] + correlations[m_num_evals-1];
+        for (int idx = 1; idx < m_num_evals-1; idx++) integral += correlations[idx];
+        integral *= m_dt / 2.0;
+
+        integrals.push_back(integral);
+    }
+
+    // page 274
+    int sum = 0;
+    for (int idx = 0; idx < integrals.size(); idx++) sum += integrals[idx];
+    return sum / integrals.size();
+}
+
+double ViscositySensor::TensorEvaluator::ens_avg_stress(int buffer_idx) const
+{
+    double avg = 0;
+    for (int idx = 0; idx < m_num_evals; idx++)
+    {
+        avg += m_stresses[buffer_idx][idx];
+    }
+    return avg / m_num_evals;
 }

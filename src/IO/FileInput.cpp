@@ -52,6 +52,8 @@ bool FileInput::readFile(const std::string &filename) {
             if (var == "sensor_fene_bins") file >> config->sensor_fene_bins;
             if (var == "sensor_rdf_max") file >> config->sensor_rdf_max;
             if (var == "sensor_rdf_dr") file >> config->sensor_rdf_dr;
+            if (var == "sensor_visc_window") file >> config->sensor_visc_window;
+            if (var == "sensor_visc_no_orig") file >> config->sensor_visc_no_orig;
             if (var == "store_checkpoint") file >> config->storeCheckpoint;
             if (var == "ps_gen_region") {
                 math::d3 begin, end; int cid;

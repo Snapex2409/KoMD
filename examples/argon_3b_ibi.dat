@@ -18,7 +18,7 @@ timesteps 20000000
 #=================================================
 density 0.01
 #                begin    end        cid
-checkpoint_file ../examples/argon/ckpt_3b_eq2.ps    0 0 0
+checkpoint_file ../examples/argon/ckpt_3b_eq.ps    0 0 0
 #=================================================
 # Potentials
 #=================================================
@@ -42,7 +42,7 @@ triple_steps 4
 #=================================================
 # IO
 #=================================================
-write_freq 100000
+write_freq 10000
 store_checkpoint 0
 
 #=================================================
@@ -54,7 +54,7 @@ IBI_bins 100
 IBI_alpha 0.2
 IBI_steps_equil 1e+4
 IBI_steps_measure 1e+3
-IBI_conv_threshold 0.95
+IBI_conv_threshold 0.97
 IBI_conv_mode integral
 IBI_conv_stop worse
 IBI_conv_window 10
