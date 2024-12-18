@@ -33,17 +33,18 @@ private:
         void eval(const KW::vec_t<double>& tensor);
         double correlate(int origin_begin, int origin_end, int origin_stride, int offset, int buffer_idx, double function_shift = 0.0) const;
         double integrate() const;
-        double ens_avg_stress(int buffer_idx) const;
+        double ens_avg_pressure(int buffer_idx) const;
     private:
         int m_num_tensor_points = 0;
         std::array<bool, PressureSensor::PressureDim::NUM_PRESSURES> m_tensor_points {};
 
-        std::vector<std::vector<double>> m_stresses;
+        std::vector<std::vector<double>> m_pressures;
         int m_num_evals = 0;
 
         int m_correlation_stride = 1;
         double m_dt = 0;
         bool m_origin_free = false;
+        double m_volume = 0;
     };
 
     TensorEvaluator m_bulk_evaluator;
