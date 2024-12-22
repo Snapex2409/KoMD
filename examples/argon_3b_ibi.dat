@@ -51,10 +51,10 @@ store_checkpoint 0
 # IBI
 IBI_enable 1
 IBI_bins 100
-IBI_alpha 0.2
+IBI_alpha 0.1
 IBI_steps_equil 1e+4
 IBI_steps_measure 1e+3
-IBI_conv_threshold 0.97
+IBI_conv_threshold 0.98
 IBI_conv_mode integral
 IBI_conv_stop worse
 IBI_conv_window 10
